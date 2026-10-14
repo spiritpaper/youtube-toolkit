@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>YT Toolkit</title>
+    <link rel="stylesheet" href="../lib/base.css" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <img src="../../icons/icon32.png" alt="" width="24" height="24" />
+      <h1>YT Toolkit</h1>
+    </header>
+
+    <section id="key-setup" hidden>
+      <h2>Connect the YouTube API</h2>
+      <ol>
+        <li>
+          Open the
+          <a href="https://console.cloud.google.com/apis/library/youtube.googleapis.com" target="_blank"
+            >YouTube Data API v3</a
+          >
+          page and click <b>Enable</b> (create a project if asked).
+        </li>
+        <li>
+          Go to
+          <a href="https://console.cloud.google.com/apis/credentials" target="_blank">Credentials</a>
+          → <b>Create credentials</b> → <b>API key</b>.
+        </li>
+        <li>Paste the key below. It's free: 10,000 units a day.</li>
+      </ol>
+      <form id="key-form">
+        <input id="key-input" type="password" placeholder="AIza…" autocomplete="off" spellcheck="false" required />
+        <button type="submit" class="primary">Save</button>
+      </form>
+      <p id="key-msg" class="msg" role="status"></p>
+    </section>
+
+    <section id="key-ok" hidden>
+      <div class="row">
+        <span>API key <code id="key-mask"></code></span>
+        <button id="key-change" class="link">Change</button>
+      </div>
+      <div class="quota">
+        <div class="row small"><span>Quota used today</span><span id="quota-text"></span></div>
+        <div class="bar"><div id="quota-bar"></div></div>
+      </div>
+    </section>
+
+    <section class="go">
+      <button id="open-home" class="primary big-btn">Open YT Toolkit</button>
+      <form id="dig" class="dig"><input id="dig-q" placeholder="Dig into a keyword…" /><button type="submit">Explore</button></form>
+      <a id="radar-line" class="radar-line" hidden></a>
+    </section>
+
+    <details class="overlays">
+      <summary>On YouTube</summary>
+      <label class="toggle"><input type="checkbox" id="opt-badges" /> Outlier badges on thumbnails</label>
+      <label class="toggle"><input type="checkbox" id="opt-watchPanel" /> Performance panel on videos</label>
+      <label class="row">
+        <span>Show badges at</span>
+        <select id="opt-badgeMin">
+          <option value="0">every video</option>
+          <option value="1.5">≥ 1.5x only</option>
+          <option value="2">≥ 2x only</option>
+          <option value="3">≥ 3x only</option>
+          <option value="5">≥ 5x only</option>
+        </select>
+      </label>
+      <button id="clear-cache" title="Forget cached stats and refetch on the next page view">Clear temporary cache</button>
+    </details>
+
+    <footer class="foot">
+      <button id="open-settings" class="link">Settings</button>
+      <a id="support" class="link" target="_blank" rel="noopener" hidden></a>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>
