@@ -2,6 +2,11 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
+## [Unreleased]
+
+### Added
+- **Support the developer** link in the sidebar, popup and Settings, pointing to https://spiritpaper.github.io/#support.
+
 ## [0.6.0] - 2026-10-13
 
 First public release.
