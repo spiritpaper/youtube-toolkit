@@ -1,0 +1,17 @@
+# Dependencies and tool caches (the extension itself has none)
+node_modules/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Packed extensions and signing keys: never commit private keys
+*.crx
+*.pem
+*.zip
+
+# Local backups exported from the extension may contain personal data
+yt-toolkit-backup-*.json

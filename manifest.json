@@ -1,0 +1,76 @@
+{
+  "manifest_version": 3,
+  "name": "YT Toolkit — Outliers & Ideas",
+  "version": "0.6.0",
+  "description": "Find outliers, follow channels, explore keywords and video webs, then plan, script and track your own videos, with optional AI.",
+  "permissions": [
+    "storage",
+    "unlimitedStorage",
+    "alarms",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://www.googleapis.com/*",
+    "https://i.ytimg.com/*",
+    "https://www.youtube.com/*",
+    "https://suggestqueries.google.com/*",
+    "https://youtubeanalytics.googleapis.com/*",
+    "https://oauth2.googleapis.com/*"
+  ],
+  "optional_host_permissions": [
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://openrouter.ai/*"
+  ],
+  "background": {
+    "service_worker": "src/background/index.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "src/content/page-hook.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://www.youtube.com/*"
+      ],
+      "js": [
+        "src/content/shared.js",
+        "src/content/badges.js",
+        "src/content/watch-panel.js",
+        "src/content/channel-panel.js",
+        "src/content/main.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "options_ui": {
+    "page": "src/options/options.html",
+    "open_in_tab": true
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
