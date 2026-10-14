@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Keyword Explorer · YT Toolkit</title>
+    <link rel="icon" href="../../icons/icon32.png" />
+    <link rel="stylesheet" href="../lib/base.css" />
+    <link rel="stylesheet" href="explore.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>Keyword explorer</h1>
+      <form id="start" class="start">
+        <input id="start-q" type="search" placeholder="Start a rabbit hole: e.g. budget travel" autocomplete="off" list="start-suggest" required />
+        <datalist id="start-suggest"></datalist>
+        <button class="primary" type="submit">Dig in</button>
+      </form>
+      <nav class="links"><a href="../ideas/ideas.html">Saved ideas</a></nav>
+    </header>
+
+    <div class="layout">
+      <aside class="side">
+        <div class="side-head">
+          <h2>Rabbit holes</h2>
+          <button id="export-keywords" class="link" title="Every explored keyword with its stats">Export CSV</button>
+        </div>
+        <div id="tree" class="tree"></div>
+        <p id="tree-empty" class="muted small">Your explored keywords appear here as a tree. Dig into a related keyword to go deeper, and click any level to come back up.</p>
+      </aside>
+
+      <main id="main">
+        <section id="welcome" class="welcome">
+          <h2>Find outliers by keyword, one level at a time</h2>
+          <ol>
+            <li>Start with a broad topic. Every result is scored against its own channel's median.</li>
+            <li>Check the <b>opportunity score</b>: lots of outliers, small channels winning and fresh demand are good signs.</li>
+            <li>Click a related keyword to dig a level deeper, star the good ones, save outlier videos as ideas, and click the trail to climb back up.</li>
+          </ol>
+          <p class="muted small">Searching is free (it reads YouTube's own search page). Scoring uses your YouTube API key: about 1 unit per keyword plus ~5 per new channel (channels are cached for 12 hours).</p>
+        </section>
+        <section id="node" hidden></section>
+      </main>
+    </div>
+
+    <script type="module" src="explore.js"></script>
+  </body>
+</html>
