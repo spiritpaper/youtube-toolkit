@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Video Web · YT Toolkit</title>
+    <link rel="icon" href="../../icons/icon32.png" />
+    <link rel="stylesheet" href="../lib/base.css" />
+    <link rel="stylesheet" href="web.css" />
+  </head>
+  <body>
+    <header class="top">
+      <h1>Video web</h1>
+      <form id="start" class="start">
+        <input id="seed" placeholder="Paste a YouTube video link or ID" spellcheck="false" required />
+        <button class="primary" type="submit">Map it</button>
+        <select id="recent" aria-label="Recent webs"><option value="">Recent webs…</option></select>
+      </form>
+      <nav class="links"><a href="../explore/explore.html">Keyword explorer</a><a href="../ideas/ideas.html">Saved ideas</a></nav>
+    </header>
+    <main id="main">
+      <section class="welcome">
+        <h2>See how YouTube connects videos</h2>
+        <p>Start from any video. The web shows the videos YouTube suggests next to it, then the ones suggested next to those. An arrow A → B means YouTube suggests B on A's page.</p>
+        <ul>
+          <li><b>Hubs</b> are videos YouTube suggests from many others. They're the center of this audience's journey.</li>
+          <li><b>Clusters</b> are groups of connected videos on the same topic.</li>
+          <li><b>Click a video</b> to see why it's connected, expand its own suggestions, or save it as an idea.</li>
+        </ul>
+        <p class="muted small">Suggestions are read from YouTube's pages for free. Scoring uses ~1 API unit per 50 videos plus ~5 per new channel. A new web usually costs 100–150 units.</p>
+      </section>
+    </main>
+    <script type="module" src="web.js"></script>
+  </body>
+</html>
