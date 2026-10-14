@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Saved Outliers · YT Toolkit</title>
+    <link rel="icon" href="../../icons/icon32.png" />
+    <link rel="stylesheet" href="../lib/base.css" />
+    <link rel="stylesheet" href="ideas.css" />
+  </head>
+  <body>
+    <header class="top">
+      <div>
+        <h1>Saved outliers</h1>
+        <p id="summary" class="muted"></p>
+        <nav><a href="../explore/explore.html">Keyword explorer →</a><a href="../script/script.html">Hook library →</a><a href="../studio/studio.html">Creator studio →</a></nav>
+      </div>
+      <div class="actions">
+        <button id="refresh" title="Fetch the latest stats for every saved idea and add them to its history">Refresh stats</button>
+        <button id="export" title="One row per idea with all performance stats">Export CSV</button>
+        <button id="export-history" title="One row per idea per day: for charts and growth analysis">Export history</button>
+        <button id="remix" title="Tick 2–4 outliers (ideally from different niches) and AI combines their formats into new concepts" disabled>Remix selected</button>
+        <button id="generate" class="primary" title="Ask AI for new video ideas based on the ideas shown below">Generate ideas</button>
+      </div>
+    </header>
+
+    <section id="insights" class="insights" aria-label="Insights"></section>
+    <p id="notice" class="notice" hidden></p>
+
+    <details id="runs" class="runs" hidden>
+      <summary>Past AI results</summary>
+      <ul id="runs-list"></ul>
+    </details>
+
+    <div class="toolbar">
+      <input id="q" type="search" placeholder="Search titles, channels, notes, tags…" />
+      <select id="format" aria-label="Format">
+        <option value="">All formats</option>
+        <option value="long">Long-form</option>
+        <option value="short">Shorts</option>
+      </select>
+      <select id="trend" aria-label="Channel trend">
+        <option value="">Any channel trend</option>
+        <option value="growing">Growing channels</option>
+        <option value="stable">Stable channels</option>
+        <option value="declining">Declining channels</option>
+      </select>
+      <select id="sort" aria-label="Sort by">
+        <option value="saved">Recently saved</option>
+        <option value="mult">Outlier score</option>
+        <option value="percentile">Channel percentile</option>
+        <option value="views">Views</option>
+        <option value="gained">Views gained since saved</option>
+        <option value="published">Newest videos</option>
+      </select>
+    </div>
+
+    <main id="grid"></main>
+    <p id="empty" class="muted" hidden>
+      Nothing saved yet. On YouTube, click <b>Save idea</b> in a video's panel or the star next to a video in a channel analysis.
+    </p>
+
+    <dialog id="dlg">
+      <header>
+        <h2 id="dlg-title"></h2>
+        <button id="dlg-close" class="icon" aria-label="Close">✕</button>
+      </header>
+      <div id="dlg-body" class="md"></div>
+      <footer>
+        <span id="dlg-meta" class="muted small"></span>
+        <button id="dlg-copy">Copy</button>
+        <button id="dlg-download">Download .md</button>
+        <button id="dlg-project" class="primary" hidden>Save as project</button>
+      </footer>
+    </dialog>
+
+    <script type="module" src="page.js"></script>
+  </body>
+</html>
