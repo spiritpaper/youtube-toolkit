@@ -1,0 +1,33 @@
+body { padding: 32px 16px 64px; }
+main { max-width: 640px; margin: 0 auto; }
+h1 { font-size: 24px; margin: 0 0 20px; }
+h2 { font-size: 16px; margin: 0 0 6px; display: flex; align-items: center; gap: 8px; }
+section { border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 18px; display: grid; gap: 14px; }
+section > p { margin: 0; }
+.badge { font-size: 11px; font-weight: 500; color: var(--fg-2); background: var(--bg-2); border-radius: 999px; padding: 1px 8px; }
+.muted { color: var(--fg-2); }
+.small { font-size: 12px; }
+.field { display: grid; gap: 6px; }
+.field > span { font-weight: 500; display: flex; justify-content: space-between; align-items: baseline; }
+.field > span a { font-weight: 400; font-size: 12px; }
+.field input, .field select, .field textarea { width: 100%; }
+textarea { resize: vertical; }
+.inline { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.inline input { flex: 1; min-width: 0; }
+.msg { margin: -6px 0 0; min-height: 1em; font-size: 12px; }
+.msg.err { color: var(--danger); }
+.msg.ok { color: var(--ok); }
+.toggle { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+.toggle input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--fg); }
+main { max-width: 720px; }
+.usage { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.usage th, .usage td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.usage th:not(:first-child), .usage td:not(:first-child) { text-align: right; }
+.usage thead th { color: var(--fg-2); font-weight: 500; font-size: 12px; }
+.usage td .muted { font-size: 11px; }
+.clean-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; }
+.clean-grid select { flex: 1; min-width: 0; }
+.grow { flex: 1; }
+.button-like { cursor: pointer; border: 1px solid var(--border); background: var(--bg-2); border-radius: 18px; padding: 7px 14px; font-weight: 500; }
+.button-like:hover { background: var(--bg-3); }
+button.danger { color: var(--danger); }

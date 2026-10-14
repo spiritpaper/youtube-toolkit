@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Settings · YT Toolkit</title>
+    <link rel="icon" href="../../icons/icon32.png" />
+    <link rel="stylesheet" href="../lib/base.css" />
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Settings</h1>
+
+      <section>
+        <h2>AI assistant <span class="badge">optional</span></h2>
+        <p class="muted">
+          Use your own key from any provider to get breakdowns of why an outlier worked and fresh video ideas from
+          your saved outliers. Keys are stored only in this browser and sent only to the provider you choose.
+        </p>
+
+        <label class="field">
+          <span>Provider</span>
+          <select id="provider"></select>
+        </label>
+
+        <label class="field">
+          <span>API key <a id="key-link" target="_blank" rel="noopener">Get a key</a></span>
+          <div class="inline">
+            <input id="key" type="password" autocomplete="off" spellcheck="false" />
+            <button id="connect" class="primary">Connect</button>
+          </div>
+        </label>
+        <p id="ai-msg" class="msg" role="status"></p>
+
+        <label class="field">
+          <span>Model</span>
+          <input id="model" list="models" placeholder="Connect to load models" spellcheck="false" />
+          <datalist id="models"></datalist>
+        </label>
+
+        <label class="field">
+          <span>Describe your channel <small class="muted">(makes ideas fit you)</small></span>
+          <textarea
+            id="niche"
+            rows="3"
+            placeholder="e.g. Budget travel vlogs for Gen Z, 12K subs, I film solo with a phone and edit fast-paced 10-minute videos."
+          ></textarea>
+        </label>
+
+        <div class="inline">
+          <button id="disconnect">Remove key</button>
+        </div>
+      </section>
+
+      <section>
+        <h2>Tracking saved ideas</h2>
+        <label class="toggle">
+          <input type="checkbox" id="trackDaily" />
+          Refresh the stats of saved ideas once a day, building a history you can export
+        </label>
+        <p class="muted small">
+          Costs about 1 YouTube API unit per 50 ideas, plus about 5 per channel whose data isn't already cached.
+        </p>
+        <div class="inline">
+          <button id="refresh">Refresh now</button>
+          <span id="refresh-msg" class="muted small"></span>
+        </div>
+      </section>
+
+      <section>
+        <h2>Storage &amp; data</h2>
+        <p class="muted">Everything is stored only in this browser. Delete what you no longer need, or back it up as a file.</p>
+        <table class="usage">
+          <thead><tr><th>Data</th><th>Items</th><th>Size</th></tr></thead>
+          <tbody id="usage"></tbody>
+          <tfoot><tr><th>Total</th><th></th><th id="usage-total"></th></tr></tfoot>
+        </table>
+
+        <div class="clean-grid">
+          <label class="field">
+            <span>Rabbit holes</span>
+            <div class="inline">
+              <select id="holes-days">
+                <option value="30">not touched in 30 days</option>
+                <option value="90">not touched in 90 days</option>
+                <option value="180">not touched in 180 days</option>
+                <option value="0">all of them</option>
+              </select>
+              <button data-clean="holes">Delete</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>Tracking history</span>
+            <div class="inline">
+              <select id="history-days">
+                <option value="30">older than 30 days</option>
+                <option value="90">older than 90 days</option>
+                <option value="365">older than a year</option>
+              </select>
+              <button data-clean="history-older">Trim</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>Saved ideas</span>
+            <div class="inline">
+              <select id="ideas-which">
+                <option value="ideas-unavailable">deleted or private videos</option>
+                <option value="ideas-older:90">saved over 90 days ago</option>
+                <option value="ideas-older:365">saved over a year ago</option>
+              </select>
+              <button data-clean="ideas">Delete</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>Transcripts &amp; heatmaps</span>
+            <div class="inline">
+              <select id="extras-which">
+                <option value="orphans">not linked to a saved idea</option>
+                <option value="transcripts-all">all transcripts</option>
+                <option value="heatmaps-all">all heatmaps</option>
+              </select>
+              <button data-clean="extras">Delete</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>AI results &amp; video webs</span>
+            <div class="inline">
+              <select id="ai-which">
+                <option value="ai-runs">generated idea lists</option>
+                <option value="ai-breakdowns">breakdowns on saved ideas</option>
+                <option value="webs-all">all video webs</option>
+                <option value="comments-all">all comment research</option>
+              </select>
+              <button data-clean="ai">Delete</button>
+            </div>
+          </label>
+          <label class="field">
+            <span>Temporary API cache</span>
+            <div class="inline">
+              <span class="muted small grow">Refetched when needed (uses quota)</span>
+              <button data-clean="cache">Clear</button>
+            </div>
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Automatic cleanup</span>
+          <select id="holeRetentionDays">
+            <option value="0">Keep rabbit holes forever</option>
+            <option value="30">Delete rabbit holes not touched in 30 days</option>
+            <option value="90">Delete rabbit holes not touched in 90 days</option>
+            <option value="180">Delete rabbit holes not touched in 180 days</option>
+            <option value="365">Delete rabbit holes not touched in a year</option>
+          </select>
+        </label>
+
+        <div class="inline">
+          <button id="backup">Download backup</button>
+          <label class="button-like">Restore backup<input id="restore" type="file" accept="application/json,.json" hidden /></label>
+          <span class="grow"></span>
+          <button id="wipe" class="danger">Delete everything</button>
+        </div>
+        <p id="data-msg" class="msg" role="status"></p>
+        <p class="muted small">Backups include ideas, history, transcripts, heatmaps, rabbit holes and AI results, but not your API keys.</p>
+      </section>
+      <p id="support-row" class="muted small" hidden>Enjoying YT Toolkit? <a id="support" target="_blank" rel="noopener"></a></p>
+    </main>
+    <script type="module" src="options.js"></script>
+  </body>
+</html>

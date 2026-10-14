@@ -1,0 +1,634 @@
+// Bring-your-own-key AI providers. Called from extension pages (not the
+// service worker, which may be suspended during a long generation).
+
+export const PROVIDERS = {
+  gemini: {
+    label: 'Google Gemini',
+    keyUrl: 'https://aistudio.google.com/apikey',
+    keyHint: 'AIza…',
+    origins: ['https://generativelanguage.googleapis.com/*'],
+    // "-latest" aliases always point at Google's current model.
+    suggested: ['gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.7-flash', 'gemini-3.6-flash', 'gemini-2.5-flash'],
+  },
+  openai: {
+    label: 'OpenAI',
+    keyUrl: 'https://platform.openai.com/api-keys',
+    keyHint: 'sk-…',
+    origins: ['https://api.openai.com/*'],
+    suggested: ['gpt-5.4-mini', 'gpt-5.4'],
+  },
+  anthropic: {
+    label: 'Anthropic Claude',
+    keyUrl: 'https://platform.claude.com/settings/keys',
+    keyHint: 'sk-ant-…',
+    origins: ['https://api.anthropic.com/*'],
+    suggested: ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'],
+  },
+  openrouter: {
+    label: 'OpenRouter (hundreds of models)',
+    keyUrl: 'https://openrouter.ai/keys',
+    keyHint: 'sk-or-…',
+    origins: ['https://openrouter.ai/*'],
+    suggested: ['google/gemini-flash-latest', 'google/gemini-3.6-flash', 'openai/gpt-5.4-mini', 'anthropic/claude-sonnet-5.5'],
+  },
+};
+
+export class AiError extends Error {}
+
+export async function getAiSettings() {
+  const { ai = {} } = await chrome.storage.local.get('ai');
+  return { provider: 'gemini', keys: {}, models: {}, niche: '', ...ai };
+}
+
+// Settings for the active provider, or null if AI isn't set up.
+export async function activeAi() {
+  const s = await getAiSettings();
+  const key = s.keys[s.provider];
+  const model = s.models[s.provider];
+  if (!key || !model) return null;
+  const granted = await chrome.permissions.contains({ origins: PROVIDERS[s.provider].origins });
+  return granted ? { provider: s.provider, key, model, niche: s.niche } : null;
+}
+
+async function request(url, init, provider, { retry = true } = {}) {
+  let res;
+  try {
+    res = await fetch(url, init);
+  } catch {
+    // One automatic retry for network blips.
+    if (retry) return new Promise((r) => setTimeout(r, 1500)).then(() => request(url, init, provider, { retry: false }));
+    throw new AiError(`Couldn't reach ${PROVIDERS[provider].label}. Check your connection.`);
+  }
+  // Overloaded or temporarily unavailable (common on busy models): retry once.
+  if (retry && (res.status >= 500 || res.status === 429 && /overload|unavailable/i.test(res.statusText))) {
+    await new Promise((r) => setTimeout(r, 2500));
+    return request(url, init, provider, { retry: false });
+  }
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const msg = body.error?.message ?? body.message ?? `HTTP ${res.status}`;
+    if (res.status === 401 || res.status === 403) throw new AiError(`${PROVIDERS[provider].label} rejected the key: ${msg}`);
+    if (res.status === 429) throw new AiError(`${PROVIDERS[provider].label} rate limit or credit limit reached: ${msg}`);
+    throw new AiError(`${PROVIDERS[provider].label}: ${msg}`);
+  }
+  return body;
+}
+
+const ANTHROPIC_HEADERS = (key) => ({
+  'x-api-key': key,
+  'anthropic-version': '2023-06-01',
+  'anthropic-dangerous-direct-browser-access': 'true',
+  'content-type': 'application/json',
+});
+
+// Models whose refusals can be retried server-side on another model.
+const ANTHROPIC_FALLBACK = /^claude-(opus-5|sonnet-5-5|fable-5-1)/;
+
+/** Returns [{ id, label }] for the provider, newest-looking first where possible. */
+export async function listModels(provider, key) {
+  if (provider === 'gemini') {
+    const body = await request(
+      'https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000',
+      { headers: { 'x-goog-api-key': key } },
+      provider,
+    );
+    return (body.models ?? [])
+      .filter((m) => m.supportedGenerationMethods?.includes('generateContent'))
+      .map((m) => ({ id: m.name.replace(/^models\//, ''), label: m.displayName }))
+      .filter(
+        (m) =>
+          /^gemini|^gemma/i.test(m.id) &&
+          !/embed|tts|image|audio|live|transcribe|robotics|computer-use|omni|nano-banana|deep-research|customtools/i.test(m.id),
+      );
+  }
+  if (provider === 'openai') {
+    const body = await request('https://api.openai.com/v1/models', { headers: { authorization: `Bearer ${key}` } }, provider);
+    return (body.data ?? [])
+      .filter((m) => /^(gpt|o\d|chatgpt)/.test(m.id) && !/audio|realtime|tts|transcribe|image|search|embedding/.test(m.id))
+      .sort((a, b) => (b.created ?? 0) - (a.created ?? 0))
+      .map((m) => ({ id: m.id, label: m.id }));
+  }
+  if (provider === 'anthropic') {
+    const body = await request('https://api.anthropic.com/v1/models?limit=100', { headers: ANTHROPIC_HEADERS(key) }, provider);
+    return (body.data ?? []).map((m) => ({ id: m.id, label: m.display_name ?? m.id }));
+  }
+  if (provider === 'openrouter') {
+    // The model list is public, so also validate the key against a keyed endpoint.
+    await request('https://openrouter.ai/api/v1/key', { headers: { authorization: `Bearer ${key}` } }, provider);
+    const body = await request('https://openrouter.ai/api/v1/models', {}, provider);
+    return (body.data ?? []).map((m) => ({ id: m.id, label: m.name ?? m.id }));
+  }
+  throw new AiError(`Unknown provider: ${provider}`);
+}
+
+export function pickDefaultModel(provider, models) {
+  const ids = new Set(models.map((m) => m.id));
+  return PROVIDERS[provider].suggested.find((id) => ids.has(id)) ?? models[0]?.id ?? '';
+}
+
+/**
+ * One-shot text generation. Images are optional: `image` ({ mime, data }
+ * base64) or `images` (several, in order). Returns the model's text (Markdown).
+ */
+export async function generate({ provider, key, model, system, prompt, image, images = [] }) {
+  const pics = [...(image ? [image] : []), ...images].filter(Boolean);
+  if (provider === 'gemini') {
+    const parts = pics.map((img) => ({ inline_data: { mime_type: img.mime, data: img.data } }));
+    parts.push({ text: prompt });
+    const body = await request(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+      {
+        method: 'POST',
+        headers: { 'x-goog-api-key': key, 'content-type': 'application/json' },
+        body: JSON.stringify({ system_instruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts }] }),
+      },
+      provider,
+    );
+    const cand = body.candidates?.[0];
+    const text = cand?.content?.parts?.map((p) => p.text ?? '').join('') ?? '';
+    if (!text) {
+      throw new AiError(`Gemini returned no text (${body.promptFeedback?.blockReason ?? cand?.finishReason ?? 'unknown reason'}).`);
+    }
+    return text;
+  }
+
+  if (provider === 'openai' || provider === 'openrouter') {
+    const content = [{ type: 'text', text: prompt }, ...pics.map((img) => ({ type: 'image_url', image_url: { url: `data:${img.mime};base64,${img.data}` } }))];
+    const url =
+      provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
+    const headers = { authorization: `Bearer ${key}`, 'content-type': 'application/json' };
+    if (provider === 'openrouter') headers['X-Title'] = 'YT Toolkit';
+    const body = await request(
+      url,
+      {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: 'system', content: system },
+            { role: 'user', content },
+          ],
+        }),
+      },
+      provider,
+    );
+    const text = body.choices?.[0]?.message?.content;
+    if (!text) throw new AiError('The model returned no text.');
+    return text;
+  }
+
+  if (provider === 'anthropic') {
+    const content = pics.map((img) => ({ type: 'image', source: { type: 'base64', media_type: img.mime, data: img.data } }));
+    content.push({ type: 'text', text: prompt });
+    const headers = ANTHROPIC_HEADERS(key);
+    const payload = { model, max_tokens: 16000, system, messages: [{ role: 'user', content }] };
+    if (ANTHROPIC_FALLBACK.test(model)) {
+      headers['anthropic-beta'] = 'server-side-fallback-2026-07-01';
+      payload.fallbacks = 'default';
+    }
+    const body = await request(
+      'https://api.anthropic.com/v1/messages',
+      { method: 'POST', headers, body: JSON.stringify(payload) },
+      provider,
+    );
+    if (body.stop_reason === 'refusal') {
+      throw new AiError(`Claude declined this request${body.stop_details?.explanation ? `: ${body.stop_details.explanation}` : '.'}`);
+    }
+    const text = (body.content ?? []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+    if (!text) throw new AiError('Claude returned no text.');
+    return text;
+  }
+
+  throw new AiError(`Unknown provider: ${provider}`);
+}
+
+// ---------- Prompts ----------
+
+const SYSTEM = `You are a sharp YouTube content strategist. You study outlier videos (videos that got far more views than their channel normally gets) and turn them into repeatable, specific video ideas. Be concrete and practical; avoid generic advice like "make good content". Use Markdown with short headings and bullet points.`;
+
+const pct = (x, d = 1) => (x == null ? 'n/a' : `${(x * 100).toFixed(d)}%`);
+const n = (x) => (x == null ? 'n/a' : Math.round(x).toLocaleString('en-US'));
+const x2 = (x) => (x == null ? 'n/a' : `${x.toFixed(1)}x`);
+
+function nicheLine(niche) {
+  return niche?.trim()
+    ? `About my channel: ${niche.trim()}`
+    : `I haven't described my channel, so suggest ideas that would work for a small creator in a similar niche.`;
+}
+
+// Roughly the first `words` words of a transcript, with timestamps every few lines.
+function transcriptExcerpt(segments, words = 1500) {
+  const out = [];
+  let count = 0;
+  for (const [i, seg] of segments.entries()) {
+    if (count >= words) break;
+    const t = Math.round(seg.start);
+    out.push(i % 5 === 0 ? `[${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}] ${seg.text}` : seg.text);
+    count += seg.text.split(/\s+/).length;
+  }
+  return out.join(' ');
+}
+
+export function breakdownPrompt(idea, niche, { transcript = null, peaks = null } = {}) {
+  const s = idea.stats ?? {};
+  const mmss = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
+  const extra = [
+    peaks?.length ? `Most replayed moments (YouTube's replay heatmap): ${peaks.map((p) => mmss(p.start)).join(', ')}` : '',
+    transcript?.length ? `Transcript (beginning):\n${transcriptExcerpt(transcript)}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n\n');
+  return {
+    system: SYSTEM,
+    prompt: `Analyze this outlier video. The image attached (if any) is its thumbnail.
+
+Title: ${idea.title}
+Channel: ${idea.channelTitle} (${n(s.subs)} subscribers, channel trend: ${s.trend ?? 'unknown'})
+Format: ${idea.format === 'short' ? 'YouTube Short' : 'long-form video'}${idea.durationSec ? `, ${Math.round(idea.durationSec / 60)} min` : ''}
+Published: ${idea.publishedAt?.slice(0, 10)}
+Views: ${n(idea.views)} — ${x2(s.multiplier ?? idea.multiplier)} the channel's median (${n(s.baselineMedian ?? idea.baselineMedian)}), ${x2(s.vsAverage)} its average
+Percentile among the channel's recent videos: ${s.percentile == null ? 'n/a' : Math.round(s.percentile)}
+Like rate: ${pct(s.likeRate, 2)} (channel typical: ${pct(s.channelLikeRate, 2)})
+${idea.notes ? `My notes: ${idea.notes}` : ''}
+${extra ? `\n${extra}\n` : ''}
+${nicheLine(niche)}
+
+Give me:
+1. **Why it outperformed**: the specific title, thumbnail, topic and timing factors. Reference what you see in the thumbnail.${transcript?.length ? '\n2. **The hook**: how the first 30 seconds of the transcript keep viewers watching, and what happens at the most replayed moments.' : ''}
+${transcript?.length ? '3' : '2'}. **The repeatable pattern**: a fill-in-the-blank formula for the title and the concept.
+${transcript?.length ? '4' : '3'}. **5 title ideas** adapting this pattern to my channel.
+${transcript?.length ? '5' : '4'}. **1 thumbnail concept** for the best of those titles.
+Keep it under ${transcript?.length ? 550 : 400} words.`,
+  };
+}
+
+export function ideasPrompt(ideas, niche) {
+  const rows = ideas
+    .slice(0, 40)
+    .map((i) => {
+      const s = i.stats ?? {};
+      const extra = [i.tags?.length ? `tags: ${i.tags.join(', ')}` : '', i.notes ? `notes: ${i.notes}` : '']
+        .filter(Boolean)
+        .join('; ');
+      return `- "${i.title}" by ${i.channelTitle} — ${x2(s.multiplier ?? i.multiplier)} median, ${n(i.views)} views, ${i.format === 'short' ? 'Short' : 'long-form'}${extra ? ` (${extra})` : ''}`;
+    })
+    .join('\n');
+  return {
+    system: SYSTEM,
+    prompt: `Here are outlier videos I saved as inspiration:
+
+${rows}
+
+${nicheLine(niche)}
+
+1. **Patterns**: name the 3–5 strongest patterns across these outliers (topics, title structures, emotional hooks, formats), citing which videos show each one.
+2. **10 video ideas** for my channel built on those patterns. For each: a ready-to-use title, a one-line hook for the first 15 seconds, the format (Short or long-form), and which outlier(s) it's based on.
+3. **Best bet**: which single idea to make first, and why.`,
+  };
+}
+
+// Fetches a video's thumbnail as base64 for multimodal models.
+export async function thumbnailImage(videoId) {
+  try {
+    const res = await fetch(`https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`);
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    const data = await new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(String(r.result).split(',')[1]);
+      r.onerror = reject;
+      r.readAsDataURL(blob);
+    });
+    return { mime: blob.type || 'image/jpeg', data };
+  } catch {
+    return null;
+  }
+}
+
+// Suggests where to dig next in a keyword rabbit hole.
+export function anglesPrompt(path, outliers, niche) {
+  const list = outliers
+    .slice(0, 25)
+    .map((v) => `- "${v.title}" (${x2(v.multiplier)} its channel's median, ${n(v.views)} views)`)
+    .join('\n');
+  return {
+    system: SYSTEM,
+    prompt: `I'm researching YouTube video ideas by drilling down through search keywords.
+Keyword path so far: ${path.join(' → ')}
+
+Outlier videos for "${path.at(-1)}":
+${list || '(no strong outliers found)'}
+
+${nicheLine(niche)}
+
+Suggest 8 YouTube search keywords to explore next: more specific sub-niches, adjacent topics, or angles these outliers hint at that might be under-served.
+Reply with exactly 8 lines, each a search phrase of 2–6 words. No numbering, quotes or commentary.`,
+  };
+}
+
+export function parseLines(text, max = 8) {
+  return text
+    .split('\n')
+    .map((l) => l.replace(/^[\s\-*\d.)"]+|["\s]+$/g, '').trim())
+    .filter((l) => l && l.split(/\s+/).length <= 8)
+    .slice(0, max);
+}
+
+// Content gaps: competitor outliers vs your own recent titles.
+export function gapsPrompt(outliers, myTitles, niche) {
+  const theirs = outliers
+    .slice(0, 40)
+    .map((v) => `- "${v.title}" (${v.channelTitle}, ${x2(v.multiplier)} its channel's median)`)
+    .join('\n');
+  const mine = myTitles.slice(0, 50).map((t) => `- ${t}`).join('\n');
+  return {
+    system: SYSTEM,
+    prompt: `Recent outlier videos from channels I compete with:
+${theirs}
+
+My recent video titles:
+${mine || '(not available)'}
+
+${nicheLine(niche)}
+
+Find my content gaps: topics, angles or formats that are clearly working for my competitors but that I haven't covered.
+For each of 6 gaps give:
+- **Gap**: the topic or angle in a few words
+- **Evidence**: which competitor outliers show it works
+- **Why it works**: the viewer desire behind it
+- **2 titles** I could use, written for my channel
+Finish with **Start here**: the single gap I should make first, and why.`,
+  };
+}
+
+// Title lab: rank drafts and suggest stronger variants modelled on proven outliers.
+export function titlesPrompt(drafts, proven, niche, { keyword = '', thumbnailText = '' } = {}) {
+  const list = drafts.map((t, i) => `${i + 1}. ${t}`).join('\n');
+  const examples = proven
+    .slice(0, 30)
+    .map((v) => `- "${v.title}" (${x2(v.multiplier)} its channel's median)`)
+    .join('\n');
+  return {
+    system: SYSTEM,
+    prompt: `I'm choosing a title for my next video.
+${keyword ? `Target search keyword: ${keyword}\n` : ''}${thumbnailText ? `Text on the thumbnail: "${thumbnailText}" (the title should complement it, not repeat it)\n` : ''}
+My draft titles:
+${list}
+
+Proven outlier titles in my space, for reference:
+${examples || '(none saved yet)'}
+
+${nicheLine(niche)}
+
+1. **Ranking**: rank my drafts from strongest to weakest, with one line on why for each (curiosity, clarity, stakes, length on mobile).
+2. **Better versions**: write 6 new titles that keep my video's promise but borrow what makes the proven outliers work. Keep each under 60 characters.
+3. **Pick**: the one title you'd publish, and the thumbnail text that would pair with it.`,
+  };
+}
+
+const mmss = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
+
+// Timestamped transcript, trimmed to roughly `maxWords` words.
+export function timestampedTranscript(segments, maxWords = 9000) {
+  const out = [];
+  let count = 0;
+  for (const s of segments) {
+    count += s.text.split(/\s+/).length;
+    if (count > maxWords) {
+      out.push('[transcript trimmed]');
+      break;
+    }
+    out.push(`[${mmss(s.start)}] ${s.text}`);
+  }
+  return out.join('\n');
+}
+
+/** Deep script analysis: hook, structure, attention tactics, keywords, payoff. */
+export function scriptPrompt(idea, segments, analysis, niche) {
+  const s = idea.stats ?? {};
+  const peaks = analysis?.replayed?.map((r) => mmss(r.start)).join(', ');
+  const drops = analysis?.dropOffs?.map((d) => mmss(d.start)).join(', ');
+  return {
+    system: `${SYSTEM} You are also an expert scriptwriter and story editor who studies how YouTube videos grab and hold attention.`,
+    prompt: `Break down the script of this ${idea.format === 'short' ? 'YouTube Short' : 'YouTube video'}.
+
+Title: ${idea.title}
+Channel: ${idea.channelTitle}
+Performance: ${n(idea.views)} views, ${x2(s.multiplier ?? idea.multiplier)} the channel's median
+${peaks ? `Most replayed moments (YouTube heatmap): ${peaks}` : ''}
+${drops ? `Biggest audience drop-offs (creator's retention data): ${drops}` : ''}
+
+Transcript:
+${timestampedTranscript(segments)}
+
+${nicheLine(niche)}
+
+Use timestamps and short quotes as evidence throughout.
+1. **The hook (first 30 seconds)**: exactly how it grabs attention: the promise, the curiosity gap, stakes, pacing. What makes viewers stay past 30 seconds?
+2. **Story structure**: the beats/acts with timestamps (setup, escalation, turns, climax, payoff). Name the structure if it follows a known one.
+3. **Attention tactics**: open loops, re-hooks, pattern interrupts, questions, cliffhangers before slow parts. List each with timestamp and quote.
+4. **Language & keywords**: recurring words and phrases, how they reinforce the title, help search, and set expectations; the tone and sentence rhythm.
+5. **Promise and payoff**: what the title/thumbnail promise and where (and whether) the script delivers it.
+${peaks || drops ? '6. **Why viewers replayed / left**: explain what is said at the most replayed moments and at any drop-offs.\n7' : '6'}. **Steal this structure**: a reusable beat sheet with rough timings as a % of runtime.`,
+  };
+}
+
+/** Beat-sheet outline for my own video, modelled on an analyzed outlier script. */
+export function outlinePrompt(idea, analysisText, segments, topic, niche) {
+  return {
+    system: `${SYSTEM} You are also an expert scriptwriter.`,
+    prompt: `Write a script outline for my next video, modelled on the structure and attention tactics of this outlier.
+
+Outlier: "${idea.title}" (${x2(idea.stats?.multiplier ?? idea.multiplier)} its channel's median)
+${analysisText ? `Analysis of the outlier's script:\n${analysisText.slice(0, 6000)}` : `Its transcript:\n${timestampedTranscript(segments, 3000)}`}
+
+My video's topic: ${topic}
+${nicheLine(niche)}
+
+Give me:
+1. **3 title options** and the thumbnail text for the best one.
+2. **The hook**: a word-for-word first 30 seconds.
+3. **Beat sheet**: each beat with its purpose, rough timing (% of runtime) and the open loop or re-hook that carries viewers into the next beat.
+4. **Lines to re-hook** at the points where viewers usually drift (around 25%, 50% and 75%).
+5. **The payoff and ending** that keeps people watching the next video.`,
+  };
+}
+
+/** Ideas from a video web: what YouTube connects, and where the openings are. */
+export function webPrompt(web, insights, niche) {
+  const t = (n) => `"${n.title}" (${n.channelTitle}, ${x2(n.multiplier)} its channel's median)`;
+  const seed = web.nodes[web.seed];
+  return {
+    system: SYSTEM,
+    prompt: `I mapped YouTube's "suggested next" links around this video: ${t(seed)}.
+${insights.size} videos, ${insights.edges} suggestion links.
+
+Hubs (videos YouTube suggests from many others in this web):
+${insights.hubs.map((h) => `- ${t(h)}, suggested from ${h.inDegree} videos`).join('\n') || '- none'}
+
+Strongest outliers in the web:
+${insights.outliers.map((o) => `- ${t(o)}`).join('\n') || '- none'}
+
+Topic clusters: ${insights.clusters.map((c) => `[${c.label.join(', ')}] ${c.ids.length} videos, ${c.outliers} outliers`).join('; ') || 'none'}
+Words over-represented in outliers: ${insights.outlierWords.map((w) => w.word).join(', ') || 'none'}
+
+${nicheLine(niche)}
+
+1. **What YouTube thinks this audience wants**: read the hubs and clusters. What is the viewer journey?
+2. **Where the openings are**: topics or angles the web suggests that small channels can win.
+3. **6 video ideas** that would slot into this web (so YouTube suggests them next to these videos), each with a title and why it fits.
+4. **Packaging notes**: what titles and thumbnails in this web have in common.`,
+  };
+}
+
+/** Outline for one of my projects, using its linked outliers as models. */
+export function projectOutlinePrompt(project, inspiration, niche) {
+  const models = inspiration
+    .slice(0, 5)
+    .map((i) => `- "${i.title}" (${i.channelTitle}, ${x2(i.stats?.multiplier ?? i.multiplier)} its channel's median)${i.scriptAi ? `\n  Script notes: ${i.scriptAi.slice(0, 1200)}` : ''}`)
+    .join('\n');
+  return {
+    system: `${SYSTEM} You are also an expert scriptwriter.`,
+    prompt: `I'm planning a video.
+Working title: ${project.title}
+${project.angle ? `My angle: ${project.angle}\n` : ''}${project.notes ? `My notes: ${project.notes}\n` : ''}${(project.titles ?? []).length ? `Title ideas so far: ${project.titles.join(' | ')}\n` : ''}
+Outlier videos I'm modelling it on:
+${models || '(none linked)'}
+
+${nicheLine(niche)}
+
+Write the plan:
+1. **3 title options** (under 60 characters) and thumbnail text for the best one.
+2. **The hook**: a word-for-word first 30 seconds.
+3. **Beat sheet**: each beat with its purpose, rough timing (% of runtime) and the open loop or re-hook that carries viewers into the next beat.
+4. **The payoff and ending**.`,
+  };
+}
+
+/** Outlier remix: combine the formats of 2–4 outliers into new concepts. */
+export function remixPrompt(ideas, niche) {
+  const list = ideas
+    .map((i, k) => `${String.fromCharCode(65 + k)}. "${i.title}" (${i.channelTitle}, ${x2(i.stats?.multiplier ?? i.multiplier)} its channel's median)${i.notes ? `. My notes: ${i.notes}` : ''}`)
+    .join('\n');
+  return {
+    system: SYSTEM,
+    prompt: `Remix these outlier videos into new video concepts. They may come from different niches; that's the point.
+
+${list}
+
+${nicheLine(niche)}
+
+For each outlier, first name in one line what makes it work (format, hook, emotional driver, topic).
+Then write **5 remix concepts** that combine elements from at least two of them, adapted to my channel. For each:
+- **Title** (under 60 characters) and thumbnail text
+- **Borrowed from**: which element comes from which video (by letter)
+- **Hook**: the first 15 seconds
+- **Why it should work**
+Finish with **Best bet**: the concept to make first.`,
+  };
+}
+
+/** Audience research: what commenters ask for, struggle with and love. */
+export function audiencePrompt(video, analysis, comments, niche) {
+  const line = (c) => `- (${c.likes} likes) ${c.text.replace(/\s+/g, ' ').slice(0, 280)}`;
+  const top = [...comments].sort((a, b) => b.likes - a.likes).slice(0, 60).map(line).join('\n');
+  return {
+    system: SYSTEM,
+    prompt: `These are the most relevant comments on "${video.title}" (${video.channelTitle}, ${n(video.views)} views).
+
+${top}
+
+Detected so far: ${analysis.questions.length} questions, ${analysis.requests.length} video requests, ${analysis.pains.length} pain points, ${analysis.moments.length} moments mentioned by timestamp.
+
+${nicheLine(niche)}
+
+1. **What viewers want next**: the requests and unanswered questions, grouped, with how strongly they're voiced (likes).
+2. **Pain points**: what frustrated or confused viewers, and what that says about an underserved need.
+3. **What they loved**: moments and elements praised (use timestamps if mentioned).
+4. **6 video ideas** that answer this audience directly, each with a title and the comments it answers.`,
+  };
+}
+
+/** Hook rewriter: 5 new openings, modelled on proven hooks from the library. */
+export function hookPrompt(project, currentHook, libraryHooks, niche) {
+  const examples = libraryHooks
+    .slice(0, 6)
+    .map((x) => `- From "${x.title}" (${x2(x.multiplier)} its channel's median): "${x.text.slice(0, 500)}"`)
+    .join('\n');
+  return {
+    system: `${SYSTEM} You are also an expert scriptwriter who specialises in video openings.`,
+    prompt: `Rewrite the opening (first ~30 seconds) of my video.
+Working title: ${project.title}
+${project.angle ? `Angle: ${project.angle}\n` : ''}
+My current opening:
+"${currentHook || '(not written yet)'}"
+
+Openings of outlier videos I've saved, as models:
+${examples || '(none saved yet)'}
+
+${nicheLine(niche)}
+
+Write **5 new openings**, each 50–90 words, ready to read aloud. Use a different technique for each and label it (for example: curiosity gap, stakes up front, contrarian claim, cold-open story moment, result first). For each, add one line on which model it borrows from and why it should hold viewers past 30 seconds.`,
+  };
+}
+
+/** Re-hook planner: lines that pull viewers back in at the weak checkpoints. */
+export function rehookPrompt(project, script, checkpoints, niche) {
+  const cps = checkpoints
+    .map((c) => `- ${Math.round(c.at * 100)}% (~${Math.floor(c.start / 60)}:${String(Math.round(c.start % 60)).padStart(2, '0')}): "${c.line.slice(0, 200)}" ${c.covered ? '(already has a hook nearby)' : '(no hook nearby)'}`)
+    .join('\n');
+  return {
+    system: `${SYSTEM} You are also an expert scriptwriter.`,
+    prompt: `My video "${project.title}" loses viewers at the usual points. Here is the script:
+
+${script.slice(0, 24000)}
+
+Checkpoints (the line spoken at each point):
+${cps}
+
+${nicheLine(niche)}
+
+For each checkpoint, write **2 re-hook lines** (an open loop, a twist, a question or raised stakes) that fit naturally right before that line, in my script's voice. Quote the sentence they go before. Then list any other spot in the script where the energy drops and suggest one fix.`,
+  };
+}
+
+/** Shot list for filming, from the outline and script. */
+export function shotListPrompt(project) {
+  return {
+    system: `${SYSTEM} You are also an experienced video producer and editor.`,
+    prompt: `Turn this video plan into a shot list for a solo creator.
+Title: ${project.title}
+${project.angle ? `Angle: ${project.angle}\n` : ''}
+Outline:
+${(project.outline || '(none)').slice(0, 8000)}
+
+Script:
+${(project.script || '(none yet)').slice(0, 16000)}
+
+Return a Markdown table with columns: # | Beat | Shot type (A-roll talking, B-roll, screen recording, insert/close-up, drone…) | What to film | On-screen text | Location / props.
+Group shots by beat in order. After the table add:
+- **Filming checklist** (gear, locations, permissions, batteries…)
+- **B-roll to grab anywhere** (generic shots that cover cuts)
+- **Retention notes for the edit**: where to add pattern interrupts, captions or music changes.`,
+  };
+}
+
+/** Thumbnail critique: my thumbnail (first image) vs outlier thumbnails. */
+export function thumbnailPrompt(project, title, outliers, niche) {
+  const list = outliers.map((o, i) => `Image ${i + 2}: "${o.title}" (${x2(o.multiplier)} its channel's median)`).join('\n');
+  return {
+    system: `${SYSTEM} You are also an expert YouTube thumbnail designer.`,
+    prompt: `Image 1 is MY thumbnail for a video titled "${title}".
+${list ? `The other images are thumbnails of outlier videos in my space:\n${list}\n` : ''}
+${nicheLine(niche)}
+
+Critique my thumbnail as it would appear in a phone feed (small and fast-scrolling):
+1. **First impression in 1 second**: what the eye sees first; is the idea instantly clear?
+2. **Readability at small size**: text (ideally 0–4 words), contrast, clutter, faces and emotion.
+3. **Curiosity and promise**: does it create a question the title answers, without repeating the title?
+4. **Compared with the outliers**: what they do that mine doesn't (composition, color, text, emotion).
+5. **3 specific fixes** I can make in my editor, and **3 alternative thumbnail concepts** (describe the composition and text).
+Score it 1–10 for click appeal and say what would make it a 9.`,
+  };
+}
