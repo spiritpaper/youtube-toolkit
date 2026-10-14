@@ -1,0 +1,50 @@
+# Getting started
+
+About 10 minutes. You only need step 1 and 2 to use most features.
+
+## 1. Install the extension
+
+1. Download or clone this folder to your computer. Keep it somewhere permanent: Chrome gives an unpacked extension an ID based on its folder, and moving the folder later gives it a new ID with empty storage. (Use **Settings → Storage & data → Download backup** before moving it.)
+2. In Chrome, open `chrome://extensions`.
+3. Turn on **Developer mode** (top right).
+4. Click **Load unpacked** and choose the `yt-toolkit` folder.
+5. Pin the extension: click the puzzle icon in the toolbar and pin **YT Toolkit**.
+
+Works in Chrome, Edge and Brave.
+
+## 2. Add a YouTube Data API key (free)
+
+The extension reads public YouTube data (views, subscribers, uploads) through Google's official API. Each user brings their own free key, which allows 10,000 "units" a day: plenty for normal use.
+
+1. Open the [Google Cloud console](https://console.cloud.google.com/) and create a project (any name).
+2. Open the [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) page and click **Enable**.
+3. Go to [Credentials](https://console.cloud.google.com/apis/credentials) → **Create credentials** → **API key**. Copy the key.
+4. Optional but recommended: click the key, and under **API restrictions** choose **Restrict key → YouTube Data API v3**.
+5. Click the YT Toolkit icon in the toolbar, paste the key and click **Save**. The extension checks it with one request.
+6. Reload any open YouTube tabs.
+
+You'll now see outlier badges on YouTube thumbnails and a performance panel next to videos.
+
+## 3. Optional: connect an AI provider
+
+AI writes breakdowns, outlines, hooks and ideas. Everything else works without it.
+
+1. Open **Settings** (sidebar, or the popup's Settings link).
+2. Choose a provider: Google Gemini (has a free tier), OpenAI, Anthropic Claude, or OpenRouter.
+3. Paste your key and click **Connect**. Chrome asks permission to contact that provider.
+4. Describe your channel in one or two sentences ("Budget travel vlogs for Gen Z, 12K subs, solo creator filming on a phone"). AI uses this to tailor ideas to you.
+
+See the [AI assistant guide](guides/ai-assistant.md).
+
+## 4. Optional: sign in with Google for your own analytics
+
+To see your own retention curves, watch time and click-through rate, and to compare yourself with other channels, follow the [My channel guide](guides/my-channel.md). It takes about 5 minutes in the same Google Cloud project.
+
+## Where to go next
+
+Open the **Home** page (popup → **Open YT Toolkit**). Its checklist walks you through the first steps:
+
+1. **Follow** a few channels you want to learn from ([guide](guides/channels.md)).
+2. **Dig into a keyword** in the explorer ([guide](guides/keyword-explorer.md)).
+3. **Save outliers** you like with ☆ ([guide](guides/finding-outliers.md)).
+4. **Start a project** on the Idea board from a saved outlier ([guide](guides/idea-board.md)).
