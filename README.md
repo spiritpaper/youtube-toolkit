@@ -42,7 +42,7 @@ Home, Following, the Idea board and the project pages read saved data only.
 
 ## Quick start
 
-1. In Chrome, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick this folder.
+1. Download the latest zip from [Releases](https://github.com/spiritpaper/youtube-toolkit/releases) and unzip it into a folder (or clone this repository). In Chrome, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick that folder.
 2. Get a free [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) key (**Credentials → Create credentials → API key**), click the YT Toolkit icon and paste it.
 3. Reload YouTube. Then open **Home** from the popup and follow its checklist.
 
@@ -66,7 +66,7 @@ No build step and no dependencies: plain ES modules loaded straight from `src/`.
 npm test      # 76 tests: math, the background against a fake YouTube API, AI providers, storage, UI helpers
 ```
 
-After editing, click the extension's reload icon in `chrome://extensions`, then reload YouTube tabs. See [Architecture](docs/development/architecture.md).
+After editing, click the extension's reload icon in `chrome://extensions`, then reload YouTube tabs. See [Architecture](docs/development/architecture.md) and [Releasing](docs/development/releasing.md) (push a `vX.Y.Z` tag and GitHub Actions publishes the release zip). Changes are listed in the [changelog](CHANGELOG.md).
 
 ## Support
 

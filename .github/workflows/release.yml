@@ -1,0 +1,43 @@
+name: Release
+
+# Push a tag like v0.7.0 to publish a GitHub Release with the extension zip.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tag matches manifest, package.json and changelog
+        run: node scripts/check-version.mjs "$GITHUB_REF_NAME"
+      - name: Tests
+        run: npm test
+      - name: Build the extension zip
+        id: zip
+        run: echo "path=$(sh scripts/package.sh "$GITHUB_REF_NAME")" >> "$GITHUB_OUTPUT"
+      - name: Release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { on = 1; next }
+            on && /^## \[/ { exit }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          printf '\n---\n**Install:** download `%s`, unzip it into a folder, then open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and choose that folder. See [Getting started](https://github.com/%s/blob/%s/docs/getting-started.md).\n' \
+            "$(basename "${{ steps.zip.outputs.path }}")" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" "${{ steps.zip.outputs.path }}" \
+            --title "YT Toolkit ${GITHUB_REF_NAME}" \
+            --notes-file notes.md \
+            --verify-tag

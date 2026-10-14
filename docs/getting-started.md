@@ -4,10 +4,10 @@ About 10 minutes. You only need step 1 and 2 to use most features.
 
 ## 1. Install the extension
 
-1. Download or clone this folder to your computer. Keep it somewhere permanent: Chrome gives an unpacked extension an ID based on its folder, and moving the folder later gives it a new ID with empty storage. (Use **Settings → Storage & data → Download backup** before moving it.)
+1. Download the latest `youtube-toolkit-v….zip` from [Releases](https://github.com/spiritpaper/youtube-toolkit/releases) and unzip it into a folder (or clone the repository). Keep that folder somewhere permanent: Chrome gives an unpacked extension an ID based on its folder, and moving the folder later gives it a new ID with empty storage. (Use **Settings → Storage & data → Download backup** before moving it.)
 2. In Chrome, open `chrome://extensions`.
 3. Turn on **Developer mode** (top right).
-4. Click **Load unpacked** and choose the `yt-toolkit` folder.
+4. Click **Load unpacked** and choose that folder (the one containing `manifest.json`).
 5. Pin the extension: click the puzzle icon in the toolbar and pin **YT Toolkit**.
 
 Works in Chrome, Edge and Brave.

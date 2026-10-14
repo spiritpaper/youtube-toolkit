@@ -15,3 +15,6 @@ Thumbs.db
 
 # Local backups exported from the extension may contain personal data
 yt-toolkit-backup-*.json
+
+# Built release zips
+dist/

@@ -1,0 +1,7 @@
+# Left out of release zips (scripts/package.sh uses git archive).
+test/ export-ignore
+scripts/ export-ignore
+.github/ export-ignore
+package.json export-ignore
+.gitignore export-ignore
+.gitattributes export-ignore

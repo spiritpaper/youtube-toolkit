@@ -1,9 +1,17 @@
 {
-  "name": "yt-toolkit",
-  "version": "0.1.0",
+  "name": "youtube-toolkit",
+  "version": "0.6.0",
+  "description": "YT Toolkit: a Chrome extension for YouTube creators. Outliers, keyword research, channel tracking and video planning.",
   "private": true,
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spiritpaper/youtube-toolkit.git"
+  },
+  "homepage": "https://github.com/spiritpaper/youtube-toolkit",
   "scripts": {
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "check-version": "node scripts/check-version.mjs",
+    "package": "sh scripts/package.sh"
   }
 }

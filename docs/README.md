@@ -31,3 +31,4 @@ YT Toolkit is a Chrome extension for YouTube creators. It finds outlier videos (
 
 - **[Architecture](development/architecture.md)**: how the extension is put together, messages, storage keys
 - **[Testing and contributing](development/testing.md)**: running the tests, adding a feature
+- **[Releasing](development/releasing.md)**: versioning, the release workflow and the zip
