@@ -170,3 +170,8 @@ tr.summary td { color: var(--fg-2); font-style: italic; }
 @media (max-width: 980px) { .lab, .tcard { grid-template-columns: 1fr; } .lab form { position: static; } }
 
 body.shell .top .tabs { display: none; }
+.review-history { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 4px 0 8px; }
+.chip-btn { font-size: 12px; padding: 3px 10px; border-radius: 999px; }
+.chip-btn.on { background: var(--bg-3); font-weight: 600; }
+.review-data { margin-top: 12px; }
+.review-data pre { white-space: pre-wrap; font-size: 12px; background: var(--bg-2); padding: 10px; border-radius: 8px; max-height: 420px; overflow: auto; }

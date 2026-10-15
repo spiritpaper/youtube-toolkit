@@ -4,7 +4,8 @@ import { change, median, retentionSummary, formatTime } from '../lib/stats.js';
 import { lineChart } from '../lib/linechart.js';
 import { contentGaps } from '../lib/gaps.js';
 import { titleChecks, similarTitles } from '../lib/titles.js';
-import { activeAi, generate, gapsPrompt, titlesPrompt, PROVIDERS } from '../lib/ai.js';
+import { activeAi, generate, gapsPrompt, titlesPrompt, channelReviewPrompt, PROVIDERS } from '../lib/ai.js';
+import { reviewData } from '../lib/channel-review.js';
 import { markdownToHtml } from '../lib/markdown.js';
 
 const shell = mountShell('mine');
@@ -141,10 +142,116 @@ async function renderMine() {
         yFormat: fmtNum,
       }),
     ),
+    reviewCard(auth, ov, top, pub),
     retentionCard(top, pub),
     topTable(top, pub),
   );
   loadRetention(top, pub);
+}
+
+// ---------- AI channel review ----------
+
+const REVIEW_RETENTION_VIDEOS = 6;
+
+/** Everything the review is built on, from your analytics (no YouTube Data quota beyond cached profiles). */
+async function gatherReview(auth, ov, top, pub, progress) {
+  progress('Reading traffic sources…');
+  const traffic = await send({ type: 'myTraffic', days: state.days }).catch(() => []);
+  // Retention for the most-viewed long-form videos (Shorts curves say little).
+  const ids = top.filter((r) => pub[r.video]?.format !== 'short').slice(0, REVIEW_RETENTION_VIDEOS).map((r) => r.video);
+  const curves = {};
+  for (const [i, id] of ids.entries()) {
+    progress(`Reading retention ${i + 1} of ${ids.length}…`);
+    curves[id] = await send({ type: 'myRetention', id, publishedAt: pub[id]?.publishedAt }).catch(() => null);
+  }
+  const txs = await chrome.storage.local.get(ids.map((id) => `tx:${id}`));
+  const transcripts = Object.fromEntries(ids.filter((id) => txs[`tx:${id}`]).map((id) => [id, txs[`tx:${id}`].segments]));
+  progress('Comparing with the channels you follow…');
+  const rows = await send({ type: 'compare' }).catch(() => []);
+  return reviewData({
+    me: auth.me,
+    days: state.days,
+    ov,
+    top,
+    pub,
+    traffic,
+    curves,
+    transcripts,
+    profile: rows.find((r) => r.mine && !r.error) ?? null,
+    peers: rows.filter((r) => !r.mine),
+  });
+}
+
+function reviewView(r) {
+  return h('div', { class: 'review' },
+    h('div', { class: 'row' },
+      h('span', { class: 'muted small grow' }, `${new Date(r.at).toLocaleString()} · last ${r.days} days · ${PROVIDERS[r.provider]?.label ?? r.provider} · ${r.model}`),
+      h('button', { onclick: (e) => navigator.clipboard.writeText(r.text).then(() => (e.target.textContent = 'Copied')) }, 'Copy')),
+    mdBlock(r.text),
+    r.data && h('details', { class: 'review-data' }, h('summary', {}, 'The data this review was based on'), h('pre', {}, r.data)));
+}
+
+function reviewCard(auth, ov, top, pub) {
+  const box = h('div', {});
+  const history = h('div', { class: 'review-history' });
+  const btn = h('button', { class: 'primary' }, 'Review my channel with AI');
+  let reviews = [];
+
+  const paintHistory = (shownAt) => {
+    history.replaceChildren(
+      ...(reviews.length > 1 || (reviews.length === 1 && shownAt !== reviews[0].at)
+        ? [h('span', { class: 'muted small' }, 'Past reviews:'),
+          ...reviews.map((r) => h('button', {
+            class: `chip-btn${r.at === shownAt ? ' on' : ''}`,
+            title: `${r.stats?.views != null ? `${fmtNum(r.stats.views)} views, ` : ''}${r.stats?.netSubs != null ? `${r.stats.netSubs >= 0 ? '+' : ''}${fmtNum(r.stats.netSubs)} subs` : ''}`,
+            onclick: () => show(r),
+          }, `${new Date(r.at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} · ${r.days}d`))]
+        : []),
+    );
+  };
+  const show = (r) => {
+    box.replaceChildren(reviewView(r));
+    paintHistory(r.at);
+  };
+
+  btn.addEventListener('click', async () => {
+    const ai = await activeAi();
+    if (!ai) {
+      box.replaceChildren(h('p', { class: 'muted' }, 'AI is optional. Connect Gemini, OpenAI, Claude or OpenRouter in ', h('a', { href: '../options/options.html', target: '_blank' }, 'Settings'), ' to use it.'));
+      return;
+    }
+    if (!top.length) {
+      box.replaceChildren(h('p', { class: 'muted' }, `No videos had views in the last ${state.days} days, so there is nothing to review yet. Try a longer period.`));
+      return;
+    }
+    btn.disabled = true;
+    const status = h('div', { class: 'loading' }, 'Gathering your analytics…');
+    box.replaceChildren(status);
+    try {
+      const data = await gatherReview(auth, ov, top, pub, (msg) => (status.textContent = msg));
+      status.textContent = `Asking ${PROVIDERS[ai.provider].label} (${ai.model}) for an honest review. This can take a minute…`;
+      const { system, prompt } = channelReviewPrompt(data.text, ai.niche);
+      const text = await generate({ ...ai, system, prompt });
+      const saved = await send({ type: 'saveChannelReview', review: { text, data: data.text, stats: data.stats, days: state.days, provider: ai.provider, model: ai.model } });
+      reviews = [saved, ...reviews];
+      show(saved);
+    } catch (err) {
+      box.replaceChildren(errorBox(err));
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  send({ type: 'channelReviews' }).then((list) => {
+    reviews = list;
+    if (reviews.length && !box.childElementCount) show(reviews[0]);
+  }).catch(() => {});
+
+  return h('section', { class: 'card', id: 'review' },
+    h('div', { class: 'row' }, h('h3', { class: 'grow', style: 'margin:0' }, 'Honest channel review (AI)'), btn),
+    h('p', { class: 'muted small' }, `Built only on your analytics for the selected period (${state.days} days): totals, every top video, retention with the moments viewers left (and what you said there, if you saved the transcript), traffic sources and the channels you follow. It names each problem, where it is and how to fix it, without softening.`),
+    history,
+    box);
 }
 
 function header(auth) {

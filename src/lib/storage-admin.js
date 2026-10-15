@@ -13,7 +13,7 @@ const CATEGORIES = [
   { id: 'notes', label: 'Your script notes', match: (k) => k.startsWith('sn:') },
   { id: 'heatmaps', label: 'Retention heatmaps', match: (k) => k.startsWith('hm:') },
   { id: 'explore', label: 'Keyword rabbit holes', match: (k) => k === 'explore:index' || k.startsWith(NODE_PREFIX) },
-  { id: 'ai', label: 'AI results', match: (k) => k === 'aiRuns' },
+  { id: 'ai', label: 'AI results', match: (k) => k === 'aiRuns' || k === 'channelReviews' },
   { id: 'watch', label: 'Competitors & radar', match: (k) => k === 'watchlist' || k === 'radar' },
   { id: 'webs', label: 'Video webs', match: (k) => k.startsWith('vw:') },
   { id: 'comments', label: 'Comment research', match: (k) => k.startsWith('cm:') },
@@ -200,6 +200,7 @@ export function summarizeBackup(backup) {
     { label: 'Comment research', count: prefixed(d, 'cm:') },
     { label: 'Thumbnails', count: prefixed(d, 'th:') },
     { label: 'AI results', count: (d.aiRuns ?? []).length },
+    { label: 'AI channel reviews', count: (d.channelReviews ?? []).length },
     { label: 'AI settings (no keys)', count: d.ai ? 1 : 0 },
   ].filter((r) => r.count > 0);
 }
@@ -315,7 +316,10 @@ export async function importAll(backup, mutators = {}) {
 
   for (const [k, v] of Object.entries(rest)) {
     if (SECRET_KEYS.includes(k) || LOCAL_ONLY.includes(k) || k.startsWith('cache:')) continue;
-    if (k === 'aiRuns') {
+    if (k === 'channelReviews') {
+      const have = new Set((current.channelReviews ?? []).map((r) => r.at));
+      toSet.channelReviews = [...(current.channelReviews ?? []), ...v.filter((r) => !have.has(r.at))].sort((a, b) => b.at - a.at).slice(0, 12);
+    } else if (k === 'aiRuns') {
       const seen = new Set((current.aiRuns ?? []).map((r) => `${r.at}:${r.title}`));
       toSet.aiRuns = [...(current.aiRuns ?? []), ...v.filter((r) => !seen.has(`${r.at}:${r.title}`))].sort((a, b) => b.at - a.at).slice(0, 20);
     } else if (!(k in current) || stamp(v) > stamp(current[k])) {

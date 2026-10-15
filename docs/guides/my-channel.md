@@ -33,6 +33,19 @@ Signing in also:
 - adds your real retention, watch time and CTR to a project's **After publishing** section
 - maps your retention drop-offs onto your script in the **Script analyzer**
 
+## Honest channel review (AI)
+
+**Review my channel with AI** (on My channel) writes a review of your channel built only on your own analytics for the selected period (7, 28 or 90 days):
+
+- totals against the previous period, and how daily views moved
+- every top video: views, watch time, % viewed, subscribers gained, outlier score against your own median, and impressions and click-through rate where the API provides them
+- retention of your most-viewed long-form videos: how many viewers are left at 10%, 50% and 90%, the steepest drop and rewatched moments as timestamps, and **what you said at the drop** if you've saved that video's transcript (Transcript → Save transcript in the panel on YouTube)
+- traffic sources, and your channel profile next to the channels you follow
+
+The AI is told not to hold back. You get a verdict, then every problem, worst first, each with **What**, **Where** (video and timestamp, or metric), **Evidence** (the numbers), **Fix** and **Check** (which number should move if the fix works), followed by what's working, three experiments for your next uploads, and what the data can't tell. It may only use the data it was given; general YouTube advice is labeled as a rule of thumb.
+
+Open **The data this review was based on** under a review to see exactly what the AI saw. The last 12 reviews are kept (and backed up), so you can compare them over time from **Past reviews**.
+
 ## Notes
 
 - YouTube Analytics data lags by about 2 days.

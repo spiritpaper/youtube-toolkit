@@ -160,6 +160,14 @@ const webHandlers = {
   },
 };
 
+// Your AI channel reviews, newest first, so you can compare them over time.
+async function saveChannelReview(review) {
+  const { channelReviews = [] } = await chrome.storage.local.get('channelReviews');
+  const saved = { ...review, at: Date.now() };
+  await chrome.storage.local.set({ channelReviews: [saved, ...channelReviews].slice(0, 12) });
+  return saved;
+}
+
 async function saveAiRun(run) {
   const { aiRuns = [] } = await chrome.storage.local.get('aiRuns');
   await chrome.storage.local.set({ aiRuns: [{ ...run, at: Date.now() }, ...aiRuns].slice(0, 20) });
@@ -197,6 +205,13 @@ const handlers = {
   projectUpdate: ({ id, patch }) => updateProject(id, patch),
   projectDelete: ({ id }) => deleteProject(id),
   projectsArchiveOld: () => archivePublished(),
+  saveChannelReview: ({ review }) => saveChannelReview(review),
+  channelReviews: async () => (await chrome.storage.local.get('channelReviews')).channelReviews ?? [],
+  deleteChannelReview: async ({ at }) => {
+    const { channelReviews = [] } = await chrome.storage.local.get('channelReviews');
+    await chrome.storage.local.set({ channelReviews: channelReviews.filter((r) => r.at !== at) });
+    return true;
+  },
   notesGet: ({ id }) => getNotes(id),
   notesList: () => listNoted(),
   notesAdd: ({ id, note }) => addNote(id, note),

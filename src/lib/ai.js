@@ -632,3 +632,50 @@ Critique my thumbnail as it would appear in a phone feed (small and fast-scrolli
 Score it 1–10 for click appeal and say what would make it a 9.`,
   };
 }
+
+/**
+ * An unsparing review of your own channel, built only on your analytics
+ * (`data` is the sheet from channel-review.js).
+ */
+export function channelReviewPrompt(data, niche) {
+  const system = `You are a blunt, senior YouTube strategist reviewing a creator's own channel from their real YouTube Analytics. The creator explicitly asked you not to hold back: name every real problem plainly, worst first, the way a paid consultant who wants them to grow would. No flattery, no softening, no filler encouragement, no generic advice ("be consistent", "make great content").
+
+Rules:
+- Use ONLY the data provided. Every problem must cite the specific numbers that show it, and say WHERE it is: the video title, the timestamp in the video, or the metric and period.
+- Every problem needs a concrete fix: what to change, in which video or upload, and how the creator will see in these same numbers whether it worked.
+- When a transcript line is given for a drop, use it: say what in that line likely made viewers leave and rewrite it.
+- Compare videos with each other and with the channel's own medians; compare with the followed channels only where it is like-for-like.
+- If something can't be judged from this data (for example click-through rate when it isn't provided), say so in one line instead of guessing.
+- General YouTube knowledge can explain a fix, but label it as a rule of thumb; never present outside benchmarks or thresholds as facts about this channel.
+- Praise only what the numbers prove, briefly.
+Write in Markdown with short headings, bullet points and tables where they help.`;
+  const prompt = `${nicheLine(niche)}
+
+Here is my channel's data:
+
+${data}
+
+Review my channel. Structure:
+
+## Verdict
+Three sentences at most: where the channel really stands and the single biggest thing holding it back.
+
+## Problems, worst first
+For each problem (as many as the data shows, usually 4-8):
+### <short name of the problem>
+- **What:** the problem in one sentence.
+- **Where:** the exact video(s), timestamp(s) or metric.
+- **Evidence:** the numbers that prove it.
+- **Fix:** specific steps (rewrite the line, restructure the intro, change the format, length or upload pattern…).
+- **Check:** which number should move, and by roughly how much, if the fix works.
+
+## What is working
+Only what the numbers prove, with the numbers. Keep it short.
+
+## Next 3 uploads
+Three concrete experiments built from the problems above, each with the metric to watch.
+
+## What this data can't tell
+One or two lines on the blind spots.`;
+  return { system, prompt };
+}
