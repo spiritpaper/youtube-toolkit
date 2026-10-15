@@ -48,3 +48,5 @@ Open the **Home** page (popup → **Open YT Toolkit**). Its checklist walks you 
 2. **Dig into a keyword** in the explorer ([guide](guides/keyword-explorer.md)).
 3. **Save outliers** you like with ☆ ([guide](guides/finding-outliers.md)).
 4. **Start a project** on the Idea board from a saved outlier ([guide](guides/idea-board.md)).
+
+**Tip:** press **Ctrl+K** (⌘K on a Mac) or **/** on any YT Toolkit page to search everything you've saved (projects, saved outliers, followed channels, your notes, rabbit holes, video webs) and jump straight to it. Use ↑ ↓ to pick and Enter to open.

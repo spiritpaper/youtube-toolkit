@@ -34,3 +34,8 @@
 .arow .num .k { font-size: 11px; color: var(--fg-2); }
 .arow .num b { font-size: 13px; }
 .arow .acts { display: flex; gap: 6px; align-items: center; margin-left: auto; }
+.btools-row { padding: 4px 24px 0; }
+.btools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.btools input[type='search'] { min-width: 220px; border-radius: 18px; padding: 6px 14px; }
+.btools button[aria-pressed='true'] { background: var(--bg-3); font-weight: 600; }
+.pcard .a.stale { color: var(--warn); }

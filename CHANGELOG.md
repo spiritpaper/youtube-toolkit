@@ -5,10 +5,13 @@ All notable changes to YT Toolkit. Each release's section becomes its GitHub Rel
 ## [Unreleased]
 
 ### Fixed
+- **Phone layout**: the menu button no longer covers page titles.
 - **Saving no longer stops after one failed write**: an error such as following a 16th keyword or editing a just-deleted project used to block every later save to the same data until Chrome restarted the extension.
 - **AI answers render properly**: tables, nested lists, code blocks, quotes, links, strikethrough and numbered lists that continue after a paragraph now display as formatted text instead of raw Markdown, with the same styling on every page.
 
 ### Added
+- **Quick search** (Ctrl+K or / on any page) across projects, saved outliers, followed channels, your notes, rabbit holes, video webs and pages, opening each result in place.
+- **Idea board filter and sorting**: filter cards by text, sort columns five ways (remembered), and a **Needs attention** view of cards untouched for two weeks.
 - **Shorts from a long video** in the Script analyzer: candidate 25–58 second clips around the most replayed moments and the script's twists, and an AI plan for 3–5 Shorts (clip times, first-second hook, cuts, captions, loop ending). For other creators' videos it suggests your own take instead of a reupload.
 - **Honest channel review (AI)** on My channel: built only on your analytics (totals, top videos, retention drop-offs with what you said there, traffic sources, followed channels), it lists every problem worst first with what, where, evidence, fix and the number to check. Reviews are saved with the data they used.
 - **Your own notes on any video**: timestamped notes in the Script lab (with "+ note" on every transcript line) and an **Add note at 3:42** button in the panel on YouTube that uses the player's current time. Click a note's time to jump there; notes sync between both places, can be downloaded, and are backed up.

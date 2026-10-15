@@ -11,6 +11,36 @@ let archiveDays = ARCHIVE_DAYS_DEFAULT;
 let archiveQuery = '';
 let archiveSort = 'published';
 const isArchived = (p) => !!p.archivedAt;
+const STALE_DAYS = 14;
+const SORTS = {
+  updated: { label: 'Recently updated', key: (p) => -(p.updatedAt ?? 0) },
+  stale: { label: 'Untouched longest', key: (p) => p.updatedAt ?? 0 },
+  newest: { label: 'Newest ideas', key: (p) => -(p.createdAt ?? 0) },
+  oldest: { label: 'Oldest ideas', key: (p) => p.createdAt ?? 0 },
+  title: { label: 'Title A–Z', key: (p) => p.title.toLowerCase() },
+};
+const remembered = (() => {
+  try {
+    return JSON.parse(localStorage.getItem('boardView') ?? '{}');
+  } catch {
+    return {};
+  }
+})();
+let boardQuery = '';
+let boardSort = SORTS[remembered.sort] ? remembered.sort : 'updated';
+let onlyStale = false;
+const remember = () => {
+  try {
+    localStorage.setItem('boardView', JSON.stringify({ sort: boardSort }));
+  } catch {}
+};
+const isStale = (p) => p.status !== 'published' && Date.now() - (p.updatedAt ?? 0) > STALE_DAYS * 86_400_000;
+const matches = (p, q) => !q || `${p.title} ${p.angle ?? ''} ${p.notes ?? ''} ${(p.titles ?? []).join(' ')}`.toLowerCase().includes(q);
+const bySort = (a, b) => {
+  const ka = SORTS[boardSort].key(a);
+  const kb = SORTS[boardSort].key(b);
+  return typeof ka === 'string' ? ka.localeCompare(kb) : ka - kb;
+};
 
 const open = (id) => (location.href = `../project/project.html?id=${id}`);
 
@@ -28,7 +58,7 @@ function card(p) {
       'aria-label': 'Move to',
       onchange: (e) => move(p.id, e.target.value),
     }, STATUSES.map((s) => h('option', { value: s.id, selected: s.id === p.status }, s.label))),
-    h('div', { class: 'a' }, `updated ${ageText(p.updatedAt)}`),
+    h('div', { class: `a${isStale(p) ? ' stale' : ''}`, title: isStale(p) ? `Not touched in ${STALE_DAYS}+ days` : '' }, `updated ${ageText(p.updatedAt)}`),
   );
   el.addEventListener('dragstart', (e) => {
     e.dataTransfer.setData('text/plain', p.id);
@@ -42,15 +72,49 @@ async function move(id, status) {
   await send({ type: 'projectUpdate', id, patch: { status } });
 }
 
+function boardTools() {
+  const search = h('input', { type: 'search', placeholder: 'Filter cards…', value: boardQuery, 'aria-label': 'Filter cards by title, angle or notes' });
+  search.addEventListener('input', () => {
+    boardQuery = search.value;
+    renderBoard();
+  });
+  const sort = h('select', { 'aria-label': 'Sort cards in each column', onchange: (e) => { boardSort = e.target.value; remember(); renderBoard(); } },
+    Object.entries(SORTS).map(([id, s]) => h('option', { value: id, selected: id === boardSort }, s.label)));
+  const staleCount = Object.values(projects).filter((p) => !isArchived(p) && isStale(p)).length;
+  const stale = h('button', {
+    type: 'button',
+    'aria-pressed': String(onlyStale),
+    title: `Cards not touched in ${STALE_DAYS}+ days (published ones aside)`,
+    onclick: () => { onlyStale = !onlyStale; renderBoard(); },
+  }, `Needs attention${staleCount ? ` (${staleCount})` : ''}`);
+  return h('div', { class: 'btools' }, search, sort, stale);
+}
+
 function renderBoard() {
   board.className = 'board';
+  const tools = document.getElementById('btools');
+  // Keep the filter box (and its cursor) when only the columns change.
+  if (!tools.firstChild || tools.dataset.stale !== String(onlyStale) || tools.dataset.count !== String(Object.keys(projects).length)) {
+    const had = document.activeElement?.closest?.('#btools input[type=search]');
+    tools.replaceChildren(boardTools());
+    tools.dataset.stale = String(onlyStale);
+    tools.dataset.count = String(Object.keys(projects).length);
+    if (had) {
+      const i = tools.querySelector('input[type=search]');
+      i.focus();
+      i.setSelectionRange(i.value.length, i.value.length);
+    }
+  }
   board.replaceChildren(
     ...STATUSES.map((s) => {
-      const list = Object.values(projects).filter((p) => p.status === s.id && !isArchived(p)).sort((a, b) => b.updatedAt - a.updatedAt);
+      const q = boardQuery.trim().toLowerCase();
+      const all = Object.values(projects).filter((p) => p.status === s.id && !isArchived(p));
+      const list = all.filter((p) => matches(p, q) && (!onlyStale || isStale(p))).sort(bySort);
+      const hidden = all.length - list.length;
       const col = h('section', { class: 'col', 'aria-label': s.label },
-        h('h2', {}, h('span', {}, s.label), h('span', {}, list.length)),
+        h('h2', {}, h('span', {}, s.label), h('span', { title: hidden ? `${hidden} hidden by the filter` : '' }, hidden ? `${list.length} of ${all.length}` : list.length)),
         ...list.map(card),
-        list.length === 0 && h('div', { class: 'hint' }, s.id === 'idea' ? 'Add an idea above, or click "Start project" on a saved outlier, content gap or AI outline.' : 'Drag cards here'),
+        list.length === 0 && h('div', { class: 'hint' }, hidden ? 'Nothing here matches the filter.' : s.id === 'idea' ? 'Add an idea above, or click "Start project" on a saved outlier, content gap or AI outline.' : 'Drag cards here'),
         s.id === 'published' && h('div', { class: 'hint small' }, archiveDays > 0 ? `Videos move to the Archive ${archiveDays} days after they go live.` : 'Automatic archiving is off.', ' ', h('a', { href: '../options/options.html#board' }, 'Change')));
       col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('over'); });
       col.addEventListener('dragleave', () => col.classList.remove('over'));
@@ -124,6 +188,8 @@ function render() {
       h('button', { type: 'button', 'aria-pressed': String(view === id), onclick: () => { view = id; history.replaceState(null, '', id === 'archive' ? '#archive' : '#'); render(); } }, label)),
   );
   document.getElementById('new').hidden = view === 'archive';
+  const tools = document.getElementById('btools');
+  tools.hidden = view === 'archive';
   if (view === 'archive') renderArchive();
   else renderBoard();
 }

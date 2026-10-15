@@ -6,6 +6,12 @@ Saved outliers are other people's videos. The **Idea board** holds *your* videos
 
 Drag cards between columns (or use the dropdown on each card). Click a card to open its **project workspace**.
 
+Above the columns:
+
+- **Filter cards**: type to narrow every column to cards whose title, angle, notes or title candidates match. Column counts show "2 of 5" while a filter is on.
+- **Sort** each column by recently updated, untouched longest, newest or oldest idea, or title. Your choice is remembered.
+- **Needs attention** shows only cards you haven't touched in 14 days or more (published ones aside); their "updated" line turns orange on the board.
+
 ## Start a project
 
 - On the board, type an idea and click **Add**.
