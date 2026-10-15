@@ -2,6 +2,7 @@
 // doing (Discover · Channels · Create · You). Pages call mountShell() first.
 
 import { SUPPORT_URL, SUPPORT_LABEL } from './support.js';
+import { buildIndex, search, KINDS } from './search.js';
 
 const ICONS = {
   home: '<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
@@ -46,6 +47,152 @@ export const NAV = [
 ];
 
 const root = () => chrome.runtime.getURL('src/');
+
+// ---------- quick search (Ctrl+K) ----------
+
+async function loadSearchData() {
+  const keys = chrome.storage.local.getKeys ? await chrome.storage.local.getKeys() : Object.keys(await chrome.storage.local.get(null));
+  const wanted = keys.filter((k) => ['ideas', 'projects', 'watchlist', 'explore:index'].includes(k) || k.startsWith('sn:') || k.startsWith('vw:'));
+  const data = await chrome.storage.local.get(wanted);
+  data.analyzed = new Set(keys.filter((k) => k.startsWith('tx:')).map((k) => k.slice(3)));
+  data.pages = NAV.filter((n) => n.id).map((n) => ({ label: n.label, href: n.href }));
+  return buildIndex(data);
+}
+
+let searchUi = null;
+function openSearch() {
+  if (!searchUi) searchUi = createSearch();
+  searchUi.open();
+}
+
+function createSearch() {
+  const dlg = document.createElement('dialog');
+  dlg.className = 'qs';
+  dlg.setAttribute('aria-label', 'Quick search');
+  dlg.innerHTML = `<div class="qs-box">${icon('search')}<input type="search" placeholder="Search projects, saved videos, channels, notes, rabbit holes…" aria-label="Search" aria-controls="qs-list" aria-autocomplete="list" autocomplete="off" spellcheck="false" /><kbd>Esc</kbd></div><div class="qs-list" id="qs-list" role="listbox"></div><div class="qs-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>Enter</kbd> open</span><span><kbd>Ctrl</kbd><kbd>K</kbd> anywhere</span></div>`;
+  document.body.append(dlg);
+  const input = dlg.querySelector('input');
+  const list = dlg.querySelector('.qs-list');
+  let items = [];
+  let results = [];
+  let pos = 0;
+
+  const go = (r) => {
+    if (!r) return;
+    dlg.close();
+    if (/^https?:/.test(r.href)) window.open(r.href, '_blank', 'noopener');
+    else location.href = root() + r.href;
+  };
+  const paint = () => {
+    list.replaceChildren();
+    const q = input.value.trim();
+    if (!q) {
+      const hint = document.createElement('p');
+      hint.className = 'qs-empty';
+      hint.textContent = items.length > 0 ? `Type to search ${items.filter((i) => i.kind !== 'page').length.toLocaleString()} saved items and every page.` : 'Loading…';
+      list.append(hint);
+      return;
+    }
+    if (!results.length) {
+      const none = document.createElement('p');
+      none.className = 'qs-empty';
+      none.textContent = `Nothing matches "${q}".`;
+      list.append(none);
+      return;
+    }
+    let lastKind = null;
+    results.forEach((r, i) => {
+      if (r.kind !== lastKind) {
+        const g = document.createElement('div');
+        g.className = 'qs-group';
+        g.textContent = KINDS[r.kind];
+        list.append(g);
+        lastKind = r.kind;
+      }
+      const a = document.createElement('a');
+      a.className = `qs-item${i === pos ? ' on' : ''}`;
+      a.id = `qs-${i}`;
+      a.setAttribute('role', 'option');
+      a.setAttribute('aria-selected', String(i === pos));
+      a.href = /^https?:/.test(r.href) ? r.href : root() + r.href;
+      const t = document.createElement('span');
+      t.className = 'qs-t';
+      t.textContent = r.title;
+      const sub = document.createElement('span');
+      sub.className = 'qs-sub';
+      sub.textContent = r.sub ?? '';
+      a.append(t, sub);
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        go(r);
+      });
+      a.addEventListener('mousemove', () => {
+        if (pos !== i) {
+          pos = i;
+          mark();
+        }
+      });
+      list.append(a);
+    });
+    input.setAttribute('aria-activedescendant', `qs-${pos}`);
+  };
+  const mark = () => {
+    for (const el of list.querySelectorAll('.qs-item')) {
+      const on = el.id === `qs-${pos}`;
+      el.classList.toggle('on', on);
+      el.setAttribute('aria-selected', String(on));
+      if (on) el.scrollIntoView({ block: 'nearest' });
+    }
+    input.setAttribute('aria-activedescendant', `qs-${pos}`);
+  };
+  const run = () => {
+    // Group by kind in a fixed order, keeping the best match of each kind first.
+    const order = Object.keys(KINDS);
+    results = search(items, input.value).sort((a, b) => order.indexOf(a.kind) - order.indexOf(b.kind) || b.score - a.score);
+    // Lead with the kind of the single best hit.
+    const best = search(items, input.value, 1)[0];
+    if (best) results.sort((a, b) => (b.kind === best.kind) - (a.kind === best.kind));
+    pos = 0;
+    paint();
+  };
+  input.addEventListener('input', run);
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!results.length) return;
+      pos = (pos + (e.key === 'ArrowDown' ? 1 : -1) + results.length) % results.length;
+      mark();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      go(results[pos]);
+    } else if (e.key === 'Escape') {
+      e.preventDefault(); // a search box would only clear itself
+      dlg.close();
+    }
+  });
+  dlg.addEventListener('click', (e) => {
+    if (e.target === dlg) dlg.close(); // click on the backdrop
+  });
+  let before = null;
+  dlg.addEventListener('close', () => {
+    input.blur();
+    if (before?.isConnected && before !== document.body) before.focus({ preventScroll: true });
+  });
+  return {
+    async open() {
+      if (dlg.open) return input.select();
+      before = document.activeElement;
+      input.value = '';
+      results = [];
+      paint();
+      dlg.showModal();
+      input.focus();
+      items = await loadSearchData().catch(() => []);
+      if (input.value.trim()) run();
+      else paint();
+    },
+  };
+}
 
 function link(item, active) {
   const a = document.createElement('a');
@@ -97,6 +244,22 @@ export function mountShell(active) {
   img.alt = '';
   brand.append(img, document.createTextNode('YT Toolkit'));
   nav.append(brand);
+
+  const find = document.createElement('button');
+  find.type = 'button';
+  find.className = 'nav-search';
+  find.innerHTML = `${icon('search')}<span>Search</span><kbd>Ctrl K</kbd>`;
+  find.addEventListener('click', openSearch);
+  nav.append(find);
+  document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      openSearch();
+    } else if (e.key === '/' && !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName ?? '') && !document.activeElement?.isContentEditable) {
+      e.preventDefault();
+      openSearch();
+    }
+  });
 
   for (const item of NAV) {
     if (item.section) {

@@ -53,7 +53,7 @@ function visible() {
     if (format && i.format !== format) return false;
     if (trend && i.stats?.trend !== trend) return false;
     if (!q) return true;
-    return [i.title, i.channelTitle, i.notes, ...(i.tags ?? [])].some((s) => s?.toLowerCase().includes(q));
+    return [i.id.toLowerCase(), i.title, i.channelTitle, i.notes, ...(i.tags ?? [])].some((s) => s?.toLowerCase().includes(q));
   });
   const gained = (i) => trackingStats(i.history)?.viewsGained ?? -1;
   const by = {
@@ -494,6 +494,9 @@ async function renderRuns() {
 // ---------- wiring ----------
 
 for (const id of ['q', 'format', 'trend', 'sort']) $(id).addEventListener('input', render);
+// Opened from quick search: ?q=<video id or words>.
+const startQuery = new URLSearchParams(location.search).get('q');
+if (startQuery) $('q').value = startQuery;
 
 chrome.storage.onChanged.addListener(async (changes, area) => {
   if (area !== 'local') return;

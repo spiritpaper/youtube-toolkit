@@ -27,14 +27,14 @@ function growthCharts(ch) {
 
 function card(ch) {
   if (ch.error) {
-    return h('section', { class: 'ch' }, h('div', { class: 'ch-head' }, h('b', {}, ch.title ?? ch.id), h('span', { class: 'error' }, ch.error)));
+    return h('section', { class: 'ch', id: `ch-${ch.id}` }, h('div', { class: 'ch-head' }, h('b', {}, ch.title ?? ch.id), h('span', { class: 'error' }, ch.error)));
   }
   const p = ch.profile;
   const g30 = channelGrowth(ch.history, 30);
   const last = ch.uploads[0];
   return h(
     'section',
-    { class: 'ch' },
+    { class: 'ch', id: `ch-${ch.id}` },
     h(
       'div',
       { class: 'ch-head' },
@@ -109,6 +109,12 @@ async function load() {
   const { radarCheckedAt } = await chrome.storage.local.get('radarCheckedAt');
   $('checked').textContent = radarCheckedAt ? `Updated daily · last ${new Date(radarCheckedAt).toLocaleString()}` : 'Updated daily';
   render();
+  // Opened from quick search: #ch-<channel id>.
+  const target = location.hash && document.getElementById(location.hash.slice(1));
+  if (target) {
+    target.scrollIntoView({ block: 'start' });
+    target.classList.add('flash');
+  }
 }
 
 $('add').addEventListener('submit', async (e) => {
