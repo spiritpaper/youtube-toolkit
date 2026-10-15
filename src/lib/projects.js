@@ -76,7 +76,7 @@ export async function deleteProject(id) {
   return true;
 }
 
-// Internal: lets the background record performance snapshots.
+// Internal: lets the background record performance snapshots and restore backups.
 export function mutateProjects(fn) {
   return mutate(fn);
 }

@@ -41,7 +41,8 @@ function card(ch) {
       p.thumb && h('img', { src: p.thumb, alt: '' }),
       h('div', { class: 'grow' },
         h('a', { class: 'name', href: `https://www.youtube.com/channel/${ch.id}`, target: '_blank' }, p.title),
-        h('div', { class: 'muted small' }, [p.handle, last && `last upload ${ageText(last.publishedAt)}`, `following since ${new Date(ch.addedAt).toLocaleDateString()}`].filter(Boolean).join(' · '))),
+        h('div', { class: 'muted small' }, [p.handle, last && `last upload ${ageText(last.publishedAt)}`, `following since ${new Date(ch.addedAt).toLocaleDateString()}`].filter(Boolean).join(' · ')),
+        ch.staleSince && h('div', { class: 'stale small', title: ch.staleReason ?? '' }, `Showing data from ${ageText(ch.staleSince)}. Couldn't refresh: ${ch.staleReason ?? 'unknown error'}`)),
       h('select', {
         'aria-label': 'Why you follow this channel',
         onchange: (e) => send({ type: 'updateFollow', id: ch.id, patch: { role: e.target.value } }),

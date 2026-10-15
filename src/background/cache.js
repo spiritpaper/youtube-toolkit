@@ -30,6 +30,12 @@ export async function get(key) {
   return (await getMany([key])).get(key);
 }
 
+/** The stored record ({ value, exp }) even if it has expired, or undefined. */
+export async function peek(key) {
+  const { [PREFIX + key]: rec } = await chrome.storage.local.get(PREFIX + key);
+  return rec;
+}
+
 export async function setMany(entries, ttlMs) {
   const exp = Date.now() + ttlMs;
   const toStore = {};

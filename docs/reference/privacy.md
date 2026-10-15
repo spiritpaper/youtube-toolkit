@@ -15,7 +15,7 @@ Everything is stored in your browser's extension storage (`chrome.storage.local`
 
 Google sign-in tokens are kept **only in memory** (`chrome.storage.session`) and expire after an hour. Signing out revokes the token and deletes cached analytics.
 
-Backups you download contain your data but **never** your API keys or sign-in details.
+Backups you download contain your data (including your AI provider choice and channel description) but **never** your API keys or sign-in tokens.
 
 ## What's sent where
 

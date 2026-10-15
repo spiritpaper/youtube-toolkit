@@ -49,3 +49,4 @@ details summary { cursor: pointer; font-size: 13px; color: var(--fg-2); }
 .viz-tip-row { display: flex; gap: 6px; align-items: center; }
 .viz-key { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 @media (max-width: 800px) { .detail { grid-template-columns: 1fr; } .add { margin-left: 0; } }
+.stale { color: var(--warn); margin-top: 2px; }

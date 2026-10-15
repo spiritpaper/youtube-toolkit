@@ -26,12 +26,12 @@ import {
 import { addNode, getNode, listNodes, updateNode, deleteNodes, deleteHolesOlderThan } from '../lib/explore-store.js';
 import { usage, cleanup, exportAll, importAll } from '../lib/storage-admin.js';
 import { signIn, signOut, authStatus } from './auth.js';
-import { listProjects, createProject, updateProject, deleteProject } from '../lib/projects.js';
-import { followKeyword, unfollowKeyword, listKeywords, trendCheck } from './trends.js';
+import { listProjects, createProject, updateProject, deleteProject, mutateProjects } from '../lib/projects.js';
+import { followKeyword, unfollowKeyword, listKeywords, trendCheck, mutateAlerts } from './trends.js';
 import { trackPublished, parseVideoId } from './published.js';
 import { videoTotals } from './analytics.js';
 import { overview, topVideos, retention, trafficSources } from './analytics.js';
-import { watch, unwatch, compare, radarCheck, markRadarRead, clearRadar, updateBadge, parseChannelInput, gapData, following, updateFollow } from './watchlist.js';
+import { watch, unwatch, compare, radarCheck, markRadarRead, clearRadar, updateBadge, parseChannelInput, gapData, following, updateFollow, mutateWatch, mutateRadar } from './watchlist.js';
 
 // holeRetentionDays: rabbit holes untouched for this long are deleted (0 = keep forever).
 const DEFAULT_SETTINGS = { badges: true, watchPanel: true, badgeMin: 0, trackDaily: true, holeRetentionDays: 180 };
@@ -215,7 +215,7 @@ const handlers = {
   storageUsage: () => usage(),
   cleanup: (msg) => cleanup(msg),
   exportData: () => exportAll(),
-  importData: ({ backup }) => importAll(backup),
+  importData: ({ backup }) => importAll(backup, { mutateWatch, mutateRadar, mutateAlerts, mutateProjects }),
   // Your channel (Google sign-in)
   authStatus: () => authStatus(),
   setClientId: async ({ clientId }) => {

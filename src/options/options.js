@@ -1,6 +1,7 @@
 import { mountShell } from '../lib/nav.js';
 import { PROVIDERS, getAiSettings, listModels, pickDefaultModel } from '../lib/ai.js';
 import { SUPPORT_URL, SUPPORT_LABEL } from '../lib/support.js';
+import { summarizeBackup } from '../lib/storage-admin.js';
 
 mountShell('settings');
 
@@ -213,23 +214,87 @@ $('holeRetentionDays').addEventListener('change', (e) =>
   chrome.storage.local.set({ holeRetentionDays: Number(e.target.value) }),
 );
 
+async function showLastBackup() {
+  const { lastBackupAt } = await chrome.storage.local.get('lastBackupAt');
+  const el = $('last-backup');
+  if (!lastBackupAt) {
+    el.textContent = 'No backup downloaded from this browser yet.';
+    el.className = 'small warn-text';
+    return;
+  }
+  const days = Math.floor((Date.now() - lastBackupAt) / 86_400_000);
+  el.textContent = `Last backup: ${days === 0 ? 'today' : days === 1 ? 'yesterday' : `${days} days ago`} (${new Date(lastBackupAt).toLocaleDateString()}).`;
+  el.className = days > 14 ? 'small warn-text' : 'small muted';
+}
+
 $('backup').addEventListener('click', async () => {
   const backup = await send({ type: 'exportData' });
   const url = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' }));
   const a = Object.assign(document.createElement('a'), { href: url, download: `yt-toolkit-backup-${new Date().toISOString().slice(0, 10)}.json` });
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
+  const items = summarizeBackup(backup).reduce((n, r) => n + r.count, 0);
+  dataMessage(`Backup downloaded (${items.toLocaleString()} items).`);
+  showLastBackup();
 });
 
+// Restore: show what the file holds first, then merge on confirmation.
+let pending = null;
+function closePreview() {
+  pending = null;
+  $('restore-preview').hidden = true;
+}
 $('restore').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   e.target.value = '';
   if (!file) return;
   try {
-    const { ideasAdded, nodes } = await send({ type: 'importData', backup: JSON.parse(await file.text()) });
-    dataMessage(`Restored: ${ideasAdded} new ideas, ${nodes} rabbit-hole keywords merged.`);
+    const backup = JSON.parse(await file.text());
+    const rows = summarizeBackup(backup);
+    pending = backup;
+    $('restore-from').textContent = `${file.name}${backup.exportedAt ? ` · made ${new Date(backup.exportedAt).toLocaleString()}` : ''}`;
+    const list = $('restore-list');
+    list.replaceChildren(
+      ...(rows.length
+        ? rows.map((r) => {
+            const li = document.createElement('li');
+            li.append(r.label, ' ');
+            const b = document.createElement('b');
+            b.textContent = r.count.toLocaleString();
+            li.append(b);
+            return li;
+          })
+        : [Object.assign(document.createElement('li'), { textContent: 'This backup is empty.' })]),
+    );
+    $('restore-preview').hidden = false;
+    $('restore-go').focus();
+    dataMessage('');
+  } catch (err) {
+    closePreview();
+    dataMessage(err instanceof SyntaxError ? 'That file is not a YT Toolkit backup (it is not valid JSON).' : err.message, 'err');
+  }
+});
+$('restore-cancel').addEventListener('click', closePreview);
+$('restore-go').addEventListener('click', async () => {
+  if (!pending) return;
+  const btn = $('restore-go');
+  btn.disabled = true;
+  btn.textContent = 'Restoring…';
+  try {
+    const r = await send({ type: 'importData', backup: pending });
+    const parts = [
+      `${r.ideasAdded} new saved outliers`,
+      `${r.projectsAdded} new projects`,
+      `${r.channelsAdded} new followed channels`,
+      `${r.nodes} rabbit-hole keywords merged`,
+    ];
+    dataMessage(`Restored: ${parts.join(', ')}. Everything else was merged, keeping the newer copy.`);
+    closePreview();
   } catch (err) {
     dataMessage(err.message, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Restore and merge';
   }
   showUsage();
 });
@@ -242,6 +307,7 @@ $('wipe').addEventListener('click', async () => {
   showUsage();
 });
 
+showLastBackup();
 const { holeRetentionDays = 180 } = await chrome.storage.local.get('holeRetentionDays');
 $('holeRetentionDays').value = String(holeRetentionDays);
 showUsage();

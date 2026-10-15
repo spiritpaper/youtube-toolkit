@@ -25,6 +25,9 @@ function mutate(fn) {
   return chain;
 }
 
+/** Serialized writer for a backup restore. */
+export const mutateAlerts = (fn) => mutate(fn);
+
 export function listKeywords() {
   return load();
 }

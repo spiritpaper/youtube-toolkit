@@ -97,12 +97,17 @@ test('removing an idea also removes its transcript and heatmap', async () => {
 test('backup excludes keys and cache; restore merges by recency', async () => {
   store.ideas = { a: { id: 'a', title: 'old', updatedAt: 1 } };
   store.apiKey = 'secret';
-  store.ai = { keys: { gemini: 'secret' } };
+  store.ai = { provider: 'gemini', keys: { gemini: 'secret' }, niche: 'coding vlogs' };
+  store.google = { clientId: 'cid', signedIn: true, me: { id: 'UCme' } };
   store['cache:x'] = { value: 1, exp: Date.now() + 1000 };
   store['tx:a'] = { segments: [{ start: 0, text: 'hi' }] };
   const backup = await admin.exportAll();
-  assert.ok(!('apiKey' in backup.data) && !('ai' in backup.data) && !('cache:x' in backup.data));
+  assert.ok(!('apiKey' in backup.data) && !('cache:x' in backup.data));
+  assert.deepEqual(backup.data.ai, { provider: 'gemini', niche: 'coding vlogs' }, 'AI settings without keys');
+  assert.deepEqual(backup.data.google, { clientId: 'cid' }, 'no sign-in state');
+  assert.ok(!JSON.stringify(backup).includes('secret'));
   assert.ok('tx:a' in backup.data);
+  assert.ok(store.lastBackupAt > 0 && !('lastBackupAt' in backup.data));
 
   backup.data.ideas.a = { id: 'a', title: 'new', updatedAt: 5 };
   backup.data.ideas.b = { id: 'b', title: 'b', updatedAt: 1 };
@@ -113,4 +118,56 @@ test('backup excludes keys and cache; restore merges by recency', async () => {
   assert.equal(store.ideas.a.title, 'new');
   assert.equal(store.apiKey, 'secret', 'API keys are never imported');
   await assert.rejects(admin.importAll({ foo: 1 }), /Not a YT Toolkit backup/);
+});
+
+test('backup carries followed channels with their stats; restore merges them', async () => {
+  const day = 86_400_000;
+  const base = (subs) => ({ v: 3, channel: { title: 'Chan', subs }, long: { median: 100 }, recent: { long: [], short: [] } });
+  store.watchlist = { UC1: { id: 'UC1', title: 'Chan', notes: 'study hooks', history: [{ t: 10 * day, subs: 100 }], seen: ['a'], addedAt: 10 * day } };
+  store.radar = [{ id: 'v1', channelId: 'UC1', foundAt: 5 }];
+  store.keywordAlerts = { godot: { keyword: 'godot', seen: ['x'], found: 1 } };
+  store.projects = { p1: { id: 'p1', title: 'mine', updatedAt: 9 } };
+  store['cache:c:UC1'] = { value: base(100), exp: Date.now() + day };
+  store['vw:abc'] = { seed: 'abc', at: 1 };
+  store.aiRuns = [{ at: 1, title: 'run' }];
+  const backup = await admin.exportAll();
+  assert.equal(backup.data.channelData.UC1.value.channel.subs, 100, 'last-known channel stats are included');
+  assert.ok('vw:abc' in backup.data);
+  const labels = Object.fromEntries(admin.summarizeBackup(backup).map((r) => [r.label, r.count]));
+  assert.equal(labels['Followed channels'], 1);
+  assert.equal(labels['Video webs'], 1);
+  assert.equal(labels['Channels with saved stats & uploads'], 1);
+
+  // A different browser: same channel with other history, an extra channel.
+  for (const k of Object.keys(store)) delete store[k];
+  store.watchlist = { UC1: { id: 'UC1', title: 'Chan', notes: '', history: [{ t: 12 * day, subs: 120 }], seen: ['b'], addedAt: 12 * day } };
+  store.radar = [{ id: 'v2', channelId: 'UC1', foundAt: 9 }];
+  store.projects = { p1: { id: 'p1', title: 'mine, newer', updatedAt: 20 } };
+  store.aiRuns = [{ at: 1, title: 'run' }];
+  backup.data.watchlist.UC2 = { id: 'UC2', title: 'Other', history: [], seen: [] };
+  backup.data.projects.p2 = { id: 'p2', title: 'new', updatedAt: 1 };
+  const res = await admin.importAll(backup);
+  assert.equal(res.channelsAdded, 1);
+  assert.equal(res.projectsAdded, 1);
+  const ch = store.watchlist.UC1;
+  assert.deepEqual(ch.history.map((s) => s.subs), [100, 120], 'daily snapshots from both');
+  assert.deepEqual(ch.seen.sort(), ['a', 'b']);
+  assert.equal(ch.notes, 'study hooks', 'empty notes are filled from the backup');
+  assert.equal(ch.addedAt, 10 * day);
+  assert.equal(store.projects.p1.title, 'mine, newer', 'newer project wins');
+  assert.deepEqual(store.radar.map((r) => r.id), ['v2', 'v1']);
+  assert.equal(store.keywordAlerts.godot.found, 1);
+  assert.equal(store['cache:c:UC1'].value.channel.subs, 100, 'channel stats restored into the cache');
+  assert.equal(store.aiRuns.length, 1, 'restoring twice does not duplicate AI results');
+  await admin.importAll(backup);
+  assert.equal(store.watchlist.UC1.history.length, 2);
+  assert.equal(store.radar.length, 2);
+});
+
+test('restored AI settings keep this browser\'s keys and choices', async () => {
+  store.ai = { provider: 'openai', keys: { openai: 'mine' }, models: { openai: 'gpt' }, niche: '' };
+  await admin.importAll({ app: 'yt-toolkit', version: 2, data: { ai: { provider: 'gemini', keys: { gemini: 'evil' }, models: { gemini: 'flash' }, niche: 'coding vlogs' }, google: { clientId: 'cid' } } });
+  assert.deepEqual(store.ai, { provider: 'openai', keys: { openai: 'mine' }, models: { gemini: 'flash', openai: 'gpt' }, niche: 'coding vlogs' });
+  assert.deepEqual(store.google, { clientId: 'cid' });
+  assert.throws(() => admin.summarizeBackup({ app: 'other' }), /Not a YT Toolkit backup/);
 });

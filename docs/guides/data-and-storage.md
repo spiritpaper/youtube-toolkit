@@ -43,8 +43,19 @@ All exports respect the current search and filters.
 
 ## Backup and restore
 
-- **Download backup**: one JSON file with your saved outliers, history, transcripts, heatmaps, rabbit holes, projects, followed channels and AI results. **API keys and sign-in details are never included.**
-- **Restore backup**: merges a backup into your current data. For items in both, the more recently updated copy wins. Nothing is deleted.
+- **Download backup**: one JSON file with everything you'd miss on a new computer:
+  - saved outliers and their tracking history, notes and AI breakdowns
+  - Idea board projects, their uploaded thumbnails and after-publishing numbers
+  - followed channels with their notes, daily growth history and **last-known stats and uploads**, so Following, Compare and Content gaps work right after a restore without spending quota
+  - the radar feed and keyword alerts
+  - rabbit holes, video webs, transcripts, retention heatmaps and comment research
+  - recent AI results and your AI settings (provider, models, channel description)
+  - your Google client ID (you still sign in again)
+
+  **API keys and sign-in tokens are never included.** Settings shows when you last downloaded a backup, in orange after two weeks.
+- **Restore backup**: pick the file and you'll see what it holds before anything changes. **Restore and merge** then merges it into your current data: for items in both, the more recently updated copy wins; followed channels combine their growth history from both; restoring the same file twice doesn't duplicate anything. Nothing is deleted, and your keys and current AI choices are kept.
+
+If a followed channel can't be refreshed (no quota left, invalid key, offline), Following shows its last-known numbers with an orange "Showing data from …" note instead of an error.
 
 Back up before moving the extension folder, reinstalling, or switching computers.
 

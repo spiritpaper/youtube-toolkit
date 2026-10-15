@@ -31,3 +31,8 @@ main { max-width: 720px; }
 .button-like { cursor: pointer; border: 1px solid var(--border); background: var(--bg-2); border-radius: 18px; padding: 7px 14px; font-weight: 500; }
 .button-like:hover { background: var(--bg-3); }
 button.danger { color: var(--danger); }
+.warn-text { color: var(--warn); }
+.restore-preview { border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 10px 0; background: var(--bg-2); }
+.restore-preview ul { columns: 2; column-gap: 24px; margin: 8px 0; padding-left: 18px; font-size: 13px; }
+.restore-preview li { break-inside: avoid; }
+@media (max-width: 600px) { .restore-preview ul { columns: 1; } }

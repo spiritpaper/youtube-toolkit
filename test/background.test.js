@@ -173,6 +173,15 @@ test('invalid key surfaces a friendly keyInvalid error', async () => {
   await assert.rejects(yt.scoreVideos(['neverCached']), (err) => err.reason === 'keyInvalid');
 });
 
+test('a failed refresh falls back to the last channel record when allowed', async () => {
+  const fresh = await yt.getBaseline(B, { fresh: true });
+  store.apiKey = 'bad';
+  await assert.rejects(yt.getBaseline(B, { fresh: true }), (err) => err.reason === 'keyInvalid');
+  const stale = await yt.getBaseline(B, { fresh: true, allowStale: true });
+  assert.equal(stale.long.median, fresh.long.median);
+  assert.ok(stale.staleSince <= Date.now() && /key/i.test(stale.staleReason));
+});
+
 test('quota counter tracks calls', async () => {
   await yt.scoreVideos(['long0000003']);
   const n = calls.length;

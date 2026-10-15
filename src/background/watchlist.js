@@ -48,6 +48,10 @@ function mutate(fn) {
   return chain;
 }
 
+/** Serialized writers for a backup restore. */
+export const mutateWatch = (fn) => mutate(({ watchlist }) => fn(watchlist));
+export const mutateRadar = (fn) => mutate(({ radar }) => fn(radar));
+
 export async function updateBadge(radar) {
   radar ??= (await load()).radar;
   const unread = radar.filter((r) => !r.read).length;
@@ -104,7 +108,7 @@ export async function following() {
   const out = [];
   for (const ch of Object.values(watchlist)) {
     try {
-      const base = await getBaseline(ch.id);
+      const base = await getBaseline(ch.id, { allowStale: true });
       const uploads = ['long', 'short']
         .flatMap((format) =>
           (base.recent?.[format] ?? []).map((v) => ({
@@ -117,7 +121,7 @@ export async function following() {
           })),
         )
         .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
-      out.push({ ...ch, profile: channelProfile(base), uploads: uploads.slice(0, 12) });
+      out.push({ ...ch, profile: channelProfile(base), uploads: uploads.slice(0, 12), staleSince: base.staleSince, staleReason: base.staleReason });
     } catch (err) {
       out.push({ ...ch, error: err.message });
     }
@@ -149,7 +153,8 @@ export async function compare(myId) {
   const rows = [];
   for (const id of ids) {
     try {
-      rows.push({ ...channelProfile(await getBaseline(id)), mine: id === myId });
+      const base = await getBaseline(id, { allowStale: true });
+      rows.push({ ...channelProfile(base), mine: id === myId, staleSince: base.staleSince });
     } catch (err) {
       rows.push({ id, title: watchlist[id]?.title ?? id, error: err.message, mine: id === myId });
     }

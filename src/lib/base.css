@@ -10,6 +10,7 @@
   --accent: #065fd4;
   --danger: #c62828;
   --ok: #2e7d32;
+  --warn: #a15c00;
   --t-low: #c62828; --t-low-bg: #fdecea;
   --t-mid: #606060; --t-mid-bg: #ededed;
   --t-good: #2e7d32; --t-good-bg: #e6f4e7;
@@ -28,6 +29,7 @@
     --accent: #3ea6ff;
     --danger: #ff8a80;
     --ok: #81c784;
+    --warn: #ffb74d;
     --t-low: #ff8a80; --t-low-bg: #4a1f1f;
     --t-mid: #bdbdbd; --t-mid-bg: #333333;
     --t-good: #81c784; --t-good-bg: #1e3a20;

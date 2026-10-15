@@ -203,16 +203,24 @@ function baselineRecord(channel, long, short) {
   };
 }
 
-// ~5 quota units per channel, cached for 12 hours.
-export function getBaseline(channelId, { fresh = false } = {}) {
-  return once(`c:${channelId}:${fresh}`, async () => {
+// ~5 quota units per channel, cached for 12 hours. With `allowStale`, a failed
+// refresh (no quota, offline) falls back to the last record we have, marked
+// with `staleSince` (when it was fetched) and `staleReason`.
+export function getBaseline(channelId, { fresh = false, allowStale = false } = {}) {
+  return once(`c:${channelId}:${fresh}:${allowStale}`, async () => {
     const hit = fresh ? null : await cache.get(`c:${channelId}`);
     if (hit?.v === BASELINE_VERSION) return hit;
-    const channel = await fetchChannel(channelId);
-    const { long, short } = await channelUploads(channel, { long: 50, short: 50 });
-    const record = baselineRecord(channel, long, short);
-    await cache.set(`c:${channelId}`, record, BASELINE_TTL);
-    return record;
+    try {
+      const channel = await fetchChannel(channelId);
+      const { long, short } = await channelUploads(channel, { long: 50, short: 50 });
+      const record = baselineRecord(channel, long, short);
+      await cache.set(`c:${channelId}`, record, BASELINE_TTL);
+      return record;
+    } catch (err) {
+      const old = allowStale ? await cache.peek(`c:${channelId}`) : null;
+      if (old?.value?.v !== BASELINE_VERSION) throw err;
+      return { ...old.value, staleSince: old.exp - BASELINE_TTL, staleReason: err.message };
+    }
   });
 }
 
