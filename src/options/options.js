@@ -140,6 +140,7 @@ async function showUsage() {
   const detail = {
     ideas: `${u.ideas.items} ideas, ${u.ideas.snapshots} snapshots${u.ideas.unavailable ? `, ${u.ideas.unavailable} unavailable` : ''}`,
     transcripts: `${u.transcripts.items}${u.transcripts.orphans ? ` (${u.transcripts.orphans} unlinked)` : ''}`,
+    notes: `${u.notes.items} video${u.notes.items === 1 ? "" : "s"}`,
     heatmaps: `${u.heatmaps.items}${u.heatmaps.orphans ? ` (${u.heatmaps.orphans} unlinked)` : ''}`,
     explore: `${u.explore.holes} holes, ${u.explore.items} keywords`,
     ai: `${u.ai.items} lists, ${u.ideas.withAi} breakdowns`,
@@ -300,7 +301,7 @@ $('restore-go').addEventListener('click', async () => {
 });
 
 $('wipe').addEventListener('click', async () => {
-  if (!confirm('Delete ALL saved ideas, history, transcripts, heatmaps, rabbit holes and AI results? Settings and API keys are kept.')) return;
+  if (!confirm('Delete ALL saved ideas, history, projects, followed channels, transcripts, your script notes, heatmaps, rabbit holes, video webs and AI results? Settings and API keys are kept.')) return;
   if (!confirm('Really delete everything? Consider downloading a backup first.')) return;
   const n = await send({ type: 'cleanup', action: 'everything' });
   dataMessage(`Deleted ${n} items.`);

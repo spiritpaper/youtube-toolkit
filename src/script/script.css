@@ -90,3 +90,24 @@ mark { background: color-mix(in srgb, var(--d-stakes) 30%, transparent); color: 
   .head img { width: 120px; }
   .hookrow { grid-template-columns: 1fr; }
 }
+.note-add { display: grid; grid-template-columns: 80px 1fr auto; gap: 8px; align-items: start; }
+.note-time { width: 80px; font-variant-numeric: tabular-nums; }
+.note-text { width: 100%; resize: vertical; min-height: 38px; font: inherit; }
+.notes { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 2px; }
+.notes li { display: grid; grid-template-columns: 56px 1fr auto; gap: 8px; align-items: start; padding: 6px 4px; border-radius: 8px; }
+.notes li:hover { background: var(--bg-2); }
+.notes li.empty { display: block; }
+.notes .note-body { white-space: pre-wrap; cursor: text; min-width: 0; overflow-wrap: anywhere; }
+.notes .note-edit { grid-column: 1 / -1; display: grid; grid-template-columns: 80px 1fr; gap: 8px; }
+.notes .note-edit .row { grid-column: 2; gap: 6px; }
+.notes button.icon { border: 0; background: none; padding: 2px 6px; color: var(--fg-2); }
+.transcript p { position: relative; }
+.transcript .add-note { margin-left: 6px; padding: 0 8px; font-size: 11px; opacity: 0; }
+.transcript p:hover .add-note, .transcript .add-note:focus-visible { opacity: 1; }
+@media (max-width: 600px) { .note-add { grid-template-columns: 80px 1fr; } .note-add button { grid-column: 1 / -1; } }
+@media (hover: none) { .transcript .add-note { opacity: 1; } }
+.noted { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.noted li { display: flex; gap: 10px; align-items: center; }
+.noted img { width: 96px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; flex: none; }
+.noted .t { font-weight: 600; color: var(--fg); text-decoration: none; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.notes .note-body p { margin: 0; } .notes .note-body { white-space: normal; font-size: 14px; }

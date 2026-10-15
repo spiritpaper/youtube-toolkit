@@ -31,6 +31,7 @@ When you watch a video, a **YT Toolkit** panel appears at the top of the sidebar
   - **Explore topic**: start a keyword rabbit hole from this video ([guide](keyword-explorer.md))
   - **Video web**: map what YouTube suggests around it ([guide](video-web.md))
   - **Comments**: audience questions and requests ([guide](scripts-and-titles.md#audience-questions))
+- **My notes**: **Add note at 3:42** pins a note to the moment the video is at (you can change the time before saving; Ctrl+Enter saves, Esc cancels). Click a note's time to jump the video there. Notes work on any video, saved or not, and also appear in the [Script lab](scripts-and-titles.md#my-notes).
 
 ## Channel analysis
 

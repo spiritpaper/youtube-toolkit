@@ -4,6 +4,7 @@ import { analyzeScript, hookSummary, DEVICES } from '../lib/script.js';
 import { formatTime } from '../lib/stats.js';
 import { activeAi, generate, scriptPrompt, outlinePrompt, PROVIDERS } from '../lib/ai.js';
 import { markdownToHtml } from '../lib/markdown.js';
+import { parseTime, notesMarkdown } from '../lib/notes.js';
 
 mountShell('script');
 
@@ -21,13 +22,108 @@ function mdBlock(text) {
 }
 
 async function load(id) {
-  const [{ ideas = {} }, txData, hmData, google] = await Promise.all([
+  const [{ ideas = {} }, txData, hmData, google, notes] = await Promise.all([
     chrome.storage.local.get('ideas'),
     chrome.storage.local.get(`tx:${id}`),
     chrome.storage.local.get(`hm:${id}`),
     send({ type: 'authStatus' }).catch(() => ({})),
+    send({ type: 'notesGet', id }).catch(() => null),
   ]);
-  return { idea: ideas[id], tx: txData[`tx:${id}`], heatmap: hmData[`hm:${id}`]?.points ?? null, me: google.signedIn ? google.me : null };
+  return { idea: ideas[id], tx: txData[`tx:${id}`], heatmap: hmData[`hm:${id}`]?.points ?? null, me: google.signedIn ? google.me : null, notes };
+}
+
+// ---------- your notes ----------
+
+// Built once per page and reused across re-renders, so a half-written note survives.
+let notesUi = null;
+function notesCard(idea, entry) {
+  if (notesUi) return notesUi;
+  const id = idea.id;
+  let notes = entry?.notes ?? [];
+  const list = h('ol', { class: 'notes' });
+  const count = h('span', { class: 'muted small' });
+  const msg = h('p', { class: 'error small', role: 'status', hidden: true });
+  const time = h('input', { class: 'note-time', placeholder: '0:00', 'aria-label': 'Time in the video', inputmode: 'numeric' });
+  const text = h('textarea', { class: 'note-text', rows: 2, placeholder: 'What you noticed here: a hook trick, a cut, a line to steal… (Ctrl+Enter to add)', 'aria-label': 'Note' });
+  const addBtn = h('button', { class: 'primary' }, 'Add note');
+  const dl = h('button', { onclick: () => download(`notes-${idea.title.slice(0, 50)}.md`, notesMarkdown({ videoId: id, title: idea.title, notes }), 'text/markdown;charset=utf-8') }, 'Download');
+
+  const fail = (err) => {
+    msg.textContent = err.message;
+    msg.hidden = false;
+  };
+  const apply = (e) => {
+    notes = e.notes;
+    msg.hidden = true;
+    paint();
+  };
+  async function add() {
+    try {
+      apply(await send({ type: 'notesAdd', id, note: { t: time.value.trim() || '0', text: text.value, title: idea.title } }));
+      text.value = '';
+      text.focus();
+    } catch (err) {
+      fail(err);
+    }
+  }
+  addBtn.addEventListener('click', add);
+  text.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) add();
+  });
+
+  function row(n) {
+    const li = h('li', {});
+    const view = () =>
+      li.replaceChildren(
+        ts(id, n.t),
+        Object.assign(mdBlock(n.text), { className: 'md note-body', title: 'Click to edit', tabIndex: 0, onclick: (e) => e.target.tagName !== 'A' && edit(), onkeydown: (e) => e.key === 'Enter' && edit() }),
+        h('button', { class: 'icon', title: 'Delete note', 'aria-label': 'Delete note', onclick: async () => { if (confirm('Delete this note?')) send({ type: 'notesDelete', id, noteId: n.id }).then(apply, fail); } }, '✕'),
+      );
+    function edit() {
+      const t2 = h('input', { class: 'note-time', value: formatTime(n.t), 'aria-label': 'Time in the video' });
+      const x2 = h('textarea', { class: 'note-text', rows: 3, value: n.text, 'aria-label': 'Note' });
+      const save = () => send({ type: 'notesUpdate', id, noteId: n.id, patch: { t: t2.value, text: x2.value } }).then(apply, fail);
+      x2.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save();
+        if (e.key === 'Escape') view();
+      });
+      li.replaceChildren(h('div', { class: 'note-edit' }, t2, x2, h('div', { class: 'row' }, h('button', { class: 'primary', onclick: save }, 'Save'), h('button', { onclick: view }, 'Cancel'))));
+      x2.focus();
+    }
+    view();
+    return li;
+  }
+  function paint() {
+    count.textContent = notes.length ? `${notes.length} note${notes.length === 1 ? '' : 's'}` : '';
+    dl.hidden = !notes.length;
+    list.replaceChildren(...(notes.length ? notes.map(row) : [h('li', { class: 'muted small empty' }, 'No notes yet. Add one above, click "+ note" next to a transcript line, or use "Add note" in the YT Toolkit panel while watching on YouTube.')]));
+  }
+  paint();
+
+  // Notes added from the YouTube tab show up here right away.
+  chrome.storage.onChanged.addListener((changes, area) => {
+    const c = changes[`sn:${id}`];
+    if (area === 'local' && c) {
+      notes = c.newValue?.notes ?? [];
+      paint();
+    }
+  });
+
+  const el = h('section', { class: 'card', id: 'notes' },
+    h('div', { class: 'row' }, h('h3', { class: 'grow', style: 'margin:0' }, 'My notes'), count, dl),
+    h('p', { class: 'muted small' }, 'Your own notes on this video, pinned to the moment they are about. Click a time to open the video there.'),
+    h('div', { class: 'note-add' }, time, text, addBtn),
+    msg,
+    list);
+  notesUi = {
+    el,
+    at(sec) {
+      time.value = formatTime(sec);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      text.focus({ preventScroll: true });
+    },
+  };
+  return notesUi;
 }
 
 // ---------- single video ----------
@@ -61,7 +157,7 @@ function timeline(id, a) {
   );
 }
 
-function render({ idea, tx, heatmap, me }, retention) {
+function render({ idea, tx, heatmap, me, notes: noteEntry }, retention) {
   const id = idea.id;
   const a = analyzeScript(tx.segments, { title: idea.title, durationSec: idea.durationSec, heatmap, retention });
   const kpi = (k, v, title) => h('div', { class: 'kpi', title }, h('div', { class: 'k' }, k), h('div', { class: 'v' }, v));
@@ -70,6 +166,7 @@ function render({ idea, tx, heatmap, me }, retention) {
   const topic = h('input', { placeholder: 'Your video topic, e.g. "7 days in Seoul on $100"', class: 'grow', value: tx.outline?.topic ?? '' });
   const runBtn = h('button', { class: 'primary', onclick: () => runScriptAi(idea, tx, a, aiBox, runBtn) }, tx.ai ? 'Re-run AI breakdown' : 'Break down the script with AI');
   const outlineBtn = h('button', { onclick: () => runOutline(idea, tx, topic.value.trim(), outlineBox, outlineBtn) }, 'Outline my version');
+  const myNotes = notesCard(idea, noteEntry);
 
   main.replaceChildren(
     h(
@@ -96,6 +193,7 @@ function render({ idea, tx, heatmap, me }, retention) {
       kpi('Devices / min', (Object.entries(a.perMinute).filter(([k]) => k !== 'proof').reduce((n, [, v]) => n + v, 0)).toFixed(1), 'Open loops, turns, questions, stakes, story beats and CTAs per minute'),
       kpi('"You" / min', a.youPerMinute.toFixed(1), 'How often the script talks to the viewer directly'),
     ),
+    myNotes.el,
     h(
       'section',
       { class: 'card' },
@@ -173,7 +271,8 @@ function render({ idea, tx, heatmap, me }, retention) {
       h('h3', {}, 'Transcript'),
       h('div', { class: 'transcript' }, tx.segments.map((s) => {
         const d = a.devices.find((x) => x.start === s.start);
-        return h('p', {}, ts(id, s.start), d ? h('mark', { title: DEVICES[d.type].label }, s.text) : s.text);
+        return h('p', {}, ts(id, s.start), d ? h('mark', { title: DEVICES[d.type].label }, s.text) : s.text,
+          h('button', { class: 'add-note', title: `Add a note at ${formatTime(s.start)}`, onclick: () => myNotes.at(s.start) }, '+ note'));
       })),
     ),
   );
@@ -243,8 +342,24 @@ function runOutline(idea, tx, topic, box, btn) {
 
 // ---------- hook library ----------
 
+function notedSection(noted, all) {
+  if (!noted.length) return null;
+  return h('section', { class: 'card' },
+    h('h2', {}, 'Videos you took notes on'),
+    h('ul', { class: 'noted' }, noted.map((n) => {
+      const analyzed = all[`tx:${n.videoId}`] && all.ideas?.[n.videoId];
+      return h('li', {},
+        h('img', { src: `https://i.ytimg.com/vi/${n.videoId}/mqdefault.jpg`, alt: '', loading: 'lazy' }),
+        h('div', { class: 'grow' },
+          analyzed
+            ? h('a', { class: 't', href: `script.html?id=${n.videoId}#notes` }, n.title || n.videoId)
+            : h('a', { class: 't', href: `https://www.youtube.com/watch?v=${n.videoId}`, target: '_blank', title: 'Open on YouTube; save its transcript there to analyze it here' }, n.title || n.videoId),
+          h('div', { class: 'muted small' }, `${n.count} note${n.count === 1 ? '' : 's'} · ${analyzed ? 'analyzed' : 'not analyzed yet'}`)));
+    })));
+}
+
 async function renderLibrary() {
-  const all = await chrome.storage.local.get(null);
+  const [all, noted] = await Promise.all([chrome.storage.local.get(null), send({ type: 'notesList' }).catch(() => [])]);
   const ideas = all.ideas ?? {};
   const rows = Object.keys(all)
     .filter((k) => k.startsWith('tx:') && ideas[k.slice(3)])
@@ -253,6 +368,7 @@ async function renderLibrary() {
     .filter((r) => r.hook)
     .sort((a, b) => (b.mult ?? 0) - (a.mult ?? 0));
   main.replaceChildren(
+    notedSection(noted, all) ?? '',
     h('section', { class: 'card' },
       h('div', { class: 'row' }, h('h2', { class: 'grow' }, 'Hook library'),
         rows.length > 0 && h('button', {

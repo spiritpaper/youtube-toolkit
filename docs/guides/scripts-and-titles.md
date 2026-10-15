@@ -29,6 +29,17 @@ Open it with **Analyze script**, or from a saved outlier that has a transcript (
 
 **Break down the script with AI** explains the hook, the story beats (with timestamps), every attention tactic (with quotes), the language and keywords, whether the video delivers on its title, why viewers replayed or left, and a reusable beat sheet. **Outline my version** turns that structure into a hook, beat sheet and re-hook lines for your topic, which you can **Save as a project**.
 
+## My notes
+
+Every analyzed script has a **My notes** card near the top: your own observations, each pinned to a moment in the video.
+
+- Type a time (`3:42`, `1:02:03` or seconds) and the note, then **Add note** (or Ctrl+Enter).
+- **+ note** next to any transcript line (shown on hover) fills in that line's time.
+- Click a note to edit it or change its time; click its time to open the video at that moment. Notes support Markdown (**bold**, lists, links).
+- **Download** saves them as a Markdown list with timestamped links.
+
+Notes added from the [panel on YouTube](finding-outliers.md#the-video-panel) show up here instantly, and vice versa. The Script lab start page lists every video you've taken notes on, including ones you haven't analyzed yet. Notes are included in backups and are only deleted by **Delete everything**.
+
 ## Hook library
 
 **Script lab** (sidebar) opens the hook library: the first 30 seconds of every saved outlier with a transcript, strongest outliers first, with the hook signals each uses. **Export hooks** downloads them as text. The [Hook rewriter](idea-board.md#script-and-script-check) uses this library as its models, so the more transcripts you save, the better it gets.

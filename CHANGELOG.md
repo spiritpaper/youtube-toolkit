@@ -9,6 +9,7 @@ All notable changes to YT Toolkit. Each release's section becomes its GitHub Rel
 - **AI answers render properly**: tables, nested lists, code blocks, quotes, links, strikethrough and numbered lists that continue after a paragraph now display as formatted text instead of raw Markdown, with the same styling on every page.
 
 ### Added
+- **Your own notes on any video**: timestamped notes in the Script lab (with "+ note" on every transcript line) and an **Add note at 3:42** button in the panel on YouTube that uses the player's current time. Click a note's time to jump there; notes sync between both places, can be downloaded, and are backed up.
 - **Archive for published videos**: 30 days after a video goes live it leaves the board for an Archive view with its final numbers (views, outlier score, 48-hour and 7-day results), search and sorting. Archive or restore by hand from the project page or the archive; the delay is set in Settings → Idea board.
 - **Fuller backups**: followed channels now carry their last-known stats and uploads, plus your AI settings (without keys) and Google client ID. Restoring shows what the file holds first, then merges projects, followed channels (combining their growth history), the radar, keyword alerts and AI results item by item instead of skipping what you already have. Settings shows when you last backed up.
 - **Following keeps working without quota**: if a channel can't be refreshed, its last-known numbers are shown with a note instead of an error.

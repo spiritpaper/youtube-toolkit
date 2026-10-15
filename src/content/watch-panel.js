@@ -9,6 +9,7 @@ YTK.watchPanel = (() => {
   let collapsed = false;
   let heat; // undefined = loading, null = none, array = points
   let tx = { status: 'idle' }; // transcript capture state
+  let notesUi = null; // the notes section, kept across re-renders of the panel
 
   const CSS = `
     ${YTK.panelCss}
@@ -44,6 +45,17 @@ YTK.watchPanel = (() => {
     .peak { border: 1px solid var(--border); background: var(--bg-2); border-radius: 12px; padding: 1px 8px; font-variant-numeric: tabular-nums; }
     .peak:hover { background: var(--bg-3); }
     .actions + .actions { margin-top: 8px; }
+    .notes { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .notes ol { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 4px; max-height: 220px; overflow: auto; }
+    .notes li { display: grid; grid-template-columns: auto 1fr auto; gap: 6px; align-items: start; font-size: 12px; }
+    .notes li span { white-space: pre-wrap; overflow-wrap: anywhere; }
+    .notes .x { border: 0; background: none; color: var(--fg-2); cursor: pointer; padding: 0 4px; font-size: 12px; }
+    .note-form { display: grid; gap: 6px; margin-top: 8px; }
+    .note-form .row { display: flex; gap: 6px; align-items: center; }
+    .note-form input { width: 64px; }
+    .note-form input, .note-form textarea { font: inherit; font-size: 12px; color: var(--fg); background: var(--bg-2); border: 1px solid var(--border); border-radius: 6px; padding: 5px 7px; }
+    .note-form textarea { width: 100%; box-sizing: border-box; resize: vertical; min-height: 54px; }
+    .note-err { color: #e53935; font-size: 11px; }
     .btn.small-btn { padding: 6px 10px; font-size: 12px; }
   `;
 
@@ -99,16 +111,105 @@ YTK.watchPanel = (() => {
       ),
       h('div', { class: 'body' }, ...children),
     );
+    // Re-rendering moves the notes section; keep the cursor where it was.
+    const active = root.activeElement;
+    const keep = active && notesUi?.el.contains(active) ? { el: active, start: active.selectionStart, end: active.selectionEnd } : null;
     root.replaceChildren(h('style', {}, CSS), card);
+    if (keep) {
+      keep.el.focus({ preventScroll: true });
+      if (keep.start != null) keep.el.setSelectionRange(keep.start, keep.end);
+    }
   }
 
   const stat = (k, v, title, cls = '') =>
     h('div', { class: 'stat', title }, h('div', { class: 'k' }, k), h('div', { class: `v ${cls}` }, v));
 
+  const player = () => document.querySelector('#movie_player video, video.html5-main-video, #shorts-player video');
   function seek(sec) {
-    const video = document.querySelector('#movie_player video, video.html5-main-video');
+    const video = player();
     if (video) video.currentTime = sec;
   }
+
+  // ---------- your notes ----------
+  // Timestamped notes on this video, shared with the Script lab ("sn:<id>").
+  function notesSection(v) {
+    if (notesUi?.id === v.id) return notesUi.el;
+    let notes = [];
+    let form = null; // { t } while the note form is open
+    const el = h('div', { class: 'notes' });
+    const stop = (e) => e.stopPropagation(); // keep YouTube's k/j/l/f shortcuts out of the text box
+    const paint = (err = '') => {
+      const list = notes.length
+        ? h('ol', {}, notes.map((n) =>
+            h('li', {},
+              h('button', { class: 'peak', title: 'Jump to this moment', onclick: () => seek(n.t) }, YTK.fmtTime(n.t)),
+              h('span', {}, n.text),
+              h('button', { class: 'x', title: 'Delete note', 'aria-label': 'Delete note', onclick: () => confirm('Delete this note?') && YTK.send({ type: 'notesDelete', id: v.id, noteId: n.id }).then(load, (e) => paint(e.message)) }, '✕'))))
+        : null;
+      let body = null;
+      if (form) {
+        const time = h('input', { 'aria-label': 'Time in the video', title: 'Time in the video', onkeydown: stop, onkeyup: stop, onkeypress: stop });
+        time.value = YTK.fmtTime(form.t);
+        const text = h('textarea', { placeholder: 'What you noticed at this moment… (Ctrl+Enter to save)', 'aria-label': 'Note', onkeyup: stop, onkeypress: stop });
+        text.value = form.text ?? '';
+        text.addEventListener('input', () => (form.text = text.value));
+        const save = async () => {
+          try {
+            await YTK.send({ type: 'notesAdd', id: v.id, note: { t: time.value, text: text.value, title: v.title } });
+            form = null;
+            await load();
+          } catch (e) {
+            paint(e.message);
+          }
+        };
+        text.addEventListener('keydown', (e) => {
+          e.stopPropagation();
+          if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) save();
+          if (e.key === 'Escape') {
+            form = null;
+            paint();
+          }
+        });
+        body = h('div', { class: 'note-form' }, text,
+          h('div', { class: 'row' }, 'at', time, h('span', { style: 'flex:1' }), h('button', { class: 'btn small-btn', onclick: () => { form = null; paint(); } }, 'Cancel'), h('button', { class: 'btn small-btn primary', onclick: save }, 'Save')),
+          err && h('div', { class: 'note-err' }, err));
+        queueMicrotask(() => text.isConnected && root.activeElement !== time && text.focus({ preventScroll: true }));
+      } else if (err) {
+        body = h('div', { class: 'note-err' }, err);
+      }
+      el.replaceChildren(
+        h('div', { class: 'section-head' },
+          h('span', {}, `My notes${notes.length ? ` (${notes.length})` : ''}`),
+          h('button', {
+            class: 'btn small-btn',
+            title: 'Pin a note to the current moment of the video',
+            onclick: () => {
+              const t = Math.floor(player()?.currentTime ?? 0);
+              form = { t, text: form?.text ?? '' };
+              paint();
+            },
+          }, `Add note at ${YTK.fmtTime(Math.floor(player()?.currentTime ?? 0))}`)),
+        ...[body, list, !notes.length && !form && h('div', { class: 'muted small' }, 'Notes you add here also show up in the Script lab.')].filter(Boolean));
+    };
+    const load = async () => {
+      const entry = await YTK.send({ type: 'notesGet', id: v.id }).catch(() => null);
+      notes = entry?.notes ?? [];
+      if (notesUi?.id === v.id) paint();
+    };
+    // Keep the button's time roughly current while the video plays.
+    const tick = setInterval(() => {
+      if (!el.isConnected) return clearInterval(tick);
+      const btn = el.querySelector('.section-head .btn');
+      if (btn) btn.textContent = `Add note at ${YTK.fmtTime(Math.floor(player()?.currentTime ?? 0))}`;
+    }, 1000);
+    notesUi = { id: v.id, el, load };
+    paint();
+    load();
+    return el;
+  }
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area === 'local' && notesUi && changes[`sn:${notesUi.id}`]) notesUi.load();
+  });
 
   function heatSection() {
     if (heat === undefined) return null;
@@ -328,6 +429,7 @@ YTK.watchPanel = (() => {
         ),
       ),
       toolRow(v),
+      notesSection(v),
     );
   }
 

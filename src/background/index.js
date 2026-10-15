@@ -25,6 +25,7 @@ import {
 } from '../lib/ideas.js';
 import { addNode, getNode, listNodes, updateNode, deleteNodes, deleteHolesOlderThan } from '../lib/explore-store.js';
 import { usage, cleanup, exportAll, importAll } from '../lib/storage-admin.js';
+import { getNotes, listNoted, addNote, updateNote, deleteNote } from '../lib/notes.js';
 import { signIn, signOut, authStatus } from './auth.js';
 import { listProjects, createProject, updateProject, deleteProject, mutateProjects, archiveOld, ARCHIVE_DAYS_DEFAULT } from '../lib/projects.js';
 import { followKeyword, unfollowKeyword, listKeywords, trendCheck, mutateAlerts } from './trends.js';
@@ -196,6 +197,11 @@ const handlers = {
   projectUpdate: ({ id, patch }) => updateProject(id, patch),
   projectDelete: ({ id }) => deleteProject(id),
   projectsArchiveOld: () => archivePublished(),
+  notesGet: ({ id }) => getNotes(id),
+  notesList: () => listNoted(),
+  notesAdd: ({ id, note }) => addNote(id, note),
+  notesUpdate: ({ id, noteId, patch }) => updateNote(id, noteId, patch),
+  notesDelete: ({ id, noteId }) => deleteNote(id, noteId),
   projectPublish: async ({ id, input }) => {
     const videoId = parseVideoId(input);
     if (!videoId) throw new Error('Paste the link of your published video.');

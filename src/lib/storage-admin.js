@@ -10,6 +10,7 @@ const DAY = 86_400_000;
 const CATEGORIES = [
   { id: 'ideas', label: 'Saved ideas & their history', match: (k) => k === 'ideas' },
   { id: 'transcripts', label: 'Transcripts', match: (k) => k.startsWith('tx:') },
+  { id: 'notes', label: 'Your script notes', match: (k) => k.startsWith('sn:') },
   { id: 'heatmaps', label: 'Retention heatmaps', match: (k) => k.startsWith('hm:') },
   { id: 'explore', label: 'Keyword rabbit holes', match: (k) => k === 'explore:index' || k.startsWith(NODE_PREFIX) },
   { id: 'ai', label: 'AI results', match: (k) => k === 'aiRuns' },
