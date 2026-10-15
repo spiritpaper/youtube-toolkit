@@ -113,7 +113,10 @@ body.shell .top .links, body.shell .top nav.links { display: none; }
   body.nav-open .app-nav { transform: none; }
   .nav-toggle { display: inline-flex; position: fixed; top: 10px; left: 10px; z-index: 60; border-radius: 10px; padding: 7px; background: var(--bg); }
   body.nav-open .nav-scrim { display: block; position: fixed; inset: 0; z-index: 40; background: rgba(0, 0, 0, 0.35); }
-  body.shell .top { padding-left: 60px !important; }
+  body.shell .top, body.shell .page-head { padding-left: 60px !important; }
+  body.shell .page-head { min-height: 56px; }
+  /* Pages without a header bar start below the menu button. */
+  body.shell:not(:has(.page-head, .top)) { padding-top: 52px; }
 }
 
 /* Shared page pieces */
