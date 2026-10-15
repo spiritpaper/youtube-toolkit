@@ -5,9 +5,11 @@ All notable changes to YT Toolkit. Each release's section becomes its GitHub Rel
 ## [Unreleased]
 
 ### Fixed
+- **Saving no longer stops after one failed write**: an error such as following a 16th keyword or editing a just-deleted project used to block every later save to the same data until Chrome restarted the extension.
 - **AI answers render properly**: tables, nested lists, code blocks, quotes, links, strikethrough and numbered lists that continue after a paragraph now display as formatted text instead of raw Markdown, with the same styling on every page.
 
 ### Added
+- **Archive for published videos**: 30 days after a video goes live it leaves the board for an Archive view with its final numbers (views, outlier score, 48-hour and 7-day results), search and sorting. Archive or restore by hand from the project page or the archive; the delay is set in Settings → Idea board.
 - **Fuller backups**: followed channels now carry their last-known stats and uploads, plus your AI settings (without keys) and Google client ID. Restoring shows what the file holds first, then merges projects, followed channels (combining their growth history), the radar, keyword alerts and AI results item by item instead of skipping what you already have. Settings shows when you last backed up.
 - **Following keeps working without quota**: if a channel can't be refreshed, its last-known numbers are shown with a note instead of an error.
 - **Edit / Preview** switch on the project Outline and Shot list, so AI drafts read as formatted text and stay editable. The view you pick is remembered, and **Print** on the shot list prints the formatted version.

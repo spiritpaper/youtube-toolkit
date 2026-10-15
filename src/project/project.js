@@ -135,13 +135,20 @@ function render() {
   const tStatus = h('span', { class: 'saving' });
   title.addEventListener('input', () => autosave('title', title.value, tStatus));
   const status = h('select', { 'aria-label': 'Status' }, STATUSES.map((s) => h('option', { value: s.id, selected: s.id === project.status }, s.label)));
+  const archiveBtn = h('button', { title: 'Move off the board, keeping its numbers', hidden: project.status !== 'published' || !!project.archivedAt, onclick: async () => { project = await send({ type: 'projectUpdate', id, patch: { archived: true } }); render(); } }, 'Archive');
   status.addEventListener('change', async () => {
     project = await send({ type: 'projectUpdate', id, patch: { status: status.value } });
+    archiveBtn.hidden = project.status !== 'published' || !!project.archivedAt;
+    if (!project.archivedAt) document.querySelector('.banner')?.remove();
   });
   document.title = `${project.title} · YT Toolkit`;
   main.replaceChildren(
     h('a', { class: 'crumb', href: '../board/board.html' }, '← Idea board'),
+    project.archivedAt && h('div', { class: 'banner' }, `Archived ${ageText(project.archivedAt)}. It's off the board and kept with its final numbers.`, ' ',
+      h('button', { onclick: async () => { project = await send({ type: 'projectUpdate', id, patch: { archived: false } }); render(); } }, 'Back to board'),
+      ' ', h('a', { href: '../board/board.html#archive' }, 'Open the archive')),
     h('div', { class: 'head' }, title, tStatus, status,
+      archiveBtn,
       h('button', { class: 'danger', onclick: async () => { if (confirm('Delete this project?')) { await send({ type: 'projectDelete', id }); location.href = '../board/board.html'; } } }, 'Delete')),
     h('p', { class: 'muted small' }, `Created ${ageText(project.createdAt)} · updated ${ageText(project.updatedAt)}`),
     ideaSection(),

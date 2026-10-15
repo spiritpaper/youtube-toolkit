@@ -26,7 +26,7 @@ import {
 import { addNode, getNode, listNodes, updateNode, deleteNodes, deleteHolesOlderThan } from '../lib/explore-store.js';
 import { usage, cleanup, exportAll, importAll } from '../lib/storage-admin.js';
 import { signIn, signOut, authStatus } from './auth.js';
-import { listProjects, createProject, updateProject, deleteProject, mutateProjects } from '../lib/projects.js';
+import { listProjects, createProject, updateProject, deleteProject, mutateProjects, archiveOld, ARCHIVE_DAYS_DEFAULT } from '../lib/projects.js';
 import { followKeyword, unfollowKeyword, listKeywords, trendCheck, mutateAlerts } from './trends.js';
 import { trackPublished, parseVideoId } from './published.js';
 import { videoTotals } from './analytics.js';
@@ -34,7 +34,7 @@ import { overview, topVideos, retention, trafficSources } from './analytics.js';
 import { watch, unwatch, compare, radarCheck, markRadarRead, clearRadar, updateBadge, parseChannelInput, gapData, following, updateFollow, mutateWatch, mutateRadar } from './watchlist.js';
 
 // holeRetentionDays: rabbit holes untouched for this long are deleted (0 = keep forever).
-const DEFAULT_SETTINGS = { badges: true, watchPanel: true, badgeMin: 0, trackDaily: true, holeRetentionDays: 180 };
+const DEFAULT_SETTINGS = { badges: true, watchPanel: true, badgeMin: 0, trackDaily: true, holeRetentionDays: 180, archiveAfterDays: ARCHIVE_DAYS_DEFAULT };
 const REFRESH_ALARM = 'refresh-ideas';
 const REFRESH_EVERY_MS = 23 * 3_600_000;
 
@@ -89,6 +89,7 @@ chrome.alarms.onAlarm.addListener(async ({ name }) => {
   if (name !== REFRESH_ALARM) return;
   const s = await chrome.storage.local.get(['trackDaily', 'apiKey', 'ideasRefreshedAt', 'holeRetentionDays']);
   if (s.holeRetentionDays > 0) await deleteHolesOlderThan(s.holeRetentionDays).catch(() => {});
+  await archivePublished().catch(() => {});
   await cache.prune().catch(() => {});
   if (!s.apiKey) return;
   await trackPublished().catch(() => {}); // has its own schedule
@@ -100,6 +101,11 @@ chrome.alarms.onAlarm.addListener(async ({ name }) => {
   if (Date.now() - (s.ideasRefreshedAt ?? 0) < REFRESH_EVERY_MS) return;
   refreshIdeas().catch(() => {}); // retried on the next alarm
 });
+
+async function archivePublished() {
+  const { archiveAfterDays = ARCHIVE_DAYS_DEFAULT } = await chrome.storage.local.get('archiveAfterDays');
+  return archiveOld(archiveAfterDays);
+}
 
 async function saveIdea(video, foundVia) {
   // Store a full stats snapshot; fall back to what the page already had.
@@ -189,6 +195,7 @@ const handlers = {
   projectCreate: ({ data }) => createProject(data),
   projectUpdate: ({ id, patch }) => updateProject(id, patch),
   projectDelete: ({ id }) => deleteProject(id),
+  projectsArchiveOld: () => archivePublished(),
   projectPublish: async ({ id, input }) => {
     const videoId = parseVideoId(input);
     if (!videoId) throw new Error('Paste the link of your published video.');

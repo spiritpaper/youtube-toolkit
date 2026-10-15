@@ -308,6 +308,12 @@ $('wipe').addEventListener('click', async () => {
 });
 
 showLastBackup();
+const { archiveAfterDays = 30 } = await chrome.storage.local.get('archiveAfterDays');
+$('archiveAfterDays').value = String(archiveAfterDays);
+$('archiveAfterDays').addEventListener('change', async (e) => {
+  await chrome.storage.local.set({ archiveAfterDays: Number(e.target.value) });
+  send({ type: 'projectsArchiveOld' }).catch(() => {});
+});
 const { holeRetentionDays = 180 } = await chrome.storage.local.get('holeRetentionDays');
 $('holeRetentionDays').value = String(holeRetentionDays);
 showUsage();

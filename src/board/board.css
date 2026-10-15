@@ -16,3 +16,21 @@
 .chip.on { color: var(--ok); }
 .pcard select { font-size: 11px; padding: 2px 6px; border-radius: 8px; justify-self: start; }
 .hint { font-size: 12px; color: var(--fg-2); text-align: center; padding: 16px 6px; }
+.views { display: inline-flex; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+.views button { border: 0; border-radius: 0; padding: 6px 14px; background: transparent; }
+.views button[aria-pressed='true'] { background: var(--bg-3); font-weight: 600; }
+.hint.small { padding: 4px 6px; font-size: 11px; }
+.archive { padding: 12px 24px 40px; display: grid; gap: 8px; max-width: 1100px; }
+.atools { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.atools input[type='search'] { min-width: 260px; border-radius: 18px; padding: 6px 14px; }
+.arow { display: flex; gap: 12px; align-items: center; border: 1px solid var(--border); border-radius: 10px; padding: 8px 10px; background: var(--bg); flex-wrap: wrap; }
+.arow > img, .arow .noimg { width: 120px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 6px; flex: none; }
+.arow .noimg { display: grid; place-items: center; background: var(--bg-2); color: var(--fg-2); }
+.arow .grow { flex: 1 1 220px; min-width: 0; }
+.arow .t { font-weight: 600; color: var(--fg); text-decoration: none; }
+.arow .t:hover { text-decoration: underline; }
+.arow .nums { display: flex; gap: 16px; flex-wrap: wrap; }
+.arow .num { display: grid; gap: 2px; min-width: 70px; }
+.arow .num .k { font-size: 11px; color: var(--fg-2); }
+.arow .num b { font-size: 13px; }
+.arow .acts { display: flex; gap: 6px; align-items: center; margin-left: auto; }

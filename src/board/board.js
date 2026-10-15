@@ -1,11 +1,16 @@
 import { mountShell } from '../lib/nav.js';
-import { send, h, ageText } from '../lib/ui.js';
-import { STATUSES } from '../lib/projects.js';
+import { send, h, ageText, fmtNum, fmtMult, fmtDate, tier } from '../lib/ui.js';
+import { STATUSES, finalNumbers, ARCHIVE_DAYS_DEFAULT } from '../lib/projects.js';
 
 mountShell('board');
 const board = document.getElementById('board');
 let projects = {};
 let ideas = {};
+let view = location.hash === '#archive' ? 'archive' : 'board';
+let archiveDays = ARCHIVE_DAYS_DEFAULT;
+let archiveQuery = '';
+let archiveSort = 'published';
+const isArchived = (p) => !!p.archivedAt;
 
 const open = (id) => (location.href = `../project/project.html?id=${id}`);
 
@@ -37,14 +42,16 @@ async function move(id, status) {
   await send({ type: 'projectUpdate', id, patch: { status } });
 }
 
-function render() {
+function renderBoard() {
+  board.className = 'board';
   board.replaceChildren(
     ...STATUSES.map((s) => {
-      const list = Object.values(projects).filter((p) => p.status === s.id).sort((a, b) => b.updatedAt - a.updatedAt);
+      const list = Object.values(projects).filter((p) => p.status === s.id && !isArchived(p)).sort((a, b) => b.updatedAt - a.updatedAt);
       const col = h('section', { class: 'col', 'aria-label': s.label },
         h('h2', {}, h('span', {}, s.label), h('span', {}, list.length)),
         ...list.map(card),
-        list.length === 0 && h('div', { class: 'hint' }, s.id === 'idea' ? 'Add an idea above, or click "Start project" on a saved outlier, content gap or AI outline.' : 'Drag cards here'));
+        list.length === 0 && h('div', { class: 'hint' }, s.id === 'idea' ? 'Add an idea above, or click "Start project" on a saved outlier, content gap or AI outline.' : 'Drag cards here'),
+        s.id === 'published' && h('div', { class: 'hint small' }, archiveDays > 0 ? `Videos move to the Archive ${archiveDays} days after they go live.` : 'Automatic archiving is off.', ' ', h('a', { href: '../options/options.html#board' }, 'Change')));
       col.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('over'); });
       col.addEventListener('dragleave', () => col.classList.remove('over'));
       col.addEventListener('drop', (e) => {
@@ -56,6 +63,69 @@ function render() {
       return col;
     }),
   );
+}
+
+
+function archiveRow(p) {
+  const f = finalNumbers(p);
+  const thumb = f.thumb ?? (f.videoId ? `https://i.ytimg.com/vi/${f.videoId}/mqdefault.jpg` : null);
+  const milestone = (label, m) => h('div', { class: 'num' }, h('span', { class: 'k' }, label), h('b', {}, m ? `${fmtNum(m.views)} · ${fmtMult(m.multiplier)}` : '—'));
+  return h('article', { class: 'arow' },
+    thumb ? h('img', { src: thumb, alt: '', loading: 'lazy' }) : h('div', { class: 'noimg', 'aria-hidden': 'true' }, '▶'),
+    h('div', { class: 'grow' },
+      h('a', { class: 't', href: `../project/project.html?id=${p.id}` }, p.title),
+      h('div', { class: 'muted small' }, [f.publishedAt && `published ${fmtDate(f.publishedAt)}`, `archived ${ageText(p.archivedAt)}`, !f.videoId && 'no video linked'].filter(Boolean).join(' · '))),
+    h('div', { class: 'nums' },
+      h('div', { class: 'num' }, h('span', { class: 'k' }, 'Views'), h('b', {}, fmtNum(f.views))),
+      h('div', { class: 'num' }, h('span', { class: 'k' }, 'Outlier score'), f.multiplier == null ? h('b', {}, '—') : h('span', { class: `pill tier-${tier(f.multiplier)}` }, fmtMult(f.multiplier))),
+      milestone('At 48 h', f.h48),
+      milestone('At 7 days', f.d7)),
+    h('div', { class: 'acts' },
+      f.videoId && h('a', { class: 'button-link', href: `https://www.youtube.com/watch?v=${f.videoId}`, target: '_blank', rel: 'noopener' }, 'Watch'),
+      h('button', { onclick: () => send({ type: 'projectUpdate', id: p.id, patch: { archived: false } }) }, 'Back to board'),
+      h('button', { class: 'x', title: 'Delete project', 'aria-label': `Delete ${p.title}`, onclick: async () => { if (confirm(`Delete "${p.title}" and its tracking data?`)) await send({ type: 'projectDelete', id: p.id }); } }, '✕')));
+}
+
+function renderArchive() {
+  board.className = 'archive';
+  const all = Object.values(projects).filter(isArchived);
+  const q = archiveQuery.trim().toLowerCase();
+  const key = {
+    published: (p) => finalNumbers(p).publishedAt ?? 0,
+    views: (p) => finalNumbers(p).views ?? -1,
+    score: (p) => finalNumbers(p).multiplier ?? -1,
+  }[archiveSort];
+  const list = all.filter((p) => !q || `${p.title} ${p.angle ?? ''}`.toLowerCase().includes(q)).sort((a, b) => key(b) - key(a));
+  const search = h('input', { type: 'search', placeholder: 'Search the archive…', value: archiveQuery, 'aria-label': 'Search the archive' });
+  search.addEventListener('input', () => {
+    archiveQuery = search.value;
+    const pos = search.selectionStart;
+    render();
+    const again = board.querySelector('input[type=search]');
+    again.focus();
+    again.setSelectionRange(pos, pos);
+  });
+  const sort = h('select', { 'aria-label': 'Sort the archive', onchange: (e) => { archiveSort = e.target.value; render(); } },
+    [['published', 'Newest first'], ['views', 'Most views'], ['score', 'Best outlier score']].map(([v, l]) => h('option', { value: v, selected: v === archiveSort }, l)));
+  board.replaceChildren(
+    h('div', { class: 'atools' }, search, sort, h('span', { class: 'muted small' }, archiveDays > 0 ? `Published videos move here ${archiveDays} days after they go live.` : 'Automatic archiving is off.', ' ', h('a', { href: '../options/options.html#board' }, 'Change'))),
+    ...(list.length
+      ? list.map(archiveRow)
+      : [h('div', { class: 'empty-state' },
+          h('h2', {}, all.length ? 'Nothing matches' : 'The archive is empty'),
+          h('p', {}, all.length ? 'Try another word.' : `Published videos land here ${archiveDays > 0 ? `${archiveDays} days after they go live` : 'when you archive them from their project page'}, with the numbers they finished on, so the board stays about what you're making now.`))]),
+  );
+}
+
+function render() {
+  const archived = Object.values(projects).filter(isArchived).length;
+  document.getElementById('views').replaceChildren(
+    ...[['board', 'Board'], ['archive', `Archive${archived ? ` (${archived})` : ''}`]].map(([id, label]) =>
+      h('button', { type: 'button', 'aria-pressed': String(view === id), onclick: () => { view = id; history.replaceState(null, '', id === 'archive' ? '#archive' : '#'); render(); } }, label)),
+  );
+  document.getElementById('new').hidden = view === 'archive';
+  if (view === 'archive') renderArchive();
+  else renderBoard();
 }
 
 document.getElementById('new').addEventListener('submit', async (e) => {
@@ -72,5 +142,8 @@ chrome.storage.onChanged.addListener((changes, area) => {
   }
 });
 
-[projects, { ideas = {} }] = await Promise.all([send({ type: 'projects' }), chrome.storage.local.get('ideas')]);
+await send({ type: 'projectsArchiveOld' }).catch(() => {});
+let archiveAfterDays;
+[projects, { ideas = {}, archiveAfterDays }] = await Promise.all([send({ type: 'projects' }), chrome.storage.local.get(['ideas', 'archiveAfterDays'])]);
+archiveDays = archiveAfterDays ?? ARCHIVE_DAYS_DEFAULT;
 render();

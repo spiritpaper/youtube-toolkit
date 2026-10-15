@@ -65,6 +65,17 @@ Paste your published video link and click **Start tracking** (the project moves 
 - like rate, a views-over-time chart, and the outliers it was modelled on, for comparison
 - **Signed in** ([My channel](my-channel.md)): your real **retention curve**, average % viewed, average view duration, subscribers gained and, where the API provides it, thumbnail **click-through rate**
 
+## The archive
+
+Published videos don't stay on the board forever. **30 days after a video goes live** (YouTube's publish date if you linked it, otherwise the day you moved the card to Published), it moves to the **Archive**, the second tab at the top of the board. That's the same moment after-publishing tracking ends, so the numbers there are final.
+
+- Each archived video shows **views**, **outlier score**, and its numbers **at 48 hours** and **at 7 days**, with links to watch it or open its project.
+- **Search** by title or angle, and **sort** by newest, most views or best outlier score.
+- **Back to board** returns a video to the Published column. It stays there until you archive it again; it won't be archived automatically a second time.
+- On a published project, **Archive** moves it right away. Moving an archived project back to an earlier status (Scripting, say, for a re-upload) puts it back on the board.
+
+Change the delay (7–90 days, or never) in **Settings → Idea board**. Nothing is deleted by archiving.
+
 ## Tips
 
 - Link 2–3 outliers as inspiration before drafting the outline; the AI uses their structure.
