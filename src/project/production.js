@@ -6,6 +6,7 @@ import { formatTime } from '../lib/stats.js';
 import { lineChart } from '../lib/linechart.js';
 import { activeAi, generate, shotListPrompt, thumbnailPrompt, thumbnailImage, PROVIDERS } from '../lib/ai.js';
 import { markdownToHtml } from '../lib/markdown.js';
+import { mdEditor } from '../lib/md-view.js';
 
 const mdBlock = (text) => {
   const div = h('div', { class: 'md' });
@@ -47,10 +48,12 @@ export function shotListSection(project, { save }) {
       }, 600);
     },
   });
+  const editor = mdEditor(ta, 'shotList');
   const out = h('div', {});
   const set = (text) => {
     ta.value = ta.value ? `${ta.value}\n\n${text}` : text;
     ta.dispatchEvent(new Event('input'));
+    editor.preview();
   };
   const aiBtn = h('button', { class: 'primary' }, 'Generate with AI');
   aiBtn.addEventListener('click', async () => {
@@ -74,19 +77,21 @@ export function shotListSection(project, { save }) {
     const w = window.open('', '_blank');
     if (!w) return;
     w.document.title = `Shot list · ${project.title}`;
-    const pre = w.document.createElement('pre');
-    pre.style.cssText = 'font: 13px/1.5 system-ui, sans-serif; white-space: pre-wrap; padding: 24px;';
-    pre.textContent = `${project.title}\n\n${ta.value}`;
-    w.document.body.append(pre);
+    const style = w.document.createElement('style');
+    style.textContent = 'body { font: 13px/1.5 system-ui, sans-serif; padding: 24px; } table { border-collapse: collapse; width: 100%; } th, td { border: 1px solid #bbb; padding: 4px 6px; text-align: left; vertical-align: top; } pre { white-space: pre-wrap; }';
+    const body = w.document.createElement('div');
+    body.innerHTML = markdownToHtml(`# ${project.title}\n\n${ta.value}`); // escapes everything first
+    w.document.head.append(style);
+    w.document.body.append(body);
     w.print();
   };
   return h('section', { class: 'card' },
-    h('div', { class: 'card-head' }, h('h2', {}, 'Shot list'), status,
+    h('div', { class: 'card-head' }, h('h2', {}, 'Shot list'), status, editor.tabs,
       h('button', { onclick: () => (project.script ? set(starterShotList(project.script)) : out.replaceChildren(h('p', { class: 'muted small' }, 'Write a script first.'))) }, 'Starter from script'),
       aiBtn,
       h('button', { onclick: () => download(`shot-list-${project.title.slice(0, 40)}.md`, `# ${project.title}\n\n${ta.value}`, 'text/markdown;charset=utf-8') }, 'Download'),
       h('button', { onclick: printIt }, 'Print')),
-    out, ta);
+    out, editor.view);
 }
 
 // ---------- Thumbnail ----------

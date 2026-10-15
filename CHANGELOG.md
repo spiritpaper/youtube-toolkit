@@ -2,6 +2,14 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
+## [Unreleased]
+
+### Fixed
+- **AI answers render properly**: tables, nested lists, code blocks, quotes, links, strikethrough and numbered lists that continue after a paragraph now display as formatted text instead of raw Markdown, with the same styling on every page.
+
+### Added
+- **Edit / Preview** switch on the project Outline and Shot list, so AI drafts read as formatted text and stay editable. The view you pick is remembered, and **Print** on the shot list prints the formatted version.
+
 ## [0.6.1] - 2026-10-13
 
 ### Added

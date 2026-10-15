@@ -74,11 +74,6 @@ td.num, th.num { text-align: right; }
 .transcript p { margin: 0 0 4px; }
 mark { background: color-mix(in srgb, var(--d-stakes) 30%, transparent); color: inherit; border-radius: 3px; padding: 0 2px; }
 
-.md h1, .md h2, .md h3, .md h4 { font-size: 15px; margin: 14px 0 6px; }
-.md p { margin: 6px 0; }
-.md ul, .md ol { margin: 6px 0; padding-left: 20px; }
-.md li { margin: 3px 0; }
-.md hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
 
 /* hook library */
 .hooks { display: grid; gap: 12px; }

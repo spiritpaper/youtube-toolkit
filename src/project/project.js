@@ -3,6 +3,7 @@ import { send, h, fmtMult, fmtNum, tier, videoUrl, ageText } from '../lib/ui.js'
 import { STATUSES } from '../lib/projects.js';
 import { activeAi, generate, projectOutlinePrompt, PROVIDERS } from '../lib/ai.js';
 import { markdownToHtml } from '../lib/markdown.js';
+import { mdEditor } from '../lib/md-view.js';
 import { scriptToolsSection } from './script-tools.js';
 import { shotListSection, thumbnailSection, publishedSection } from './production.js';
 
@@ -89,6 +90,7 @@ function titlesSection() {
 
 function outlineSection() {
   const { ta, status } = field('outline', 'big', 'Hook, beats, payoff… or let AI draft it from your linked outliers.');
+  const editor = mdEditor(ta, 'outline');
   const out = h('div', {});
   const btn = h('button', { class: 'primary' }, 'Draft outline with AI');
   btn.addEventListener('click', async () => {
@@ -102,6 +104,7 @@ function outlineSection() {
       const text = await generate({ ...ai, system, prompt });
       ta.value = ta.value ? `${ta.value}\n\n---\n\n${text}` : text;
       autosave('outline', ta.value, status);
+      editor.preview();
       out.replaceChildren(h('p', { class: 'muted small' }, `Added to the outline by ${PROVIDERS[ai.provider].label} (${ai.model}). Edit freely.`));
     } catch (err) {
       out.replaceChildren(h('p', { class: 'error' }, err.message));
@@ -110,7 +113,7 @@ function outlineSection() {
       btn.textContent = 'Draft outline with AI';
     }
   });
-  return h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', {}, 'Outline'), status, btn), out, ta);
+  return h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', {}, 'Outline'), status, editor.tabs, btn), out, editor.view);
 }
 
 let scriptArea = null;

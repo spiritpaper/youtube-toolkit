@@ -21,9 +21,5 @@ main { max-width: 1180px; margin: 0 auto; padding: 8px 24px 64px; }
 .ts { color: var(--accent); text-decoration: none; font-variant-numeric: tabular-nums; }
 .words { display: flex; flex-wrap: wrap; gap: 6px; }
 .word { font-size: 12px; background: var(--bg-2); border-radius: 12px; padding: 2px 9px; }
-.md { font-size: 14px; }
-.md h1, .md h2, .md h3, .md h4 { font-size: 15px; margin: 12px 0 4px; }
-.md ul, .md ol { padding-left: 20px; }
-.md hr { border: 0; border-top: 1px solid var(--border); }
 .error { color: var(--danger); }
 @media (max-width: 860px) { .cols { grid-template-columns: 1fr; } .go { margin-left: 0; } }

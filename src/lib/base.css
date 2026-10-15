@@ -121,3 +121,30 @@ body.shell .top .links, body.shell .top nav.links { display: none; }
 .empty-state h2 { color: var(--fg); font-size: 18px; margin: 0 0 6px; }
 .button-link { display: inline-block; border: 1px solid var(--border); background: var(--bg-2); border-radius: 18px; padding: 5px 12px; font-size: 12px; font-weight: 500; color: var(--fg); text-decoration: none; }
 .button-link:hover { background: var(--bg-3); }
+
+/* Rendered Markdown (AI answers, previews) */
+.md { font-size: 14px; line-height: 1.55; overflow-wrap: anywhere; }
+.md > :first-child { margin-top: 0; }
+.md h2, .md h3, .md h4 { font-size: 15px; margin: 16px 0 6px; }
+.md h2 { font-size: 16px; }
+.md p { margin: 6px 0; }
+.md ul, .md ol { margin: 6px 0; padding-left: 22px; }
+.md li { margin: 3px 0; }
+.md li > ul, .md li > ol { margin: 2px 0; }
+.md code { background: var(--bg-3); border-radius: 4px; padding: 0 4px; font-size: 0.92em; }
+.md pre { background: var(--bg-2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; overflow-x: auto; }
+.md pre code { background: none; padding: 0; white-space: pre; }
+.md blockquote { margin: 8px 0; padding: 2px 12px; border-left: 3px solid var(--border); color: var(--fg-2, inherit); }
+.md hr { border: 0; border-top: 1px solid var(--border); margin: 14px 0; }
+.md .md-table { overflow-x: auto; margin: 8px 0; }
+.md table { border-collapse: collapse; font-size: 13px; min-width: 100%; }
+.md th, .md td { border: 1px solid var(--border); padding: 5px 8px; text-align: left; vertical-align: top; }
+.md th { background: var(--bg-2); font-weight: 600; }
+.md tbody tr:nth-child(even) td { background: color-mix(in srgb, var(--bg-2) 45%, transparent); }
+.md a { word-break: break-word; }
+
+/* Edit / Preview switch for Markdown text areas */
+.md-tabs { display: inline-flex; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+.md-tabs button { border: 0; border-radius: 0; padding: 4px 12px; font-size: 12px; background: transparent; }
+.md-tabs button[aria-selected='true'] { background: var(--bg-3); font-weight: 600; }
+.md-preview { min-height: 120px; max-height: 70vh; overflow: auto; padding: 10px 14px; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); cursor: text; }

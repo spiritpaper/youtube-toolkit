@@ -51,9 +51,6 @@ main { padding: 16px 20px 48px; }
 .chips { display: flex; flex-wrap: wrap; gap: 4px; }
 .chip { font-size: 12px; border-radius: 14px; padding: 3px 9px; }
 .md { font-size: 13px; }
-.md h1, .md h2, .md h3, .md h4 { font-size: 14px; margin: 10px 0 4px; }
-.md ul, .md ol { padding-left: 18px; }
-.md hr { border: 0; border-top: 1px solid var(--border); }
 
 table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; margin-top: 12px; }
 th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; }

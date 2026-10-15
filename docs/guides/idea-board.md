@@ -26,6 +26,7 @@ Everything about one video, top to bottom. Text fields save automatically as you
 
 - **Titles**: one candidate per line. **Test in Title lab →** opens them in the [Title lab](scripts-and-titles.md#title-lab).
 - **Outline**: write it, or click **Draft outline with AI**. The AI uses your angle and your linked outliers (including their script breakdowns, if you've run them) to write title options, a word-for-word hook, a beat sheet with re-hooks and the payoff.
+- **Edit / Preview**: the Outline and Shot list are Markdown. **Preview** shows them formatted (headings, tables, lists); **Edit** goes back to the text. Double-click the preview to edit. The box switches to Preview after an AI draft, and remembers the view you last picked.
 
 ### Script and Script check
 
@@ -47,7 +48,7 @@ Write or paste your script; the header shows word count and estimated length. Th
 
 - **Starter from script**: one shot per paragraph (or per three sentences) with A-roll, B-roll and on-screen text slots.
 - **Generate with AI**: a full shot table (beat, shot type, what to film, on-screen text, location and props), plus a filming checklist, generic B-roll and retention notes for the edit.
-- **Download** (Markdown) or **Print**.
+- **Download** (Markdown) or **Print** (prints the formatted version).
 
 ### Thumbnail
 
