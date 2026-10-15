@@ -80,3 +80,10 @@ test('only http(s) links become anchors', () => {
   );
   assert.ok(!markdownToHtml('[x](https://a.com/"onmouseover="y)').includes('"onmouseover'));
 });
+
+test('task list items show a checkbox glyph', () => {
+  assert.equal(
+    markdownToHtml('- [ ] **Audio:** lav mic\n- [x] Lights'),
+    '<ul><li><span class="md-check" aria-hidden="true">☐</span> <strong>Audio:</strong> lav mic</li><li><span class="md-check" aria-hidden="true">☑</span> Lights</li></ul>',
+  );
+});

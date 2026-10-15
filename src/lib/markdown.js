@@ -138,7 +138,9 @@ export function markdownToHtml(text) {
       } else {
         open();
       }
-      out.push(inline(m[3]));
+      // Task lists: "- [ ] item" / "- [x] item".
+      const task = /^\[([ xX])\]\s+(.*)$/.exec(m[3]);
+      out.push(task ? `<span class="md-check" aria-hidden="true">${task[1] === ' ' ? '☐' : '☑'}</span> ${inline(task[2])}` : inline(m[3]));
       function open() {
         // Keep the model's numbering when a list restarts after a paragraph.
         const start = kind === 'ol' ? parseInt(m[2], 10) : 1;
