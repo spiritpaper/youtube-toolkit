@@ -23,7 +23,7 @@ async function runAi(box, btn, build, onText) {
   const label = btn.textContent;
   btn.disabled = true;
   btn.textContent = 'Thinking…';
-  box.replaceChildren(h('p', { class: 'muted small' }, `Asking ${PROVIDERS[ai.provider].label} (${ai.model}). Long scripts can take a minute…`));
+  box.replaceChildren(h('div', { class: 'loading inline' }, `Asking ${PROVIDERS[ai.provider].label} (${ai.model}). Long scripts can take a minute…`));
   try {
     const { system, prompt } = build(ai.niche);
     const text = await generate({ ...ai, system, prompt });

@@ -1,5 +1,5 @@
 import { mountShell } from '../lib/nav.js';
-import { send, h, fmtNum, fmtMult, fmtPct, tier, ageText, videoUrl } from '../lib/ui.js';
+import { send, h, fmtNum, fmtMult, fmtPct, tier, ageText, videoUrl, emptyState } from '../lib/ui.js';
 import { change, median, retentionSummary, formatTime } from '../lib/stats.js';
 import { lineChart } from '../lib/linechart.js';
 import { contentGaps } from '../lib/gaps.js';
@@ -558,7 +558,7 @@ async function renderCompare() {
           ),
           insights(mine, others),
         )
-      : h('p', { class: 'muted' }, 'Add channels you compete with to compare them side by side.'),
+      : emptyState('Compare yourself with the channels you follow', 'Follow a few channels you learn from or compete with (above, or on Following). Each one is measured with the same math as yours: median views, upload rate, hit rate and trend.', [{ label: 'Go to Following', href: '../channels/channels.html', primary: true }]),
   );
 }
 
@@ -620,7 +620,9 @@ async function renderRadar() {
             ),
           ),
         )
-      : h('p', { class: 'muted' }, n ? 'No new outliers yet. Check back tomorrow.' : 'Watch some channels on the Compare tab, or from the channel analysis on YouTube.'),
+      : n
+        ? emptyState('No new outliers yet', 'The radar checks the channels and keywords you follow once a day and lists new uploads already at 2x their channel\'s median. Check back tomorrow, or click Check now.')
+        : emptyState('Nothing to watch yet', 'Follow channels (or add a keyword above) and the radar checks them daily for new uploads that are already outperforming their channel.', [{ label: 'Follow channels', href: '../channels/channels.html', primary: true }, { label: 'Keyword explorer', href: '../explore/explore.html' }]),
   );
 }
 

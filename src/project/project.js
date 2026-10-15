@@ -98,6 +98,7 @@ function outlineSection() {
     if (!ai) return out.replaceChildren(h('p', { class: 'muted small' }, 'AI is optional. Connect a provider in ', h('a', { href: '../options/options.html' }, 'Settings'), '.'));
     btn.disabled = true;
     btn.textContent = 'Thinking…';
+    out.replaceChildren(h('div', { class: 'loading inline' }, `Drafting with ${PROVIDERS[ai.provider].label} (${ai.model})…`));
     try {
       const insp = (project.inspiration ?? []).map((vid) => ({ ...(ideas[vid] ?? { id: vid, title: vid }), scriptAi: transcripts[vid]?.ai?.text }));
       const { system, prompt } = projectOutlinePrompt(project, insp, ai.niche);

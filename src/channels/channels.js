@@ -1,5 +1,5 @@
 import { mountShell } from '../lib/nav.js';
-import { send, h, fmtNum, fmtMult, fmtPct, tier, ageText, videoUrl } from '../lib/ui.js';
+import { send, h, fmtNum, fmtMult, fmtPct, tier, ageText, videoUrl, skeletons } from '../lib/ui.js';
 import { channelGrowth } from '../lib/stats.js';
 import { lineChart } from '../lib/linechart.js';
 
@@ -99,7 +99,7 @@ function render() {
 }
 
 async function load() {
-  $('list').replaceChildren(h('div', { class: 'empty-state' }, 'Loading…'));
+  if (!rows.length) $('list').replaceChildren(skeletons(3));
   try {
     rows = await send({ type: 'following' });
   } catch (err) {

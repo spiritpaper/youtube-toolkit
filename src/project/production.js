@@ -62,6 +62,7 @@ export function shotListSection(project, { save }) {
     if (!project.outline && !project.script) return out.replaceChildren(h('p', { class: 'muted small' }, 'Write an outline or script first.'));
     aiBtn.disabled = true;
     aiBtn.textContent = 'Thinking…';
+    out.replaceChildren(h('div', { class: 'loading inline' }, `Writing the shot list with ${PROVIDERS[ai.provider].label} (${ai.model})…`));
     try {
       const { system, prompt } = shotListPrompt(project);
       set(await generate({ ...ai, system, prompt }));
@@ -172,7 +173,7 @@ export function thumbnailSection(project, { ideas }) {
     if (!me) return aiBox.replaceChildren(h('p', { class: 'muted small' }, 'Upload a thumbnail first.'));
     aiBtn.disabled = true;
     aiBtn.textContent = 'Looking…';
-    aiBox.replaceChildren(h('p', { class: 'muted small' }, `${PROVIDERS[ai.provider].label} is comparing your thumbnail with ${Math.min(outliers.length, 3)} outlier thumbnails. Image critiques usually take 1–2 minutes.`));
+    aiBox.replaceChildren(h('div', { class: 'loading inline' }, `${PROVIDERS[ai.provider].label} is comparing your thumbnail with ${Math.min(outliers.length, 3)} outlier thumbnails. Image critiques usually take 1–2 minutes.`));
     try {
       const others = (await Promise.all(outliers.slice(0, 3).map(async (o) => ({ o, img: await thumbnailImage(o.id) })))).filter((x) => x.img);
       const { system, prompt } = thumbnailPrompt(project, title, others.map(({ o }) => ({ title: o.title, multiplier: mult(o) })), ai.niche);

@@ -1,5 +1,5 @@
 import { mountShell } from '../lib/nav.js';
-import { send, h, fmtNum, fmtMult, tier, videoUrl, download } from '../lib/ui.js';
+import { send, h, fmtNum, fmtMult, tier, videoUrl, download, emptyState } from '../lib/ui.js';
 import { analyzeScript, hookSummary, DEVICES } from '../lib/script.js';
 import { formatTime } from '../lib/stats.js';
 import { activeAi, generate, scriptPrompt, outlinePrompt, shortsPrompt, PROVIDERS } from '../lib/ai.js';
@@ -426,7 +426,7 @@ async function renderLibrary() {
               h('div', { class: 'row' }, h('a', { class: 't grow', href: `script.html?id=${r.idea.id}` }, r.idea.title), h('span', { class: `pill tier-${tier(r.mult)}` }, fmtMult(r.mult))),
               h('div', { class: 'hook' }, r.hook.text),
               h('div', { class: 'chips' }, r.hook.checks.filter((c) => c.pass).map((c) => h('span', { class: 'chip ok' }, `✓ ${c.label}`)))))))
-      : h('p', { class: 'muted' }, 'No transcripts saved yet.'),
+      : emptyState('No transcripts yet', 'Open any video on YouTube and click Transcript in the YT Toolkit panel, then Save transcript or Analyze script. Its hook lands here, strongest outliers first, and the full script breakdown opens in the analyzer.', [{ label: 'Saved outliers', href: '../ideas/ideas.html' }]),
   );
 }
 

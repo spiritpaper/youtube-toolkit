@@ -21,6 +21,20 @@ export function h(tag, attrs = {}, ...children) {
   return el;
 }
 
+/**
+ * A friendly "nothing here yet" block: a heading, what to do, and links to
+ * the page where it happens. actions: [{ label, href, primary }].
+ */
+export function emptyState(title, text, actions = []) {
+  return h('div', { class: 'empty-state' },
+    h('h2', {}, title),
+    h('p', {}, text),
+    actions.length > 0 && h('div', { class: 'empty-actions' }, actions.map((a) => h('a', { class: `button-link${a.primary ? ' primary' : ''}`, href: a.href, target: a.external ? '_blank' : null }, a.label))));
+}
+
+/** Placeholder cards while a list loads. */
+export const skeletons = (n = 3, cls = 'skeleton-card') => h('div', { class: 'skeletons', 'aria-busy': 'true', 'aria-label': 'Loading' }, Array.from({ length: n }, () => h('div', { class: cls })));
+
 const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
 export const fmtNum = (n) => (n == null || !Number.isFinite(n) ? '—' : compact.format(n));
 export const fmtMult = (m) => (m == null || !Number.isFinite(m) ? '—' : m >= 10 ? `${Math.round(m)}x` : `${m.toFixed(1)}x`);

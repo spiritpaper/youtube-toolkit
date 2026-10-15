@@ -9,6 +9,9 @@ All notable changes to YT Toolkit. Each release's section becomes its GitHub Rel
 - **Saving no longer stops after one failed write**: an error such as following a 16th keyword or editing a just-deleted project used to block every later save to the same data until Chrome restarted the extension.
 - **AI answers render properly**: tables, nested lists, code blocks, quotes, links, strikethrough and numbered lists that continue after a paragraph now display as formatted text instead of raw Markdown, with the same styling on every page.
 
+### Changed
+- **Clearer empty and loading states**: empty pages (Saved outliers, Script lab, Compare, Radar) explain what to do and link to where it happens; every wait shows a spinner, Following shows placeholder cards while it loads, and AI actions on a project show progress next to the button.
+
 ### Added
 - **Quick search** (Ctrl+K or / on any page) across projects, saved outliers, followed channels, your notes, rabbit holes, video webs and pages, opening each result in place.
 - **Idea board filter and sorting**: filter cards by text, sort columns five ways (remembered), and a **Needs attention** view of cards untouched for two weeks.
