@@ -144,9 +144,9 @@ function render() {
   document.title = `${project.title} · YT Toolkit`;
   main.replaceChildren(
     h('a', { class: 'crumb', href: '../board/board.html' }, '← Idea board'),
-    project.archivedAt && h('div', { class: 'banner' }, `Archived ${ageText(project.archivedAt)}. It's off the board and kept with its final numbers.`, ' ',
+    project.archivedAt ? h('div', { class: 'banner' }, `Archived ${ageText(project.archivedAt)}. It's off the board and kept with its final numbers.`, ' ',
       h('button', { onclick: async () => { project = await send({ type: 'projectUpdate', id, patch: { archived: false } }); render(); } }, 'Back to board'),
-      ' ', h('a', { href: '../board/board.html#archive' }, 'Open the archive')),
+      ' ', h('a', { href: '../board/board.html#archive' }, 'Open the archive')) : '',
     h('div', { class: 'head' }, title, tStatus, status,
       archiveBtn,
       h('button', { class: 'danger', onclick: async () => { if (confirm('Delete this project?')) { await send({ type: 'projectDelete', id }); location.href = '../board/board.html'; } } }, 'Delete')),
