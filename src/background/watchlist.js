@@ -38,14 +38,15 @@ async function load() {
 
 let chain = Promise.resolve();
 function mutate(fn) {
-  chain = chain.then(async () => {
+  const run = chain.then(async () => {
     const state = await load();
     const result = await fn(state);
     await chrome.storage.local.set({ watchlist: state.watchlist, radar: state.radar });
     await updateBadge(state.radar);
     return result;
   });
-  return chain;
+  chain = run.catch(() => {}); // one failed write must not block the ones after it
+  return run;
 }
 
 /** Serialized writers for a backup restore. */

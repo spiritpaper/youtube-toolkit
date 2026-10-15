@@ -30,3 +30,9 @@ test('projects move through the board and keep their content', async () => {
   assert.deepEqual(await pr.listProjects(), {});
   await assert.rejects(pr.updateProject(p.id, { title: 'x' }), /deleted/);
 });
+
+test('a failed write does not block later ones', async () => {
+  await assert.rejects(pr.updateProject('gone', { title: 'x' }), /deleted/);
+  const p = await pr.createProject({ title: 'after the error' });
+  assert.equal((await pr.listProjects())[p.id].title, 'after the error');
+});

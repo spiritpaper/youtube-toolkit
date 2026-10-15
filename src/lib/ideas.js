@@ -8,13 +8,14 @@ export function mutateIdeas(fn) {
 }
 
 function mutate(fn) {
-  chain = chain.then(async () => {
+  const run = chain.then(async () => {
     const { ideas = {} } = await chrome.storage.local.get('ideas');
     const next = fn(ideas) ?? ideas;
     await chrome.storage.local.set({ ideas: next });
     return next;
   });
-  return chain;
+  chain = run.catch(() => {}); // one failed write must not block the ones after it
+  return run;
 }
 
 export async function listIdeas() {

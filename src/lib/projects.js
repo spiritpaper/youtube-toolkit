@@ -14,13 +14,14 @@ const EDITABLE = ['title', 'status', 'angle', 'notes', 'titles', 'outline', 'scr
 
 let chain = Promise.resolve();
 function mutate(fn) {
-  chain = chain.then(async () => {
+  const run = chain.then(async () => {
     const { projects = {} } = await chrome.storage.local.get('projects');
     const result = fn(projects);
     await chrome.storage.local.set({ projects });
     return result;
   });
-  return chain;
+  chain = run.catch(() => {}); // one failed write must not block the ones after it
+  return run;
 }
 
 export async function listProjects() {

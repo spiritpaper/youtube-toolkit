@@ -8,13 +8,14 @@ export const NODE_PREFIX = 'xn:';
 
 let chain = Promise.resolve();
 function mutate(fn) {
-  chain = chain.then(async () => {
+  const run = chain.then(async () => {
     const { [INDEX]: index = {} } = await chrome.storage.local.get(INDEX);
     const result = await fn(index);
     await chrome.storage.local.set({ [INDEX]: index });
     return result;
   });
-  return chain;
+  chain = run.catch(() => {}); // one failed write must not block the ones after it
+  return run;
 }
 
 export async function listNodes() {

@@ -16,13 +16,14 @@ async function load() {
 }
 let chain = Promise.resolve();
 function mutate(fn) {
-  chain = chain.then(async () => {
+  const run = chain.then(async () => {
     const all = await load();
     const result = await fn(all);
     await chrome.storage.local.set({ keywordAlerts: all });
     return result;
   });
-  return chain;
+  chain = run.catch(() => {}); // one failed write must not block the ones after it
+  return run;
 }
 
 /** Serialized writer for a backup restore. */
