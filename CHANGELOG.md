@@ -2,7 +2,7 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
-## [Unreleased]
+## [0.7.0] - 2026-10-14
 
 ### Fixed
 - **Phone layout**: the menu button no longer covers page titles.
