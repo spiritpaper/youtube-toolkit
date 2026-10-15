@@ -14,7 +14,7 @@ Every extension page shares one sidebar:
 
 On YouTube itself:
 - **Outlier badges** on thumbnails.
-- **The video panel:** outlier score, stats, "Most replayed" heatmap, and buttons for Save idea, Follow, Analyze channel, Transcript, Explore topic, Video web and Comments.
+- **The video panel:** outlier score, stats, "Most replayed" heatmap, buttons for Save idea, Follow, Analyze channel, Transcript, Explore topic, Video web and Comments, and **your own timestamped notes** ("Add note at 3:42").
 - **Channel analysis** with Follow.
 
 ## What's inside
@@ -29,10 +29,13 @@ On YouTube itself:
   - **Re-hook planner** (AI): lines to win viewers back at the weak checkpoints
   - **Shot list**: a starter from your script, or AI-generated (A-roll, B-roll, on-screen text, props), to download or print
   - **Thumbnail**: upload it and see it in a mock home feed next to your outliers, dark or light, full size and phone size. AI critiques it against the outliers' thumbnails.
-  - **After publishing**: link the video and it's tracked for 30 days (views and outlier score vs your median at 48 hours and 7 days, next to the outliers you modelled it on). If you're signed in, your real retention curve, average % viewed and thumbnail click-through rate are added.
+  - **After publishing**: link the video and it's tracked for 30 days (views and outlier score vs your median at 48 hours and 7 days, next to the outliers you modelled it on). If you're signed in, your real retention curve, average % viewed and thumbnail click-through rate are added. After 30 days it moves to the board's **Archive** with its final numbers.
+- **Honest channel review** (AI, My channel): built only on your own analytics (retention drop-offs with what you said there, top videos, traffic, followed channels), listing every problem with where it is, the evidence and how to fix it.
+- **Shorts from a long video** (Script analyzer): clips around the most replayed moments, and an AI plan with hooks, cuts and loop endings.
+- **Quick search** (Ctrl+K on any page) across projects, saved videos, channels, notes and rabbit holes.
 - **Outlier remix** (Saved outliers): tick 2–4 outliers and AI combines their formats into new concepts.
 - **Audience questions**: the top 100 comments of any video (1 API unit, saved permanently), sorted into requests, questions, pain points and timestamped moments. AI turns them into video ideas.
-- Plus everything from before: the keyword explorer, video web, script analyzer and hook library, content gaps, title lab, compare, my channel, saved outliers with tracked stats, CSV exports and storage management.
+- Plus the keyword explorer, video web, script analyzer and hook library, content gaps, title lab, compare, my channel, saved outliers with tracked stats, CSV exports, storage management and full backups (everything except your keys).
 
 **Saving quota.** API data is cached and reused:
 - **Kept for good:** results that don't change (AI reviews, saved comments, transcripts, heatmaps).
