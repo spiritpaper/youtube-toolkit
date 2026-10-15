@@ -679,3 +679,42 @@ Three concrete experiments built from the problems above, each with the metric t
 One or two lines on the blind spots.`;
   return { system, prompt };
 }
+
+/**
+ * Shorts cut from a long video. `candidates` come from shorts.js; `mine`
+ * says whether the video is the creator's own (cut it) or someone else's
+ * (make your own Short on the same moment, don't reupload).
+ */
+export function shortsPrompt(video, segments, candidates, niche, { mine = false } = {}) {
+  const mmss = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, '0')}`;
+  const list = candidates.length
+    ? candidates
+        .map((c, i) => `${i + 1}. ${mmss(c.start)}–${mmss(c.end)} (${Math.round(c.end - c.start)} s; why: ${c.reasons.join(', ')}${c.heat != null ? `; average replay intensity ${Math.round(c.heat * 100)}%` : ''}): "${c.text.slice(0, 600)}"`)
+        .join('\n')
+    : '(none found automatically; pick from the transcript)';
+  const system = `${SYSTEM} You specialize in turning long videos into YouTube Shorts that work on their own: a hook in the first second, one idea, a payoff before the end, and an ending that makes the loop feel natural.`;
+  const prompt = `${nicheLine(niche)}
+
+${mine ? 'This is MY video. Suggest Shorts I can cut from it.' : "This video is by another creator. Don't suggest reuploading their footage: suggest Shorts I can make myself on the same moments (my own take, recreation or reaction), and say what to borrow (the idea, structure or line) and what to change."}
+
+Video: "${video.title}"${video.channelTitle ? ` by ${video.channelTitle}` : ''}${video.views != null ? ` (${n(video.views)} views${video.multiplier != null ? `, ${x2(video.multiplier)} its channel median` : ''})` : ''}
+
+Moments found from the "Most replayed" heatmap and the script's twists, questions and stakes:
+${list}
+
+Transcript with timestamps:
+${transcriptExcerpt(segments, 3500)}
+
+Pick the 3–5 strongest Shorts (use the moments above or better ones from the transcript; replayed moments are proof viewers care). For each:
+
+### Short N: <working title, under 50 characters>
+- **Clip:** start–end timestamps and length (aim for 20–45 seconds)${mine ? '' : ' of the moment it is based on'}
+- **Why it works alone:** the setup and the payoff inside the clip, in one or two sentences
+- **First second:** the opening line or on-screen text that hooks before anyone swipes${mine ? ' (a line actually said, or a short text overlay if the clip needs context)' : ''}
+- **Cut:** ${mine ? 'which lines to remove or tighten so it moves fast' : 'how to film or structure it'}
+- **On-screen text:** 1–2 short captions
+- **Ending / loop:** how it ends so the replay feels natural${mine ? '\n- **Points back to the long video:** how it can drive viewers to the full video (related-video link, pinned comment)' : ''}
+
+Finish with one line on which Short to post first and why.`;
+  return { system, prompt };
+}

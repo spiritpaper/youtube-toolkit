@@ -29,6 +29,15 @@ Open it with **Analyze script**, or from a saved outlier that has a transcript (
 
 **Break down the script with AI** explains the hook, the story beats (with timestamps), every attention tactic (with quotes), the language and keywords, whether the video delivers on its title, why viewers replayed or left, and a reusable beat sheet. **Outline my version** turns that structure into a hook, beat sheet and re-hook lines for your topic, which you can **Save as a project**.
 
+## Shorts from a long video
+
+The Script analyzer's **Shorts from this video** card lists stretches of 25–58 seconds that could work as Shorts. It builds them around the moments viewers **replay most** (the "Most replayed" heatmap) and the script's twists, questions and stakes, and starts and ends each one on a sentence. Click a time to watch that moment.
+
+**Plan Shorts with AI** picks the 3–5 strongest and, for each, gives the clip times, why it works on its own, a first-second hook, what to cut, on-screen text and a loop ending, plus which one to post first. **Save as a project** puts the plan on the Idea board.
+
+- **Your own video** (signed in on [My channel](my-channel.md)): Shorts to cut from it, with a way to point viewers back to the full video.
+- **Someone else's video**: Shorts you can make yourself on the same moments (your own take, recreation or reaction), with what to borrow and what to change. It never suggests reuploading their footage.
+
 ## My notes
 
 Every analyzed script has a **My notes** card near the top: your own observations, each pinned to a moment in the video.

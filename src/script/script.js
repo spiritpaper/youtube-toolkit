@@ -2,7 +2,8 @@ import { mountShell } from '../lib/nav.js';
 import { send, h, fmtNum, fmtMult, tier, videoUrl, download } from '../lib/ui.js';
 import { analyzeScript, hookSummary, DEVICES } from '../lib/script.js';
 import { formatTime } from '../lib/stats.js';
-import { activeAi, generate, scriptPrompt, outlinePrompt, PROVIDERS } from '../lib/ai.js';
+import { activeAi, generate, scriptPrompt, outlinePrompt, shortsPrompt, PROVIDERS } from '../lib/ai.js';
+import { shortCandidates } from '../lib/shorts.js';
 import { markdownToHtml } from '../lib/markdown.js';
 import { parseTime, notesMarkdown } from '../lib/notes.js';
 
@@ -126,6 +127,47 @@ function notesCard(idea, entry) {
   return notesUi;
 }
 
+// ---------- Shorts from this video ----------
+
+function shortsCard(idea, tx, a, heatmap, mine) {
+  const id = idea.id;
+  const candidates = shortCandidates(tx.segments, { heatmap, devices: a.devices });
+  const box = h('div', {}, tx.shorts ? shortsResult(idea, tx.shorts) : null);
+  const btn = h('button', { class: 'primary' }, tx.shorts ? 'Re-plan Shorts with AI' : 'Plan Shorts with AI');
+  btn.addEventListener('click', () =>
+    withAi(box, btn, async (ai) => {
+      const { system, prompt } = shortsPrompt({ ...idea, multiplier: idea.stats?.multiplier ?? idea.multiplier }, tx.segments, candidates, ai.niche, { mine });
+      const text = await generate({ ...ai, system, prompt });
+      const result = { text, mine, provider: ai.provider, model: ai.model, at: Date.now() };
+      await send({ type: 'saveScriptAi', id, key: 'shorts', ai: result });
+      tx.shorts = result;
+      box.replaceChildren(shortsResult(idea, result));
+    }));
+  return h('section', { class: 'card', id: 'shorts' },
+    h('div', { class: 'row' }, h('h3', { class: 'grow', style: 'margin:0' }, 'Shorts from this video'), btn),
+    h('p', { class: 'muted small' }, mine
+      ? 'Stretches of 25–58 seconds that can stand alone, around the moments viewers replay most and the script\'s twists, questions and stakes. The AI picks the best, with a first-second hook, cuts, captions and a loop ending.'
+      : 'Moments from this video that viewers replay most, or that carry a twist or a question. Not your video, so the AI suggests Shorts you can make yourself on the same moments, not reuploads.'),
+    candidates.length
+      ? h('ol', { class: 'shorts' }, candidates.map((c) =>
+          h('li', {},
+            h('div', { class: 'row' }, ts(id, c.start), h('span', { class: 'muted small' }, `→ ${formatTime(c.end)} · ${Math.round(c.end - c.start)} s · ${c.reasons.map((r) => (DEVICES[r]?.label ?? r)).join(', ')}`)),
+            h('div', { class: 'quote' }, c.text.length > 280 ? `${c.text.slice(0, 280)}…` : c.text))))
+      : h('p', { class: 'muted' }, 'This video is too short to cut Shorts from.'),
+    box);
+}
+
+function shortsResult(idea, result) {
+  return h('div', {},
+    aiResult('Shorts plan', result),
+    h('button', {
+      onclick: async () => {
+        const p = await send({ type: 'projectCreate', data: { title: `Shorts from: ${idea.title.slice(0, 80)}`, outline: result.text, inspiration: [idea.id], source: { type: 'shorts', id: idea.id } } });
+        location.href = `../project/project.html?id=${p.id}`;
+      },
+    }, 'Save as a project on the Idea board'));
+}
+
 // ---------- single video ----------
 
 function timeline(id, a) {
@@ -229,6 +271,7 @@ function render({ idea, tx, heatmap, me, notes: noteEntry }, retention) {
       ),
     ),
     timeline(id, a),
+    shortsCard(idea, tx, a, heatmap, !!me && me.id === idea.channelId),
     h(
       'div',
       { class: 'cols' },
