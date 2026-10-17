@@ -770,3 +770,108 @@ Reply with ONLY a JSON array, no other text, in exactly this shape:
 ${fields}`;
   return { system, prompt };
 }
+
+// ---------- Test screenings (Audience lab) ----------
+
+const SCREENING_SYSTEM = `You play a test audience for a YouTube video: several specific viewers, each described in detail. Each one reacts as themselves, honestly and unfiltered, the way they really would on an ordinary day with a feed full of other options.
+
+Rules:
+- Stay in character. Use each viewer's interests, knowledge, beliefs, frustrations, habits and device.
+- Be realistic, not polite: most people scroll past most videos, many leave in the first seconds, attention dips in the middle. Nobody is trying to please the creator.
+- Boredom, skepticism, confusion, irritation or anger are valid reactions; report them plainly, without judging the viewer.
+- Base reactions only on what each viewer would actually see or hear.`;
+
+const anchorLine = (baseline) =>
+  [
+    baseline?.ctr != null && `On this channel, about ${baseline.ctr.toFixed(1)}% of people shown a video click it.`,
+    baseline?.avgViewed != null && `Viewers watch about ${Math.round(baseline.avgViewed)}% of a video on average.`,
+  ].filter(Boolean).join(' ');
+
+/**
+ * Stage 1 of a screening: each viewer sees the title in their feed, then the
+ * clickers watch the hook. `neighbors`: other titles in the same feed.
+ */
+export function feedHookPrompt({ avatars, title, hook, neighbors = [], baseline = null, niche = '' }) {
+  const feed = [...neighbors.slice(0, 5).map((t) => `"${t}"`), `"${title}"   ← the video being tested`];
+  const prompt = `${nicheLine(niche)}
+
+The viewers:
+${avatars.map((a) => `- ${a}`).join('\n')}
+
+1. FEED. Each viewer is scrolling and sees these titles (no thumbnails):
+${feed.map((t) => `   ${t}`).join('\n')}
+Would they click the tested video? "yes", "maybe" or "no", their first thought on seeing the title, and why.
+${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)} Keep the share of "yes" near what's realistic.` : ''}
+
+2. HOOK. ${hook ? `Only viewers who answered yes or maybe watch the opening (about the first 30 seconds). Realistically, a good share of people who click leave within these seconds when the opening doesn't quickly show them what they came for; decide per viewer:
+"""
+${hook}
+"""
+Do they keep watching past it ("stay": true) or leave ("stay": false, and "leaveAt": the second they leave, 0-30)? How does it make them feel, and why?` : 'There is no script yet: skip the hook (stay: null).'}
+
+Reply with ONLY a JSON array, one object per viewer, using their [id]:
+[{"id": "…", "click": "yes|maybe|no", "firstThought": "…", "clickWhy": "…", "stay": true, "leaveAt": null, "hookFeeling": "one or two words", "hookWhy": "…"}]
+For viewers who don't click, use "stay": null and leave the hook fields empty.`;
+  return { system: SCREENING_SYSTEM, prompt };
+}
+
+/**
+ * Stage 2: the viewers still watching go through the video beat by beat.
+ * `beats`: [{ i, start, text }].
+ */
+export function storyPrompt({ avatars, title, beats, baseline = null, niche = '', outline = false }) {
+  const mmss = (sec) => (sec == null ? '' : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')} `);
+  const prompt = `${nicheLine(niche)}
+
+Video: "${title}"
+These viewers clicked and stayed past the opening:
+${avatars.map((a) => `- ${a}`).join('\n')}
+
+The rest of the video, in beats${outline ? ' (from the outline: what will happen, not the final words)' : ''}:
+${beats.map((b) => `[beat ${b.i}] ${mmss(b.start)}${b.text}`).join('\n\n')}
+
+They are WATCHING, not reading: each beat takes about a minute of their evening, on their device, with other videos one tap away. They can't skim ahead.
+
+Each viewer's line ends with how much of a video like this they typically watch. That is the most likely place for them to leave. Before writing their beats, decide honestly where THIS viewer would stop, given that typical amount and what each beat offers them. Leaving around their typical point is normal, not a failure. Only let someone watch much longer if the video gives them, specifically, a strong reason to. A group where everyone finishes is unrealistic.
+
+For each viewer, go through the beats in order. For each beat: attention 0-10 (let it rise and fall with the content), their main emotion (one or two words), a short thought in their own voice, and whether they leave there ("leave": true; then stop that viewer's beats).
+${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)}` : ''}
+Viewers who reach the end also answer: overall score 1-10, would they like it, the comment they'd write (in their voice, or null if they wouldn't comment), subscribe, share, watch another video from this channel, what they'd tell a friend about it, and what (if anything) changed in what they think or feel.
+
+Reply with ONLY a JSON array, one object per viewer:
+[{"id": "…", "beats": [{"i": 0, "attention": 7, "emotion": "curious", "thought": "…", "leave": false}], "end": {"score": 7, "like": true, "comment": "…", "subscribe": false, "share": false, "watchNext": true, "tellFriend": "…", "changed": "…"}}]
+Use "end": null for viewers who leave.`;
+  return { system: SCREENING_SYSTEM, prompt };
+}
+
+/**
+ * Stage 3: what to change, from the screening's results. `report` is a text
+ * summary of numbers and reactions; `principles` (optional) are story
+ * principle names the fixes may refer to.
+ */
+export function screeningSummaryPrompt({ title, report, niche = '', principles = [] }) {
+  const system = `You are a YouTube story editor reading the results of a test screening with simulated viewers. Turn their reactions into concrete changes. Be direct; don't soften problems, and don't judge the viewers: their reactions are data. Write in Markdown.`;
+  const prompt = `${nicheLine(niche)}
+
+Video: "${title}"
+Test screening results:
+${report}
+
+Write:
+## What works
+2-4 points, each tied to the viewers or beats that show it.
+
+## What to change, ranked
+The most impactful changes first (by how many viewers and how much of the audience they affect). For each:
+### <short name>
+- **Where:** title, hook, or the beat (with its time) and the line it starts with
+- **Who:** the viewers it affects, and their share of the audience
+- **Why:** what they felt or thought there, quoting them
+- **Fix:** exactly what to change (rewrite the line, cut, move, add a tease…)${principles.length ? `\n- **Principle:** the story principle behind the fix, from this list: ${principles.join(', ')}` : ''}
+
+## Title
+Keep it or change it, and up to 3 alternatives these viewers would click more, with who each one wins over.
+
+Keep it concrete and short.`;
+  return { system, prompt };
+}

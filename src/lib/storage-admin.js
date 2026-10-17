@@ -198,6 +198,7 @@ export function summarizeBackup(backup) {
     { label: 'Transcripts', count: prefixed(d, 'tx:') },
     { label: 'Script notes', count: prefixed(d, 'sn:') },
     { label: 'Audience avatars', count: Object.values(d.avatars ?? {}).reduce((n, g) => n + (g.avatars?.length ?? 0), 0) },
+    { label: 'Test screenings', count: prefixed(d, 'sim:') },
     { label: 'Retention heatmaps', count: prefixed(d, 'hm:') },
     { label: 'Comment research', count: prefixed(d, 'cm:') },
     { label: 'Thumbnails', count: prefixed(d, 'th:') },
