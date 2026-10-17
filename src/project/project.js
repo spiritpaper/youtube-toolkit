@@ -6,6 +6,7 @@ import { markdownToHtml } from '../lib/markdown.js';
 import { mdEditor } from '../lib/md-view.js';
 import { scriptToolsSection } from './script-tools.js';
 import { shotListSection, thumbnailSection, publishedSection } from './production.js';
+import { screeningSection } from './screening-card.js';
 
 mountShell('board');
 const main = document.getElementById('main');
@@ -165,6 +166,7 @@ function render() {
     }),
     shotListSection(project, { save: async (patch) => (project = await send({ type: 'projectUpdate', id, patch })) }),
     thumbnailSection(project, { ideas }),
+    screeningSection(project),
     publishedSection(project, { ideas, onChange: (p) => { project = p; render(); } }),
   );
 }

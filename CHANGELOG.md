@@ -5,6 +5,7 @@ All notable changes to YT Toolkit. Each release's section becomes its GitHub Rel
 ## [Unreleased]
 
 ### Added
+- **Test screenings**: run a project's title, opening and script past an avatar group. Each viewer decides whether to click in a realistic feed, whether to stay past the opening, and how they feel beat by beat, until they leave or reach the end (and what they'd comment). The report shows weighted click, retention and finish estimates, an attention curve, where and why viewers left, every viewer's reactions, and ranked changes. Viewers are anchored to real (or typical) watch times so the results stay honest.
 - **Audience lab**: groups of avatars, realistic fictional viewers built from your real analytics (age, countries, devices, subscribers, how people find you), your top videos and recent comments, or from your channel description or a channel you follow. Lock, edit, add by hand, and regenerate the rest. Each avatar shows the data it reflects.
 
 ## [0.7.2] - 2026-10-17

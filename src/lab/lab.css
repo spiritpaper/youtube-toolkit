@@ -43,3 +43,11 @@ dialog.edit::backdrop { background: rgba(0, 0, 0, 0.4); }
 .edit input, .edit select, .edit textarea { font-size: 14px; color: var(--fg); }
 .edit textarea { min-height: 54px; resize: vertical; }
 .edit .acts { display: flex; gap: 8px; justify-content: flex-end; }
+.tabs { display: inline-flex; border: 1px solid var(--border); border-radius: 18px; overflow: hidden; justify-self: start; }
+.tabs button { border: 0; border-radius: 0; padding: 6px 16px; background: transparent; }
+.tabs button[aria-selected='true'] { background: var(--bg-3); font-weight: 600; }
+.sim-list { display: grid; gap: 6px; }
+.sim-row { display: flex; gap: 12px; justify-content: space-between; align-items: center; padding: 8px 10px; border: 1px solid var(--border); border-radius: 10px; color: var(--fg); text-decoration: none; flex-wrap: wrap; }
+.sim-row:hover { background: var(--bg-2); }
+.sim-nums { font-size: 13px; font-variant-numeric: tabular-nums; }
+.grow { flex: 1; }

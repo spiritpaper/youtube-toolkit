@@ -35,6 +35,29 @@ Choose how many avatars you want (8 by default, up to 20). More avatars give a f
 
 Groups are saved in the extension, included in backups, and shown under **Settings → Storage & data**.
 
-## Next: test screenings
+## Test screenings
 
-Test screenings are the next step: they run a title, hook and script past a group, viewer by viewer, and later compare the forecast with the real numbers after publishing.
+A test screening runs a video past one of your groups, viewer by viewer, the way real viewers meet it:
+
+1. **The feed.** Each viewer sees your title among other titles (your strongest saved outliers and radar finds) and decides: click, maybe, or scroll past. You get their first thought and why.
+2. **The opening.** Viewers who clicked watch the first ~30 seconds of your script and stay or leave, at a given second, and say why.
+3. **The story.** Viewers who stayed watch the rest beat by beat (the script is split into beats of about a minute). For each beat, they give attention 0–10, an emotion, a thought in their own voice, and whether they leave. Viewers who reach the end say whether they'd like it, comment (with the comment), subscribe, share or watch another, and what they'd tell a friend.
+4. **The editor's notes.** What works, what to change ranked by how much of the audience it affects (where, who, why, and the fix), and whether to keep the title, with alternatives.
+
+**Run one** from a project's **Test screening** card (choose the group and which of the project's titles to test), or from **Audience lab → Test screenings**. A screening takes 3 AI calls. It tests the title, the opening and the script; with only an outline, the outline's lines stand in for the beats; with neither, only the title is tested.
+
+### The report
+
+- **Would click, stay past the opening, watch on average, reach the end, would subscribe.** These are computed by the extension from the viewers' answers, weighted by each viewer's share of your audience. They're shown next to your channel's real numbers when you're signed in.
+- **Through the video:** the attention curve and how many are still watching, with every beat's main feeling and who left where.
+- **Every viewer:** their click, first thought, how far they got and why they left, their comment, and their beat-by-beat reactions.
+- **Copy report** puts the raw results and the notes on your clipboard.
+
+### Keeping it honest
+
+Simulated viewers tend to be too kind. To counter that:
+- Each viewer gets a **typical watch time**, from your channel's real subscriber and non-subscriber averages (signed in) or common YouTube rules of thumb (not signed in), adjusted for their device. Leaving around that point is treated as normal.
+- Viewers watch rather than read, and the instructions say plainly that a group where everyone finishes is unrealistic.
+- Reactions are reported without judging the viewer: boredom, doubt and irritation are data.
+
+Even so, the numbers are best for **comparing**: two titles, or a script before and after a rewrite. Use them to see where it drags and what confuses, rather than to predict exact views. Stage 4 will compare each screening with how the video really did.

@@ -4,9 +4,13 @@
 import { mountShell } from '../lib/nav.js';
 import { send, h, emptyState } from '../lib/ui.js';
 import { activeAi, generate, avatarsPrompt, PROVIDERS } from '../lib/ai.js';
+import { face } from './face.js';
+import { renderReport, REPORT_CSS } from './report.js';
+import { runScreening } from './screen-run.js';
 import { audienceSheet, parseAvatars, mergeRegenerated, normalizeAvatar, DEFAULT_COUNT, MAX_COUNT, KNOWLEDGE, DEVICES, DISCOVERY, RELATIONSHIP } from '../lib/avatars.js';
 
 mountShell('lab');
+document.head.append(h('style', {}, REPORT_CSS));
 const main = document.getElementById('main');
 const dlg = document.getElementById('edit');
 
@@ -14,6 +18,7 @@ let groups = {};
 let current = null; // group id
 let creating = false;
 let busy = null; // { text } while building
+let tab = location.hash.startsWith('#sim') || location.hash === '#screenings' ? 'screenings' : 'avatars';
 
 const LABEL = {
   knowledge: { new: 'new to the topic', some: 'knows some', expert: 'expert' },
@@ -21,32 +26,6 @@ const LABEL = {
   relationship: { subscriber: 'subscriber', returning: 'returning viewer', new: 'new viewer' },
   device: { phone: 'phone', computer: 'computer', tv: 'TV', tablet: 'tablet' },
 };
-
-// ---------- a face for each avatar (deterministic, no images) ----------
-
-function hash(s) {
-  let x = 2166136261;
-  for (let i = 0; i < s.length; i++) x = Math.imul(x ^ s.charCodeAt(i), 16777619);
-  return x >>> 0;
-}
-function face(a) {
-  const n = hash(`${a.id}${a.name}`);
-  const hues = [12, 28, 45, 150, 175, 200, 220, 265, 300, 335];
-  const bg = `hsl(${hues[n % hues.length]} 55% 72%)`;
-  const skin = ['#f5d0b5', '#e8b48f', '#c98e66', '#a06a45', '#7a4b2e', '#5a3622'][(n >>> 4) % 6];
-  const hair = ['#2b1d16', '#4a3020', '#8a5a2b', '#c49a5a', '#1d1d1d', '#9a9a9a', '#b5452c'][(n >>> 8) % 7];
-  const style = (n >>> 12) % 3;
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  svg.setAttribute('viewBox', '0 0 64 64');
-  svg.setAttribute('aria-hidden', 'true');
-  const hairPath = [
-    'M14 30c0-14 9-21 18-21s18 7 18 21c-3-6-8-9-18-9s-15 3-18 9z',
-    'M12 34c-1-17 9-25 20-25s21 8 20 25c-2-9-6-13-11-14-3 3-9 4-18 3-5 2-9 5-11 11z',
-    'M15 28c1-12 8-18 17-18s16 6 17 18c-5-4-11-6-17-6s-12 2-17 6z M13 30h4v14h-4z M47 30h4v14h-4z',
-  ][style];
-  svg.innerHTML = `<rect width="64" height="64" fill="${bg}"/><path d="M14 64c2-11 9-16 18-16s16 5 18 16z" fill="${hair}" opacity=".85"/><circle cx="32" cy="32" r="14" fill="${skin}"/><path d="${hairPath}" fill="${hair}"/><circle cx="27" cy="33" r="1.6" fill="#222"/><circle cx="37" cy="33" r="1.6" fill="#222"/><path d="M28 39q4 3 8 0" stroke="#222" stroke-width="1.4" fill="none" stroke-linecap="round"/>`;
-  return svg;
-}
 
 // ---------- rendering ----------
 
@@ -138,7 +117,79 @@ function newGroupForm() {
 
 const defaultSource = () => (me ? 'analytics' : 'niche');
 
+function tabs() {
+  const go = (t) => {
+    tab = t;
+    history.replaceState(null, '', t === 'screenings' ? '#screenings' : '#');
+    render();
+  };
+  return h('div', { class: 'tabs', role: 'tablist' },
+    h('button', { role: 'tab', 'aria-selected': String(tab === 'avatars'), onclick: () => go('avatars') }, 'Avatars'),
+    h('button', { role: 'tab', 'aria-selected': String(tab === 'screenings'), onclick: () => go('screenings') }, 'Test screenings'));
+}
+
+// ---------- test screenings ----------
+
+let sims = [];
+let projects = {};
+async function renderScreenings() {
+  const simId = /#sim=([\w]+)/.exec(location.hash)?.[1];
+  if (simId) {
+    const sim = await send({ type: 'screeningGet', id: simId });
+    main.replaceChildren(tabs(), sim
+      ? h('div', { class: 'lab-sim' },
+          h('div', { class: 'ghead' },
+            h('a', { href: '#screenings', onclick: (e) => { e.preventDefault(); history.replaceState(null, '', '#screenings'); render(); } }, '← All test screenings'),
+            h('span', { class: 'grow' }),
+            projects[sim.projectId] && h('a', { class: 'button-link', href: `../project/project.html?id=${sim.projectId}#screening` }, 'Open the project'),
+            h('button', { onclick: () => navigator.clipboard.writeText(`${sim.report}\n\n${sim.summary?.text ?? ''}`) }, 'Copy report'),
+            h('button', { class: 'danger', onclick: async () => { if (confirm('Delete this test screening?')) { await send({ type: 'screeningDelete', id: sim.id }); history.replaceState(null, '', '#screenings'); render(); } } }, 'Delete')),
+          h('h2', { style: 'margin:8px 0 0' }, sim.projectTitle),
+          renderReport(sim))
+      : emptyState('Screening not found', 'It may have been deleted.'));
+    return;
+  }
+  sims = await send({ type: 'screenings' }).catch(() => []);
+  const groupList = Object.values(groups).filter((g) => g.avatars.length);
+  const projectList = Object.values(projects).filter((p) => !p.archivedAt).sort((a, b) => b.updatedAt - a.updatedAt);
+  const form = (() => {
+    if (!groupList.length) return h('section', { class: 'card' }, emptyState('Build an audience first', 'Test screenings run a video past an avatar group. Create one on the Avatars tab.'));
+    if (!projectList.length) return h('section', { class: 'card' }, emptyState('No projects yet', 'Screenings test a project on the Idea board: its title, opening and script.', [{ label: 'Go to the Idea board', href: '../board/board.html', primary: true }]));
+    const proj = h('select', { 'aria-label': 'Project' }, projectList.map((p) => h('option', { value: p.id }, p.title)));
+    const grp = h('select', { 'aria-label': 'Audience group' }, groupList.map((g) => h('option', { value: g.id }, `${g.name} (${g.avatars.length})`)));
+    const run = h('button', { class: 'primary' }, 'Run test screening');
+    const status = h('div', {});
+    run.addEventListener('click', async () => {
+      const ai = await activeAi();
+      if (!ai) return status.replaceChildren(h('p', { class: 'muted' }, 'Test screenings use AI. Connect a provider in Settings first.'));
+      run.disabled = true;
+      const progress = h('div', { class: 'loading inline' }, 'Starting…');
+      status.replaceChildren(progress);
+      try {
+        const p = projects[proj.value];
+        const sim = await runScreening({ ai, project: p, group: groups[grp.value], title: p.title, principles: screeningPrinciples, onProgress: (t) => (progress.textContent = t) });
+        history.replaceState(null, '', `#sim=${sim.id}`);
+        render();
+      } catch (err) {
+        run.disabled = false;
+        status.replaceChildren(err.cancelled ? '' : h('p', { class: 'error' }, err.message));
+      }
+    });
+    return h('section', { class: 'card' }, h('h2', {}, 'New test screening'),
+      h('p', { class: 'muted small' }, 'Pick a project and an audience: the viewers see the title in their feed, watch the opening, then the script beat by beat. 3 AI calls. To test other title options, run it from the project page.'),
+      h('div', { class: 'ghead' }, proj, grp, run), status);
+  })();
+  main.replaceChildren(tabs(), form,
+    h('section', { class: 'card' }, h('h2', {}, 'Past screenings'),
+      sims.length
+        ? h('div', { class: 'sim-list' }, sims.map((sm) => h('a', { class: 'sim-row', href: `#sim=${sm.id}`, onclick: (e) => { e.preventDefault(); history.replaceState(null, '', `#sim=${sm.id}`); render(); } },
+            h('div', {}, h('b', {}, sm.projectTitle), h('div', { class: 'muted small' }, `"${sm.title}" · ${sm.groupName} · ${new Date(sm.at).toLocaleString()}`)),
+            h('div', { class: 'sim-nums' }, `click ${Math.round(sm.result.clickShare * 100)}%`, ' · ', `watch ${sm.result.watchedShare == null ? '—' : `${Math.round(sm.result.watchedShare * 100)}%`}`, sm.result.score != null ? ` · ${sm.result.score.toFixed(1)}/10` : ''))))
+        : emptyState('No test screenings yet', 'Run one above, or from the Test screening card on any project.')));
+}
+
 function render() {
+  if (tab === 'screenings') return renderScreenings();
   const list = Object.values(groups).sort((a, b) => a.createdAt - b.createdAt);
   if (!current || !groups[current]) current = list[0]?.id ?? null;
   const bar = h('div', { class: 'groups' },
@@ -151,7 +202,7 @@ function render() {
         ? newGroupForm()
         : h('section', { class: 'card' }, emptyState('Build your audience', 'Avatars are realistic viewers made from your real data: who watches, how they find you, what they say in the comments. Next, you\'ll test-screen titles, hooks and scripts with them before publishing.', []), h('div', { class: 'empty-actions' }, h('button', { class: 'primary', onclick: () => { creating = true; render(); } }, 'Build my audience')))
       : groupView(groups[current]);
-  main.replaceChildren(bar, body);
+  main.replaceChildren(tabs(), bar, body);
 }
 
 // ---------- building with AI ----------
@@ -214,6 +265,10 @@ async function build({ group = null, name, focus = '', count = DEFAULT_COUNT, so
   } finally {
     busy = null;
     await load();
+window.addEventListener('hashchange', () => {
+  if (location.hash.startsWith('#sim')) tab = 'screenings';
+  render();
+});
   }
 }
 
@@ -263,6 +318,8 @@ function editAvatar(g, a) {
 
 // ---------- start ----------
 
+// Story principles the fixes may cite (the personal build fills this in).
+const screeningPrinciples = [];
 let me = null;
 let followed = {};
 async function load() {
@@ -270,7 +327,12 @@ async function load() {
   render();
 }
 
-const [auth, store] = await Promise.all([send({ type: 'authStatus' }).catch(() => ({})), chrome.storage.local.get('watchlist')]);
+const [auth, store] = await Promise.all([send({ type: 'authStatus' }).catch(() => ({})), chrome.storage.local.get(['watchlist', 'projects'])]);
+projects = store.projects ?? {};
 me = auth.signedIn ? auth.me : null;
 followed = store.watchlist ?? {};
 await load();
+window.addEventListener('hashchange', () => {
+  if (location.hash.startsWith('#sim')) tab = 'screenings';
+  render();
+});
