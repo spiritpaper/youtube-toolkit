@@ -4,6 +4,7 @@
 
 import { send } from '../lib/ui.js';
 import { generate, feedHookPrompt, storyPrompt, screeningSummaryPrompt, titleTestPrompt, thumbnailImage } from '../lib/ai.js';
+import { calibration as learnCalibration, calibrated, calibrationLine, watchShift } from '../lib/accuracy.js';
 import { splitMaterial, avatarBrief, expectedWatch, extractJsonArray, cleanFeed, cleanStory, aggregate, reportText, combineResults, cleanTitleVotes, scoreTitles, LETTERS } from '../lib/screening.js';
 
 /** The channel's real averages, to keep the simulated viewers honest (null if not signed in). */
@@ -61,15 +62,21 @@ async function feedImages(project, neighbors) {
 }
 
 /** One run of the feed, hook and story stages. */
-async function runPass({ ai, avatars, brief, anchored, title, material, neighbors, baseline, images, onProgress, label }) {
+/** What this audience's past screenings taught (checked against published videos). */
+export async function groupCalibration(groupId) {
+  const sims = await send({ type: 'screenings' }).catch(() => []);
+  return learnCalibration(sims.filter((s) => s.groupId === groupId && s.accuracy));
+}
+
+async function runPass({ ai, avatars, brief, anchored, title, material, neighbors, baseline, images, cal, onProgress, label }) {
   onProgress(`${label}The feed: ${avatars.length} viewers see "${title}"${material.hook ? ', and the clickers watch the opening' : ''}…`);
-  const one = feedHookPrompt({ avatars: avatars.map((a) => brief[a.id]), title, hook: material.hook?.text ?? '', neighbors: neighbors.map((n) => n.title), baseline, niche: ai.niche, images: images?.tags ?? null });
+  const one = feedHookPrompt({ avatars: avatars.map((a) => brief[a.id]), title, hook: material.hook?.text ?? '', neighbors: neighbors.map((n) => n.title), baseline, niche: ai.niche, images: images?.tags ?? null, calibration: calibrationLine(cal, 'feed') });
   const feed = cleanFeed(extractJsonArray(await generate({ ...ai, ...one, images: images?.images ?? [] })), avatars);
   const watching = avatars.filter((a) => feed[a.id] && feed[a.id].click !== 'no' && (material.hook ? feed[a.id].stay === true : true));
   let story = {};
   if (watching.length && material.beats.length) {
     onProgress(`${label}The story: ${watching.length} viewer${watching.length === 1 ? '' : 's'} watch the rest, beat by beat…`);
-    const two = storyPrompt({ avatars: watching.map(anchored), title, beats: material.beats, baseline, niche: ai.niche, outline: !!material.outline });
+    const two = storyPrompt({ avatars: watching.map(anchored), title, beats: material.beats, baseline, niche: ai.niche, outline: !!material.outline, calibration: calibrationLine(cal, 'story') });
     story = cleanStory(extractJsonArray(await generate({ ...ai, ...two })), watching, material.beats.length);
   }
   return { feed, story, result: aggregate(avatars, feed, story, material.beats.length) };
@@ -87,15 +94,17 @@ export async function runScreening({ ai, project, group, title, thumbnail = fals
   if (!avatars.length) throw new Error('This audience group has no avatars yet.');
   const material = splitMaterial({ script: project.script, outline: project.outline });
   onProgress('Checking your channel\'s real averages…');
-  const [baseline, neighbors] = await Promise.all([channelBaseline(), feedNeighbors(title)]);
+  const [baseline, neighbors, cal] = await Promise.all([channelBaseline(), feedNeighbors(title), groupCalibration(group.id)]);
   const images = thumbnail ? (onProgress('Loading the thumbnails for the feed…'), await feedImages(project, neighbors)) : null;
   const brief = Object.fromEntries(avatars.map((a) => [a.id, avatarBrief(a)]));
   // The story stage also gets each viewer's typical watch time, as an anchor.
-  const anchored = (a) => `${brief[a.id]} Typically watches about ${expectedWatch(a, baseline)}% of a video like this.`;
+  // Past misses shift it (e.g. this audience really watches 10 points less than screenings predicted).
+  const shift = watchShift(cal);
+  const anchored = (a) => `${brief[a.id]} Typically watches about ${Math.min(90, Math.max(5, expectedWatch(a, baseline) + shift))}% of a video like this.`;
 
   const runs = [];
   for (let p = 0; p < passes; p++) {
-    runs.push(await runPass({ ai, avatars, brief, anchored, title, material, neighbors, baseline, images, onProgress, label: passes > 1 ? `Run ${p + 1} of ${passes}. ` : '' }));
+    runs.push(await runPass({ ai, avatars, brief, anchored, title, material, neighbors, baseline, images, cal, onProgress, label: passes > 1 ? `Run ${p + 1} of ${passes}. ` : '' }));
   }
   const result = combineResults(runs.map((r) => r.result));
   const reports = runs.map((r, i) => `${passes > 1 ? `RUN ${i + 1}\n` : ''}${reportText({ avatars, feed: r.feed, story: r.story, result: r.result, material })}`);
@@ -122,6 +131,8 @@ export async function runScreening({ ai, project, group, title, thumbnail = fals
       story: runs[0].story,
       runs: passes > 1 ? runs.map((r) => ({ feed: r.feed, story: r.story, result: r.result })) : undefined,
       result,
+      calibration: cal.n ? cal : null,
+      calibrated: calibrated(result, cal),
       report,
       summary: { text: summary, provider: ai.provider, model: ai.model },
     },

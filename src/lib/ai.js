@@ -791,7 +791,7 @@ const anchorLine = (baseline) =>
  * Stage 1 of a screening: each viewer sees the title in their feed, then the
  * clickers watch the hook. `neighbors`: other titles in the same feed.
  */
-export function feedHookPrompt({ avatars, title, hook, neighbors = [], baseline = null, niche = '', images = null }) {
+export function feedHookPrompt({ avatars, title, hook, neighbors = [], baseline = null, niche = '', images = null, calibration = '' }) {
   // images: { tested: true, neighbors: n } when thumbnails are attached, in that order.
   const tag = (i) => (images ? `[image ${i}] ` : '');
   const feed = [...neighbors.slice(0, 5).map((t, i) => `${images && i < images.neighbors ? tag(i + 2) : ''}"${t}"`), `${tag(1)}"${title}"   ← the video being tested`];
@@ -803,7 +803,7 @@ ${avatars.map((a) => `- ${a}`).join('\n')}
 1. FEED. Each viewer is scrolling and sees these videos${images ? ' (the attached images are their thumbnails: image 1 is the tested video\'s, the others as tagged; videos without an image show only the title)' : ' (titles only, no thumbnails)'}:
 ${feed.map((t) => `   ${t}`).join('\n')}
 Would they click the tested video? "yes", "maybe" or "no", their first thought on seeing the title, and why.
-${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)} Keep the share of "yes" near what's realistic.` : ''}
+${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)} Keep the share of "yes" near what's realistic.` : ''}${calibration ? `\n${calibration}` : ''}
 
 2. HOOK. ${hook ? `Only viewers who answered yes or maybe watch the opening (about the first 30 seconds). Realistically, a good share of people who click leave within these seconds when the opening doesn't quickly show them what they came for; decide per viewer:
 """
@@ -821,7 +821,7 @@ For viewers who don't click, use "stay": null and leave the hook fields empty.`;
  * Stage 2: the viewers still watching go through the video beat by beat.
  * `beats`: [{ i, start, text }].
  */
-export function storyPrompt({ avatars, title, beats, baseline = null, niche = '', outline = false }) {
+export function storyPrompt({ avatars, title, beats, baseline = null, niche = '', outline = false, calibration = '' }) {
   const mmss = (sec) => (sec == null ? '' : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')} `);
   const prompt = `${nicheLine(niche)}
 
@@ -837,7 +837,7 @@ They are WATCHING, not reading: each beat takes about a minute of their evening,
 Each viewer's line ends with how much of a video like this they typically watch. That is the most likely place for them to leave. Before writing their beats, decide honestly where THIS viewer would stop, given that typical amount and what each beat offers them. Leaving around their typical point is normal, not a failure. Only let someone watch much longer if the video gives them, specifically, a strong reason to. A group where everyone finishes is unrealistic.
 
 For each viewer, go through the beats in order. For each beat: attention 0-10 (let it rise and fall with the content), their main emotion (one or two words), a short thought in their own voice, and whether they leave there ("leave": true; then stop that viewer's beats).
-${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)}` : ''}
+${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)}` : ''}${calibration ? `\n${calibration}` : ''}
 Viewers who reach the end also answer: overall score 1-10, would they like it, the comment they'd write (in their voice, or null if they wouldn't comment), subscribe, share, watch another video from this channel, what they'd tell a friend about it, and what (if anything) changed in what they think or feel.
 
 Reply with ONLY a JSON array, one object per viewer:
@@ -901,4 +901,34 @@ ${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)}` : ''}
 Reply with ONLY a JSON array, one object per viewer, using their [id]:
 [{"id": "…", "votes": [{"title": "A", "click": "yes|maybe|no", "thought": "…"}], "favorite": "A"}]`;
   return { system: SCREENING_SYSTEM, prompt };
+}
+
+/**
+ * After publishing: what a test screening got right and wrong, from its
+ * report, the forecast-vs-real numbers and real comments.
+ */
+export function accuracyNotesPrompt({ title, report, comparison, comments = [], niche = '' }) {
+  const system = `You review how well a simulated test screening predicted a real YouTube video's results, to make the next screenings better. Be specific and plain. The simulated viewers are personas; say which ones behaved unlike the real audience and how to adjust them. Write in Markdown.`;
+  const prompt = `${nicheLine(niche)}
+
+Video: "${title}"
+
+Forecast vs reality:
+${comparison}
+
+${comments.length ? `Real comments (most relevant first):\n${comments.slice(0, 30).map((c) => `- "${c.text.replace(/\s+/g, ' ').slice(0, 220)}"`).join('\n')}\n` : 'No real comments available.\n'}
+The screening's results (before publishing):
+${report}
+
+Write:
+## What the screening got right
+## What it missed
+Where the forecast and reality differ most, and the likely reason.
+## Comments: predicted vs real
+Did the themes the viewers predicted show up in the real comments? What did real viewers talk about that no persona did?
+## Adjust these personas
+Which personas reacted unlike the real audience, and what to change in them (patience, knowledge, wants, how they found the video…).
+## For the next screening
+2-3 short lessons about this audience.`;
+  return { system, prompt };
 }
