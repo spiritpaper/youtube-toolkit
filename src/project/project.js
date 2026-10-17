@@ -7,6 +7,7 @@ import { mdEditor } from '../lib/md-view.js';
 import { scriptToolsSection } from './script-tools.js';
 import { shotListSection, thumbnailSection, publishedSection } from './production.js';
 import { screeningSection } from './screening-card.js';
+import { askPanel } from '../lab/ask-panel.js';
 import { accuracySection } from './accuracy-card.js';
 
 mountShell('board');
@@ -155,6 +156,7 @@ function render() {
       h('button', { class: 'danger', onclick: async () => { if (confirm('Delete this project?')) { await send({ type: 'projectDelete', id }); location.href = '../board/board.html'; } } }, 'Delete')),
     h('p', { class: 'muted small' }, `Created ${ageText(project.createdAt)} · updated ${ageText(project.updatedAt)}`),
     ideaSection(),
+    h('section', { class: 'card', id: 'ask' }, h('div', { class: 'card-head' }, h('h2', {}, 'Ask your audience')), askPanel({ project })),
     inspirationSection(),
     titlesSection(),
     outlineSection(),

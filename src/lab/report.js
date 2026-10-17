@@ -6,6 +6,7 @@ import { lineChart } from '../lib/linechart.js';
 import { markdownToHtml } from '../lib/markdown.js';
 import { PROVIDERS } from '../lib/ai.js';
 import { face } from './face.js';
+import { renderPitch, renderChat } from './ask-view.js';
 
 const pct = (x) => (x == null ? '—' : `${Math.round(x * 100)}%`);
 const clock = (sec) => (sec == null ? '' : `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`);
@@ -163,6 +164,8 @@ export function renderReport(sim, { compact = false } = {}) {
   md.innerHTML = markdownToHtml(sim.summary?.text ?? ''); // escapes everything first
   const meta = `${new Date(sim.at).toLocaleString()} · "${sim.title}" · ${sim.groupName} (${sim.avatars.length} viewers)${sim.thumbnail ? ' · with thumbnail' : ''}${sim.result?.passes > 1 ? ` · ${sim.result.passes} runs combined` : ''}${sim.summary ? ` · ${PROVIDERS[sim.summary.provider]?.label ?? sim.summary.provider}` : ''}`;
   if (sim.kind === 'titles') return renderTitleTest(sim, { compact, meta });
+  if (sim.kind === 'pitch') return renderPitch(sim, { compact });
+  if (sim.kind === 'chat') return h('div', { class: 'sim-report' }, h('div', { class: 'muted small' }, `${new Date(sim.at).toLocaleString()} · ${sim.groupName} · ${(sim.messages ?? []).filter((m) => m.from === 'you').length} questions`), renderChat(sim));
   if (compact) {
     const drops = sim.result.leaves.slice(0, 3);
     return h('div', { class: 'sim-report compact' },

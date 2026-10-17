@@ -26,9 +26,9 @@ export function accuracySection(project) {
     ]);
     project = all[project.id] ?? project;
     const video = publishedVideo(project);
-    const screenings = sims.filter((s) => s.kind !== 'titles');
+    const screenings = sims.filter((s) => !s.kind || s.kind === 'screening');
     const titleTest = sims.find((s) => s.kind === 'titles');
-    section.hidden = !video || !sims.length;
+    section.hidden = !video || !(screenings.length || titleTest);
     if (section.hidden) return;
 
     const age = video.publishedAt ? (Date.now() - Date.parse(video.publishedAt)) / DAY : null;

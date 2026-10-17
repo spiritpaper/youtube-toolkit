@@ -6,12 +6,14 @@ import { send, h, emptyState } from '../lib/ui.js';
 import { activeAi, generate, avatarsPrompt, PROVIDERS } from '../lib/ai.js';
 import { face } from './face.js';
 import { renderReport, expectations, REPORT_CSS } from './report.js';
+import { askPanel } from './ask-panel.js';
+import { ASK_CSS } from './ask-view.js';
 import { runScreening } from './screen-run.js';
 import { calibration as learnCalibration } from '../lib/accuracy.js';
 import { audienceSheet, parseAvatars, mergeRegenerated, normalizeAvatar, DEFAULT_COUNT, MAX_COUNT, KNOWLEDGE, DEVICES, DISCOVERY, RELATIONSHIP } from '../lib/avatars.js';
 
 mountShell('lab');
-document.head.append(h('style', {}, REPORT_CSS));
+document.head.append(h('style', {}, REPORT_CSS + ASK_CSS));
 const main = document.getElementById('main');
 const dlg = document.getElementById('edit');
 
@@ -19,7 +21,7 @@ let groups = {};
 let current = null; // group id
 let creating = false;
 let busy = null; // { text } while building
-let tab = location.hash.startsWith('#sim') || location.hash === '#screenings' ? 'screenings' : 'avatars';
+let tab = location.hash.startsWith('#sim') || location.hash === '#screenings' ? 'screenings' : location.hash === '#ask' ? 'ask' : 'avatars';
 
 const LABEL = {
   knowledge: { new: 'new to the topic', some: 'knows some', expert: 'expert' },
@@ -142,12 +144,24 @@ const defaultSource = () => (me ? 'analytics' : 'niche');
 function tabs() {
   const go = (t) => {
     tab = t;
-    history.replaceState(null, '', t === 'screenings' ? '#screenings' : '#');
+    history.replaceState(null, '', t === 'avatars' ? '#' : `#${t}`);
     render();
   };
   return h('div', { class: 'tabs', role: 'tablist' },
     h('button', { role: 'tab', 'aria-selected': String(tab === 'avatars'), onclick: () => go('avatars') }, 'Avatars'),
+    h('button', { role: 'tab', 'aria-selected': String(tab === 'ask'), onclick: () => go('ask') }, 'Ask your audience'),
     h('button', { role: 'tab', 'aria-selected': String(tab === 'screenings'), onclick: () => go('screenings') }, 'Test screenings'));
+}
+
+// ---------- ask your audience (ideas without a project yet) ----------
+
+let askEl = null;
+function renderAsk() {
+  askEl ??= askPanel();
+  main.replaceChildren(tabs(), h('section', { class: 'card' },
+    h('h2', {}, 'Ask your audience'),
+    h('p', { class: 'muted small' }, 'Pitch ideas before you start a project, or ask anything. To ask about a specific project, use the Ask your audience card on its page.'),
+    askEl));
 }
 
 // ---------- test screenings ----------
@@ -208,11 +222,15 @@ async function renderScreenings() {
       status, expectations());
   })();
   main.replaceChildren(tabs(), form,
-    h('section', { class: 'card' }, h('h2', {}, 'Past screenings'),
+    h('section', { class: 'card' }, h('h2', {}, 'Past screenings, pitches and conversations'),
       sims.length
         ? h('div', { class: 'sim-list' }, sims.map((sm) => h('a', { class: 'sim-row', href: `#sim=${sm.id}`, onclick: (e) => { e.preventDefault(); history.replaceState(null, '', `#sim=${sm.id}`); render(); } },
             h('div', {}, h('b', {}, sm.projectTitle), h('div', { class: 'muted small' }, `"${sm.title}" · ${sm.groupName} · ${new Date(sm.at).toLocaleString()}`)),
-            sm.kind === 'titles'
+            sm.kind === 'pitch'
+              ? h('div', { class: 'sim-nums' }, `idea pitch · ★ ${sm.scored.pitches.find((x) => x.i === sm.scored.best)?.pitch.slice(0, 60) ?? '—'}`)
+              : sm.kind === 'chat'
+                ? h('div', { class: 'sim-nums' }, `conversation · ${(sm.messages ?? []).filter((m) => m.from === 'you').length} question${(sm.messages ?? []).filter((m) => m.from === 'you').length === 1 ? '' : 's'}`)
+                : sm.kind === 'titles'
               ? h('div', { class: 'sim-nums' }, `title comparison · ★ ${sm.scored.titles.find((t) => t.letter === sm.scored.winner)?.title ?? '—'}`)
               : h('div', { class: 'sim-nums' }, sm.accuracy?.verdict ? h('span', { class: `verdict v-${sm.accuracy.verdict}`, title: 'Checked against the published video' }, { close: 'forecast close', fair: 'roughly right', off: 'forecast off' }[sm.accuracy.verdict]) : '', ' ', `click ${Math.round(sm.result.clickShare * 100)}%`, ' · ', `watch ${sm.result.watchedShare == null ? '—' : `${Math.round(sm.result.watchedShare * 100)}%`}`, sm.result.score != null ? ` · ${sm.result.score.toFixed(1)}/10` : '', sm.result.passes > 1 ? ' · 2 runs' : ''))))
         : emptyState('No test screenings yet', 'Run one above, or from the Test screening card on any project.')));
@@ -220,6 +238,7 @@ async function renderScreenings() {
 
 function render() {
   if (tab === 'screenings') return renderScreenings();
+  if (tab === 'ask') return renderAsk();
   const list = Object.values(groups).sort((a, b) => a.createdAt - b.createdAt);
   if (!current || !groups[current]) current = list[0]?.id ?? null;
   const bar = h('div', { class: 'groups' },

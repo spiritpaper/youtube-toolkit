@@ -18,7 +18,7 @@ export function screeningSection(project, { principles = [] } = {}) {
   const section = h('section', { class: 'card', id: 'screening' }, h('div', { class: 'card-head' }, h('h2', {}, 'Test screening')), body);
 
   async function draw(status = null) {
-    const [groups, sims, fresh] = await Promise.all([
+    let [groups, sims, fresh] = await Promise.all([
       send({ type: 'avatarGroups' }).catch(() => ({})),
       send({ type: 'screenings', projectId: project.id }).catch(() => []),
       send({ type: 'projects' }).then((all) => all[project.id] ?? project).catch(() => project),
@@ -59,6 +59,8 @@ export function screeningSection(project, { principles = [] } = {}) {
     run.addEventListener('click', () => start((ai, onProgress) => runScreening({ ai, project, group: groups[groupSel.value], title: titleSel.value, thumbnail: thumb.checked, passes: twice.checked ? 2 : 1, principles, onProgress })));
     compare.addEventListener('click', () => start((ai, onProgress) => runTitleTest({ ai, project, group: groups[groupSel.value], titles, thumbnail: thumb.checked, onProgress })));
 
+    // Pitches and chats live in the same store; this card shows screenings and title tests.
+    sims = sims.filter((s) => !s.kind || s.kind === 'screening' || s.kind === 'titles');
     const latest = sims.find((s) => s.kind !== 'titles');
     const latestTitles = sims.find((s) => s.kind === 'titles');
     const earlier = sims.filter((s) => s !== latest && s !== latestTitles);
