@@ -2,6 +2,7 @@ import { mountShell } from '../lib/nav.js';
 import { PROVIDERS, getAiSettings, listModels, pickDefaultModel } from '../lib/ai.js';
 import { SUPPORT_URL, SUPPORT_LABEL } from '../lib/support.js';
 import { summarizeBackup } from '../lib/storage-admin.js';
+import { RELEASES_API } from '../lib/update-config.js';
 
 mountShell('settings');
 
@@ -307,6 +308,46 @@ $('wipe').addEventListener('click', async () => {
   dataMessage(`Deleted ${n} items.`);
   showUsage();
 });
+
+// ---------- version & updates ----------
+async function showUpdate(info) {
+  $('version').textContent = chrome.runtime.getManifest().version;
+  const { updateCheckedAt } = await chrome.storage.local.get('updateCheckedAt');
+  if (!RELEASES_API) {
+    $('updates').querySelector('.inline').hidden = true;
+    $('update-status').textContent = 'This build is updated by its install script.';
+    return;
+  }
+  $('update-status').textContent = info ? '' : updateCheckedAt ? `Up to date (checked ${new Date(updateCheckedAt).toLocaleString()}).` : '';
+  $('update-box').replaceChildren();
+  if (info) {
+    const box = document.createElement('div');
+    box.className = 'update-note';
+    const title = document.createElement('b');
+    title.textContent = `Version ${info.version} is available.`;
+    const links = document.createElement('div');
+    links.className = 'inline';
+    for (const [href, label] of [[info.zip, 'Download the zip'], [info.url, 'What\'s new']]) {
+      if (!href) continue;
+      const a = Object.assign(document.createElement('a'), { href, target: '_blank', rel: 'noopener', className: 'button-link', textContent: label });
+      links.append(a);
+    }
+    box.append(title, links);
+    $('update-box').append(box);
+  }
+}
+$('check-update').addEventListener('click', async (e) => {
+  e.target.disabled = true;
+  $('update-status').textContent = 'Checking…';
+  try {
+    await showUpdate(await send({ type: 'checkForUpdate' }));
+  } catch (err) {
+    $('update-status').textContent = `Couldn't check: ${err.message}`;
+  } finally {
+    e.target.disabled = false;
+  }
+});
+showUpdate((await chrome.storage.local.get('updateAvailable')).updateAvailable ?? null);
 
 showLastBackup();
 const { archiveAfterDays = 30 } = await chrome.storage.local.get('archiveAfterDays');

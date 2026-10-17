@@ -36,3 +36,4 @@ button.danger { color: var(--danger); }
 .restore-preview ul { columns: 2; column-gap: 24px; margin: 8px 0; padding-left: 18px; font-size: 13px; }
 .restore-preview li { break-inside: avoid; }
 @media (max-width: 600px) { .restore-preview ul { columns: 1; } }
+.update-note { border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 10px; padding: 10px 12px; margin: 8px 0; display: grid; gap: 8px; }

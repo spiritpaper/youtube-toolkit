@@ -1,6 +1,8 @@
 # Left out of release zips (scripts/package.sh uses git archive).
 test/ export-ignore
-scripts/ export-ignore
+scripts/* export-ignore
+# ...except the updater, so release users have it too.
+scripts/update.sh -export-ignore
 .github/ export-ignore
 package.json export-ignore
 .gitignore export-ignore

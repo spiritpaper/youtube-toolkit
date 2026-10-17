@@ -191,6 +191,13 @@
         <p id="data-msg" class="msg" role="status"></p>
         <p class="muted small">Backups include saved outliers and their history, projects and thumbnails, followed channels with their stats and growth history, the radar and keyword alerts, rabbit holes, video webs, transcripts, heatmaps, comment research, AI results and your AI settings, but never your API keys or Google sign-in.</p>
       </section>
+      <section id="updates">
+        <h2>Version &amp; updates</h2>
+        <p class="muted small">You're running <b id="version"></b>. <span id="update-status"></span></p>
+        <div id="update-box"></div>
+        <div class="inline"><button id="check-update">Check for updates</button></div>
+        <p class="muted small">To update: unzip the new version over this extension's folder (same place, so your data stays). The extension notices the new files and reloads itself within a few minutes, once no YT Toolkit page is open. On Linux or a Mac, run <code>sh scripts/update.sh .</code> inside the extension's folder to download and install the new version for you.</p>
+      </section>
       <p id="support-row" class="muted small" hidden>Enjoying YT Toolkit? <a id="support" target="_blank" rel="noopener"></a></p>
     </main>
     <script type="module" src="options.js"></script>

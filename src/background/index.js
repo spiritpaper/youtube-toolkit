@@ -26,6 +26,7 @@ import {
 import { addNode, getNode, listNodes, updateNode, deleteNodes, deleteHolesOlderThan } from '../lib/explore-store.js';
 import { usage, cleanup, exportAll, importAll } from '../lib/storage-admin.js';
 import { getNotes, listNoted, addNote, updateNote, deleteNote } from '../lib/notes.js';
+import { rememberLoadedBuild, reloadIfUpdated, checkForRelease } from './updates.js';
 import { signIn, signOut, authStatus } from './auth.js';
 import { listProjects, createProject, updateProject, deleteProject, mutateProjects, archiveOld, ARCHIVE_DAYS_DEFAULT } from '../lib/projects.js';
 import { followKeyword, unfollowKeyword, listKeywords, trendCheck, mutateAlerts } from './trends.js';
@@ -54,6 +55,11 @@ async function setup() {
 
 chrome.runtime.onInstalled.addListener(setup);
 chrome.runtime.onStartup.addListener(setup);
+chrome.runtime.onInstalled.addListener(() => rememberLoadedBuild().catch(() => {}));
+chrome.runtime.onStartup.addListener(() => rememberLoadedBuild().catch(() => {}));
+const UPDATE_ALARM = 'self-update';
+// Created once; re-creating it on every service-worker start would keep postponing it.
+chrome.alarms.get(UPDATE_ALARM).then((a) => a || chrome.alarms.create(UPDATE_ALARM, { delayInMinutes: 1, periodInMinutes: 5 }));
 
 let refreshing = null;
 function refreshIdeas() {
@@ -87,6 +93,11 @@ async function storeMissingHeatmaps(ids) {
 }
 
 chrome.alarms.onAlarm.addListener(async ({ name }) => {
+  if (name === UPDATE_ALARM) {
+    if (await reloadIfUpdated().catch(() => false)) return;
+    await checkForRelease().catch(() => {});
+    return;
+  }
   if (name !== REFRESH_ALARM) return;
   const s = await chrome.storage.local.get(['trackDaily', 'apiKey', 'ideasRefreshedAt', 'holeRetentionDays']);
   if (s.holeRetentionDays > 0) await deleteHolesOlderThan(s.holeRetentionDays).catch(() => {});
@@ -212,6 +223,8 @@ const handlers = {
     await chrome.storage.local.set({ channelReviews: channelReviews.filter((r) => r.at !== at) });
     return true;
   },
+  checkForUpdate: () => checkForRelease({ force: true }),
+  reloadIfUpdated: () => reloadIfUpdated(),
   notesGet: ({ id }) => getNotes(id),
   notesList: () => listNoted(),
   notesAdd: ({ id, note }) => addNote(id, note),

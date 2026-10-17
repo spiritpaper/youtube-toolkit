@@ -2,6 +2,11 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
+## [Unreleased]
+
+### Added
+- **Updates without reinstalling**: Settings and Home show when a newer release is out, `scripts/update.sh` (now included in the zip) downloads it into your folder, and the extension reloads itself when its files change, waiting until no YT Toolkit page is open.
+
 ## [0.7.0] - 2026-10-14
 
 ### Fixed

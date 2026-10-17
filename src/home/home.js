@@ -48,6 +48,15 @@ if (steps.some(([done]) => !done)) {
   );
 }
 
+// A newer release on GitHub (public build only; see background/updates.js).
+if (s.updateAvailable?.version) {
+  $('grid').before(h('div', { class: 'banner update-banner' },
+    h('b', {}, `YT Toolkit ${s.updateAvailable.version} is out.`), ' ',
+    s.updateAvailable.zip && h('a', { href: s.updateAvailable.zip }, 'Download'), ' · ',
+    h('a', { href: s.updateAvailable.url, target: '_blank', rel: 'noopener' }, "What's new"), ' · ',
+    h('a', { href: page('options/options.html#updates') }, 'How to update')));
+}
+
 const unread = radar.filter((r) => !r.read);
 const movers = follows
   .map((f) => ({ ...f, g: channelGrowth(f.history, 7) }))
