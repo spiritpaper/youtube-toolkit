@@ -1,11 +1,13 @@
 // Quick search (Ctrl+K) across everything you've saved: projects, saved
-// outliers, followed channels, your notes, rabbit holes and video webs.
+// outliers, followed channels, your notes, lessons, experiments, rabbit
+// holes and video webs.
 
 export const KINDS = {
   project: 'Projects',
   idea: 'Saved outliers',
   channel: 'Following',
   note: 'Your notes',
+  lesson: 'Lessons & experiments',
   hole: 'Rabbit holes',
   web: 'Video webs',
   page: 'Pages',
@@ -83,6 +85,12 @@ export function buildIndex(data) {
       text: n.keyword,
       t: n.updatedAt ?? 0,
     });
+  }
+  for (const l of Object.values(data.notebook?.lessons ?? {})) {
+    items.push({ kind: 'lesson', title: l.text.split('\n')[0].slice(0, 120), sub: 'lesson', href: 'notebook/notebook.html#lessons', text: l.text, t: l.updatedAt ?? 0 });
+  }
+  for (const x of Object.values(data.notebook?.experiments ?? {})) {
+    items.push({ kind: 'lesson', title: x.hypothesis, sub: 'experiment', href: `notebook/notebook.html#x=${x.id}`, text: [x.hypothesis, x.change, x.conclusion].join(' '), t: x.updatedAt ?? 0 });
   }
   for (const p of data.pages ?? []) items.push({ kind: 'page', title: p.label, sub: 'page', href: p.href, text: p.label, t: 0 });
   return items;

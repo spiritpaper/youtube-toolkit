@@ -150,7 +150,7 @@ YTK.watchPanel = (() => {
       if (form) {
         const time = h('input', { 'aria-label': 'Time in the video', title: 'Time in the video', onkeydown: stop, onkeyup: stop, onkeypress: stop });
         time.value = YTK.fmtTime(form.t);
-        const text = h('textarea', { placeholder: 'What you noticed at this moment… (Ctrl+Enter to save)', 'aria-label': 'Note', onkeyup: stop, onkeypress: stop });
+        const text = h('textarea', { placeholder: 'What you noticed at this moment… #tags group it (Ctrl+Enter to save)', 'aria-label': 'Note', onkeyup: stop, onkeypress: stop });
         text.value = form.text ?? '';
         text.addEventListener('input', () => (form.text = text.value));
         const save = async () => {

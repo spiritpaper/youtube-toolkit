@@ -45,7 +45,7 @@ function notesCard(idea, entry) {
   const count = h('span', { class: 'muted small' });
   const msg = h('p', { class: 'error small', role: 'status', hidden: true });
   const time = h('input', { class: 'note-time', placeholder: '0:00', 'aria-label': 'Time in the video', inputmode: 'numeric' });
-  const text = h('textarea', { class: 'note-text', rows: 2, placeholder: 'What you noticed here: a hook trick, a cut, a line to steal… (Ctrl+Enter to add)', 'aria-label': 'Note' });
+  const text = h('textarea', { class: 'note-text', rows: 2, placeholder: 'What you noticed here: a hook trick, a cut, a line to steal… Add #tags to group it. (Ctrl+Enter to add)', 'aria-label': 'Note' });
   const addBtn = h('button', { class: 'primary' }, 'Add note');
   const dl = h('button', { onclick: () => download(`notes-${idea.title.slice(0, 50)}.md`, notesMarkdown({ videoId: id, title: idea.title, notes }), 'text/markdown;charset=utf-8') }, 'Download');
 

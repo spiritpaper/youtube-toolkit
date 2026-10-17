@@ -19,6 +19,7 @@ const ICONS = {
   me: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
   lab: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.8 3h10.4a2 2 0 0 0 1.8-3l-5-9V3"/><path d="M7.5 14h9"/>',
+  book: '<path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/>',
   download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   heart: '<path d="M12 20s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5C19 15.6 12 20 12 20z"/>',
@@ -44,6 +45,7 @@ export const NAV = [
   { id: 'titles', label: 'Title lab', icon: 'title', href: 'studio/studio.html#titles' },
   { id: 'script', label: 'Script lab', icon: 'script', href: 'script/script.html' },
   { id: 'lab', label: 'Audience lab', icon: 'lab', href: 'lab/lab.html' },
+  { id: 'notebook', label: 'Lab notebook', icon: 'book', href: 'notebook/notebook.html' },
   { id: 'downloads', label: 'Downloads', icon: 'download', href: 'downloads/downloads.html' },
   { section: 'You' },
   { id: 'mine', label: 'My channel', icon: 'me', href: 'studio/studio.html#mine' },
@@ -56,7 +58,7 @@ const root = () => chrome.runtime.getURL('src/');
 
 async function loadSearchData() {
   const keys = chrome.storage.local.getKeys ? await chrome.storage.local.getKeys() : Object.keys(await chrome.storage.local.get(null));
-  const wanted = keys.filter((k) => ['ideas', 'projects', 'watchlist', 'explore:index'].includes(k) || k.startsWith('sn:') || k.startsWith('vw:'));
+  const wanted = keys.filter((k) => ['ideas', 'projects', 'watchlist', 'explore:index', 'notebook'].includes(k) || k.startsWith('sn:') || k.startsWith('vw:'));
   const data = await chrome.storage.local.get(wanted);
   data.analyzed = new Set(keys.filter((k) => k.startsWith('tx:')).map((k) => k.slice(3)));
   data.pages = NAV.filter((n) => n.id).map((n) => ({ label: n.label, href: n.href }));
