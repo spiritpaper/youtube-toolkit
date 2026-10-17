@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "YT Toolkit — Outliers & Ideas",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Find outliers, follow channels, explore keywords and video webs, then plan, script and track your own videos, with optional AI.",
   "homepage_url": "https://github.com/spiritpaper/youtube-toolkit",
   "permissions": [

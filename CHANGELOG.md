@@ -2,7 +2,9 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
-## [Unreleased]
+## [0.10.0] - 2026-10-17
+
+Run every AI feature on your own computer: free, private, no key.
 
 ### Added
 - **Local AI**: run every AI feature on your own computer with Ollama, LM Studio or any OpenAI-compatible server, with no key, no daily limit, and nothing leaving your machine. Ollama works with no setup. Each request gets a context window sized to its prompt and answer (up to a limit you choose), with clear messages instead of silently cut-off prompts. Thinking is off by default for speed, and models that can see images are marked for thumbnail features. A new guide covers what to install on Windows, Mac and Linux and which model fits your memory.
