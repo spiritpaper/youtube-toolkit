@@ -13,6 +13,7 @@ import {
   buildWeb,
   expandWeb,
   videoComments,
+  channelComments,
   videoInfo,
 } from './youtube.js';
 import {
@@ -26,6 +27,7 @@ import {
 import { addNode, getNode, listNodes, updateNode, deleteNodes, deleteHolesOlderThan } from '../lib/explore-store.js';
 import { usage, cleanup, exportAll, importAll } from '../lib/storage-admin.js';
 import { getNotes, listNoted, addNote, updateNote, deleteNote } from '../lib/notes.js';
+import { listGroups, saveGroup, deleteGroup, saveAvatar, deleteAvatar } from '../lib/avatars-store.js';
 import { rememberLoadedBuild, reloadIfUpdated, checkForRelease } from './updates.js';
 import { companionHello, startDownload, cancelDownload, revealDownload, updateDownloader, clearDownloads } from './companion.js';
 import { signIn, signOut, authStatus } from './auth.js';
@@ -33,7 +35,7 @@ import { listProjects, createProject, updateProject, deleteProject, mutateProjec
 import { followKeyword, unfollowKeyword, listKeywords, trendCheck, mutateAlerts } from './trends.js';
 import { trackPublished, parseVideoId } from './published.js';
 import { videoTotals } from './analytics.js';
-import { overview, topVideos, retention, trafficSources } from './analytics.js';
+import { overview, topVideos, retention, trafficSources, audienceProfile } from './analytics.js';
 import { watch, unwatch, compare, radarCheck, markRadarRead, clearRadar, updateBadge, parseChannelInput, gapData, following, updateFollow, mutateWatch, mutateRadar } from './watchlist.js';
 
 // holeRetentionDays: rabbit holes untouched for this long are deleted (0 = keep forever).
@@ -277,6 +279,13 @@ const handlers = {
   myTopVideos: ({ days }) => topVideos(days),
   myRetention: ({ id, publishedAt }) => retention(id, publishedAt),
   myTraffic: ({ days, id }) => trafficSources(days, id),
+  myAudience: ({ days }) => audienceProfile(days),
+  avatarGroups: () => listGroups(),
+  avatarGroupSave: ({ group }) => saveGroup(group),
+  avatarGroupDelete: ({ id }) => deleteGroup(id),
+  avatarSave: ({ groupId, avatar }) => saveAvatar(groupId, avatar),
+  avatarDelete: ({ groupId, avatarId }) => deleteAvatar(groupId, avatarId),
+  channelComments: ({ channelId }) => channelComments(channelId),
   // Competitors & radar
   watch: ({ input, role }) => watch(input, { role }),
   following: () => following(),

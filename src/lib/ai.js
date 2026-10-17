@@ -718,3 +718,55 @@ Pick the 3–5 strongest Shorts (use the moments above or better ones from the t
 Finish with one line on which Short to post first and why.`;
   return { system, prompt };
 }
+
+/**
+ * Builds `count` audience avatars from an audience data sheet
+ * (avatars.js audienceSheet). `keep` are avatars that stay (locked); the new
+ * ones should complement them. `focus` narrows the group ("newcomers from
+ * search", "a competitor's audience"…). Replies with a JSON array.
+ */
+export function avatarsPrompt(sheet, count, niche, { keep = [], focus = '' } = {}) {
+  const system = `You are an audience researcher who builds realistic viewer personas from real channel data, the way a UX researcher writes personas from interviews and analytics. Personas are fictional composites: never a real person, never a real commenter's name or handle, never copied comment text.
+
+Rules:
+- Ground every persona in the data provided. When the data shows shares (age, gender, countries, devices, subscribers, how they find videos), the group's weights must roughly match them.
+- Make them specific and human: a job or life stage, what's going on in their life, what they want from videos like these, what they already know, what they believe, what frustrates them, what moves them, what makes them click away.
+- Make the group realistic, not flattering: include casual viewers, skeptics, people who often leave early, people who only half-watch on their phone, as the data suggests. Real audiences are mixed.
+- Describe them with respect and without judgment: frustration, anger, boredom and disagreement are normal reactions, not flaws.
+- Avoid stereotypes; vary names, backgrounds and voices.`;
+  const fields = `[
+  {
+    "name": "first name and an initial, e.g. \\"Maya R.\\"",
+    "age": 27,
+    "gender": "woman / man / non-binary…",
+    "location": "city or region, country",
+    "occupation": "job or study",
+    "lifeStage": "one line on their situation right now",
+    "interests": ["3-6 interests"],
+    "knowledge": "new | some | expert (about this channel's topic)",
+    "wants": "what they want from videos like these",
+    "beliefs": ["2-4 beliefs or assumptions they hold about the topic or themselves"],
+    "frustrations": ["2-4 frustrations, in life or with videos like these"],
+    "moves": "what grabs or moves them",
+    "turnoffs": "what makes them click away or roll their eyes",
+    "device": "phone | computer | tv | tablet",
+    "discovery": "search | browse | suggested | subscriptions | shorts | external",
+    "relationship": "subscriber | returning | new",
+    "habits": "how and when they watch (skipping, background listening, comments…)",
+    "commentStyle": "how they comment, if they do",
+    "quote": "one sentence in their own voice about videos like these",
+    "basedOn": "which data points this persona reflects",
+    "weight": 0.15
+  }
+]`;
+  const prompt = `${nicheLine(niche)}
+
+Audience data:
+${sheet || '(No analytics available: base the personas on the channel description and any comments above, and say so in basedOn.)'}
+${focus ? `\nThis group should represent: ${focus}\n` : ''}${keep.length ? `\nThese personas are already in the group and stay; create ${count} NEW ones that complement them (different people, filling gaps):\n${keep.map((a) => `- ${a.name}, ${a.age ?? '?'}, ${a.occupation}: ${a.wants}`).join('\n')}\n` : ''}
+Create ${count} viewer personas. Weights are each persona's share of the audience (all weights together ≈ 1${keep.length ? ', counting the kept personas' : ''}).
+
+Reply with ONLY a JSON array, no other text, in exactly this shape:
+${fields}`;
+  return { system, prompt };
+}

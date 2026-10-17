@@ -141,6 +141,7 @@ async function showUsage() {
   const detail = {
     ideas: `${u.ideas.items} ideas, ${u.ideas.snapshots} snapshots${u.ideas.unavailable ? `, ${u.ideas.unavailable} unavailable` : ''}`,
     transcripts: `${u.transcripts.items}${u.transcripts.orphans ? ` (${u.transcripts.orphans} unlinked)` : ''}`,
+    lab: `${u.lab.items} item${u.lab.items === 1 ? '' : 's'}`,
     notes: `${u.notes.items} video${u.notes.items === 1 ? "" : "s"}`,
     heatmaps: `${u.heatmaps.items}${u.heatmaps.orphans ? ` (${u.heatmaps.orphans} unlinked)` : ''}`,
     explore: `${u.explore.holes} holes, ${u.explore.items} keywords`,
