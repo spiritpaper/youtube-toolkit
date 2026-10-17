@@ -1,6 +1,6 @@
 {
   "name": "youtube-toolkit",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "YT Toolkit: a Chrome extension for YouTube creators. Outliers, keyword research, channel tracking and video planning.",
   "private": true,
   "type": "module",

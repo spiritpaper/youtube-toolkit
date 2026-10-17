@@ -2,6 +2,11 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
+## [0.7.2] - 2026-10-17
+
+### Added
+- **Video downloads (optional add-on)**: a small companion app for Windows, Mac and Linux, attached to each release, lets YT Toolkit save videos, audio or just a clip: from a new Downloads page (any supported site, including X), a Download button in the YouTube panel, or **Download clip** on each suggested Short. It runs the downloader with a fixed, minimal set of options, verifies it before installing, and only talks to your copy of YT Toolkit. Nothing changes unless you turn it on. See the Video downloads guide.
+
 ## [0.7.1] - 2026-10-17
 
 ### Added
