@@ -2,7 +2,9 @@
 
 All notable changes to Outlier Lab (called YT Toolkit before 0.11.0). Each release's section becomes its GitHub Release notes.
 
-## [Unreleased]
+## [0.11.0] - 2026-10-17
+
+YT Toolkit is now **Outlier Lab**: same extension, same data, a name that fits what it has become.
 
 ### Changed
 - **YT Toolkit is now Outlier Lab.** YouTube's branding rules don't allow "YouTube" or "YT" in the name of an app that uses its API, and "lab" fits what it has become. Your data, settings and installs carry over untouched. The repository moved to `spiritpaper/outlier-lab` (old links redirect), the release zip is now `outlier-lab-v….zip`, and the companion files are `outlier-lab-companion-…`.

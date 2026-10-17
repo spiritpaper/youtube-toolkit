@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Outlier Lab",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "A creator's laboratory for YouTube: find outliers, research keywords and channels, then plan, test and track your own videos, with optional AI.",
   "homepage_url": "https://github.com/spiritpaper/outlier-lab",
   "permissions": [

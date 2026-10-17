@@ -1,6 +1,6 @@
 {
   "name": "outlier-lab",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "Outlier Lab: a creator's laboratory for YouTube, as a Chrome extension. Outliers, keyword research, channel tracking and video planning.",
   "private": true,
   "type": "module",
