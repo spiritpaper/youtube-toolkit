@@ -45,7 +45,9 @@ To see your own retention curves, watch time and click-through rate, and to comp
 Updates never need a reinstall. Your data lives in Chrome, tied to the extension's folder, so keep using the same folder:
 
 1. **Settings → Version & updates** (and a banner on Home) tells you when a new release is out.
-2. Replace the folder's files with the new version: unzip the new release over the same folder, or on Linux/macOS run `sh scripts/update.sh .` inside it (it downloads the latest release only if it's newer).
+2. Replace the folder's files with the new version. Either unzip the new release over the same folder, or let the updater do it (it downloads the latest release only if it's newer):
+   - **Windows:** double-click `scripts\update.cmd` in the extension's folder.
+   - **macOS / Linux:** run `sh scripts/update.sh .` inside the folder.
 3. That's it: the extension notices its files changed and reloads itself within about five minutes, as soon as no YT Toolkit page is open. (Or click the reload icon in `chrome://extensions`, and reload open YouTube tabs.)
 
 Download a backup first if you like (**Settings → Storage & data**); an update doesn't touch your data, but a backup costs nothing.

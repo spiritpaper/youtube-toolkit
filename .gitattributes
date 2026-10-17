@@ -3,6 +3,8 @@ test/ export-ignore
 scripts/* export-ignore
 # ...except the updater, so release users have it too.
 scripts/update.sh -export-ignore
+scripts/update.ps1 -export-ignore
+scripts/update.cmd -export-ignore
 .github/ export-ignore
 package.json export-ignore
 .gitignore export-ignore
