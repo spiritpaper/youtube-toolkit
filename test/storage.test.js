@@ -171,3 +171,10 @@ test('restored AI settings keep this browser\'s keys and choices', async () => {
   assert.deepEqual(store.google, { clientId: 'cid' });
   assert.throws(() => admin.summarizeBackup({ app: 'other' }), /Not a YT Toolkit backup/);
 });
+
+test('restoring merges notebook lessons and experiments item by item', async () => {
+  store.notebook = { lessons: { a: { id: 'a', text: 'mine, newer', updatedAt: 9 }, b: { id: 'b', text: 'only here', updatedAt: 1 } }, experiments: {} };
+  await admin.importAll({ app: 'yt-toolkit', version: 2, data: { notebook: { lessons: { a: { id: 'a', text: 'backup, older', updatedAt: 5 }, c: { id: 'c', text: 'only in backup', updatedAt: 2 } }, experiments: { x: { id: 'x', hypothesis: 'h', updatedAt: 3 } } } } });
+  assert.deepEqual(Object.fromEntries(Object.entries(store.notebook.lessons).map(([k, v]) => [k, v.text])), { a: 'mine, newer', b: 'only here', c: 'only in backup' });
+  assert.equal(store.notebook.experiments.x.hypothesis, 'h');
+});

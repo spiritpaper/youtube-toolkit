@@ -28,6 +28,7 @@ import { addNode, getNode, listNodes, updateNode, deleteNodes, deleteHolesOlderT
 import { usage, cleanup, exportAll, importAll } from '../lib/storage-admin.js';
 import { getNotes, listNoted, addNote, updateNote, deleteNote } from '../lib/notes.js';
 import { listGroups, saveGroup, deleteGroup, saveAvatar, deleteAvatar } from '../lib/avatars-store.js';
+import { getNotebook, saveLesson, deleteLesson, saveExperiment, deleteExperiment } from '../lib/notebook-store.js';
 import { listScreenings, getScreening, saveScreening, deleteScreening } from '../lib/screening-store.js';
 import { rememberLoadedBuild, reloadIfUpdated, checkForRelease } from './updates.js';
 import { companionHello, startDownload, cancelDownload, revealDownload, updateDownloader, clearDownloads } from './companion.js';
@@ -286,6 +287,11 @@ const handlers = {
   avatarGroupDelete: ({ id }) => deleteGroup(id),
   avatarSave: ({ groupId, avatar }) => saveAvatar(groupId, avatar),
   avatarDelete: ({ groupId, avatarId }) => deleteAvatar(groupId, avatarId),
+  notebook: () => getNotebook(),
+  lessonSave: ({ lesson }) => saveLesson(lesson),
+  lessonDelete: ({ id }) => deleteLesson(id),
+  experimentSave: ({ experiment }) => saveExperiment(experiment),
+  experimentDelete: ({ id }) => deleteExperiment(id),
   screenings: ({ projectId }) => listScreenings({ projectId }),
   screeningGet: ({ id }) => getScreening(id),
   screeningSave: ({ sim }) => saveScreening(sim),

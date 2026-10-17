@@ -11,6 +11,7 @@ const CATEGORIES = [
   { id: 'ideas', label: 'Saved ideas & their history', match: (k) => k === 'ideas' },
   { id: 'transcripts', label: 'Transcripts', match: (k) => k.startsWith('tx:') },
   { id: 'notes', label: 'Your script notes', match: (k) => k.startsWith('sn:') },
+  { id: 'notebook', label: 'Lab notebook', match: (k) => k === 'notebook' },
   { id: 'lab', label: 'Audience lab', match: (k) => k === 'avatars' || k.startsWith('sim:') },
   { id: 'heatmaps', label: 'Retention heatmaps', match: (k) => k.startsWith('hm:') },
   { id: 'explore', label: 'Keyword rabbit holes', match: (k) => k === 'explore:index' || k.startsWith(NODE_PREFIX) },
@@ -197,6 +198,7 @@ export function summarizeBackup(backup) {
     { label: 'Video webs', count: prefixed(d, 'vw:') },
     { label: 'Transcripts', count: prefixed(d, 'tx:') },
     { label: 'Script notes', count: prefixed(d, 'sn:') },
+    { label: 'Notebook lessons & experiments', count: count(d.notebook?.lessons) + count(d.notebook?.experiments) },
     { label: 'Audience avatars', count: Object.values(d.avatars ?? {}).reduce((n, g) => n + (g.avatars?.length ?? 0), 0) },
     { label: 'Test screenings', count: prefixed(d, 'sim:') },
     { label: 'Retention heatmaps', count: prefixed(d, 'hm:') },
@@ -322,6 +324,11 @@ export async function importAll(backup, mutators = {}) {
     if (k === 'channelReviews') {
       const have = new Set((current.channelReviews ?? []).map((r) => r.at));
       toSet.channelReviews = [...(current.channelReviews ?? []), ...v.filter((r) => !have.has(r.at))].sort((a, b) => b.at - a.at).slice(0, 12);
+    } else if (k === 'notebook') {
+      // Lessons and experiments, item by item (the newer copy wins).
+      const cur = current.notebook ?? {};
+      const pick = (a = {}, b = {}) => Object.fromEntries([...new Set([...Object.keys(a), ...Object.keys(b)])].map((id) => [id, (b[id]?.updatedAt ?? 0) > (a[id]?.updatedAt ?? 0) ? b[id] : a[id] ?? b[id]]));
+      toSet.notebook = { lessons: pick(cur.lessons, v.lessons), experiments: pick(cur.experiments, v.experiments) };
     } else if (k === 'aiRuns') {
       const seen = new Set((current.aiRuns ?? []).map((r) => `${r.at}:${r.title}`));
       toSet.aiRuns = [...(current.aiRuns ?? []), ...v.filter((r) => !seen.has(`${r.at}:${r.title}`))].sort((a, b) => b.at - a.at).slice(0, 20);
