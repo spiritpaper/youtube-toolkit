@@ -1,5 +1,6 @@
 import { mountShell } from '../lib/nav.js';
 import { PROVIDERS, getAiSettings, listModels, pickDefaultModel } from '../lib/ai.js';
+import { detectServer, cleanUrl, LOCAL_DEFAULT_URL, DEFAULT_MAX_CTX } from '../lib/local-ai.js';
 import { SUPPORT_URL, SUPPORT_LABEL } from '../lib/support.js';
 import { summarizeBackup } from '../lib/storage-admin.js';
 import { RELEASES_API } from '../lib/update-config.js';
@@ -31,6 +32,12 @@ function fillModels(models) {
 async function showProvider() {
   const p = settings.provider;
   const info = PROVIDERS[p];
+  const local = p === 'local';
+  $('local-fields').hidden = !local;
+  $('local-advanced').hidden = !local;
+  $('key-field').hidden = !!info.keyless || !!info.manual;
+  $('disconnect').textContent = local ? 'Disconnect' : 'Remove key';
+  if (local) return showLocal();
   $('key-link').href = info.keyUrl;
   $('key').value = '';
   const saved = settings.keys[p];
@@ -42,6 +49,58 @@ async function showProvider() {
   else if (saved) message('Click Connect to allow the extension to reach this provider.');
   else message('');
 }
+
+// ---------- local AI ----------
+
+async function showLocal() {
+  const l = settings.local ?? {};
+  $('local-url').value = l.url ?? LOCAL_DEFAULT_URL;
+  $('local-ctx').value = String(l.maxCtx ?? DEFAULT_MAX_CTX);
+  $('local-think').checked = !!l.think;
+  $('model').value = settings.models.local ?? '';
+  fillModels(l.models ?? []);
+  const granted = await chrome.permissions.contains({ origins: PROVIDERS.local.origins });
+  if (l.kind && granted && settings.models.local) message(`Connected to ${l.kind === 'ollama' ? 'Ollama' : 'your local AI server'}; using ${settings.models.local}.`, 'ok');
+  else message('Start Ollama or LM Studio, then click Connect.');
+}
+
+$('local-connect').addEventListener('click', async () => {
+  let url;
+  try {
+    url = cleanUrl($('local-url').value);
+  } catch (err) {
+    return message(err.message, 'err');
+  }
+  // Must be the first await so it still counts as a user gesture.
+  const granted = await chrome.permissions.request({ origins: PROVIDERS.local.origins });
+  if (!granted) return message('Permission is needed to reach your local AI.', 'err');
+  await chrome.runtime.sendMessage({ type: 'localAiRule' }).catch(() => {});
+  message('Looking for your local AI…');
+  try {
+    const server = await detectServer(url);
+    if (!server.models.length) return message(server.kind === 'ollama' ? 'Ollama is running but has no models yet. Pull one first, e.g. "ollama pull qwen3.5:4b" (see the setup guide).' : 'The server is running but lists no models. Load one in your AI app first.', 'err');
+    const vision = Object.fromEntries(server.models.map((m) => [m.id, m.vision]));
+    const thinking = Object.fromEntries(server.models.map((m) => [m.id, m.thinking]));
+    settings.local = { ...(settings.local ?? {}), url: server.url, kind: server.kind, models: server.models.map(({ id, label }) => ({ id, label })), vision, thinking };
+    // First time: the smallest model, which is the fastest (models are listed by size when known).
+    if (!server.models.some((m) => m.id === settings.models.local)) settings.models.local = [...server.models].sort((a, b) => (a.size ?? Infinity) - (b.size ?? Infinity))[0].id;
+    await save();
+    await showLocal();
+    const pick = server.models.find((m) => m.id === settings.models.local);
+    message(`Connected to ${server.kind === 'ollama' ? 'Ollama' : 'your local AI server'}. ${server.models.length} model${server.models.length === 1 ? '' : 's'}; using ${pick.id}${pick.vision === false ? ' (it can\'t see images, so thumbnail features need another model)' : ''}.`, 'ok');
+  } catch (err) {
+    message(err.message, 'err');
+  }
+});
+
+$('local-ctx').addEventListener('change', async (e) => {
+  settings.local = { ...(settings.local ?? {}), maxCtx: Number(e.target.value) };
+  await save();
+});
+$('local-think').addEventListener('change', async (e) => {
+  settings.local = { ...(settings.local ?? {}), think: e.target.checked };
+  await save();
+});
 
 $('provider').append(
   ...Object.entries(PROVIDERS).map(([id, p]) => Object.assign(document.createElement('option'), { value: id, textContent: p.label })),
@@ -90,6 +149,7 @@ $('niche').addEventListener('change', async (e) => {
 $('disconnect').addEventListener('click', async () => {
   const p = settings.provider;
   delete settings.keys[p];
+  if (p === 'local') delete settings.local;
   await save();
   await chrome.permissions.remove({ origins: PROVIDERS[p].origins }).catch(() => {});
   showProvider();

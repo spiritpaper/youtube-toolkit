@@ -24,7 +24,18 @@
           <select id="provider"></select>
         </label>
 
-        <label class="field">
+        <div id="local-fields" class="field" hidden>
+          <label class="field">
+            <span>Server address <a href="https://github.com/spiritpaper/youtube-toolkit/blob/main/docs/guides/local-ai.md" target="_blank" rel="noopener">Setup guide</a></span>
+            <div class="inline">
+              <input id="local-url" placeholder="http://localhost:11434" spellcheck="false" />
+              <button id="local-connect" class="primary">Connect</button>
+            </div>
+          </label>
+          <p class="muted small">Runs on this computer: free, private, no key. Ollama uses <code>http://localhost:11434</code>; LM Studio uses <code>http://localhost:1234</code> (start its server first).</p>
+        </div>
+
+        <label class="field" id="key-field">
           <span>API key <a id="key-link" target="_blank" rel="noopener">Get a key</a></span>
           <div class="inline">
             <input id="key" type="password" autocomplete="off" spellcheck="false" />
@@ -38,6 +49,20 @@
           <input id="model" list="models" placeholder="Connect to load models" spellcheck="false" />
           <datalist id="models"></datalist>
         </label>
+
+        <div id="local-advanced" class="field" hidden>
+          <label class="field">
+            <span>Context window <small class="muted">(how much text the model can hold at once)</small></span>
+            <select id="local-ctx">
+              <option value="16384">16k: small models, 4–6 GB of graphics memory</option>
+              <option value="32768">32k: recommended, covers test screenings and long scripts</option>
+              <option value="65536">64k: long transcripts and big avatar groups</option>
+              <option value="131072">128k: lots of memory</option>
+            </select>
+          </label>
+          <p class="muted small">Each request only uses as much as it needs, up to this. A bigger window uses more memory; if the model gets slow or fails to load, lower it.</p>
+          <label class="toggle"><input type="checkbox" id="local-think" /> Let the model think before answering (slower; sometimes better on hard tasks)</label>
+        </div>
 
         <label class="field">
           <span>Describe your channel <small class="muted">(makes ideas fit you)</small></span>
