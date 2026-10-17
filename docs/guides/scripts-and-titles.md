@@ -4,7 +4,7 @@ Study how outlier videos are written, and test your own titles.
 
 ## Transcripts
 
-On any YouTube video, click **Transcript** in the YT Toolkit panel. Then:
+On any YouTube video, click **Transcript** in the Outlier Lab panel. Then:
 
 - **Download .txt**: timestamped transcript
 - **Save transcript**: keeps it with the saved outlier (saves the outlier too)

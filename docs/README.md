@@ -1,6 +1,6 @@
-# YT Toolkit documentation
+# Outlier Lab documentation
 
-YT Toolkit is a Chrome extension for YouTube creators. It finds outlier videos (videos that got far more views than their channel normally gets), helps you learn from the channels you follow, and walks your own videos from idea to published, with optional AI help.
+Outlier Lab is a Chrome extension for YouTube creators. It finds outlier videos (videos that got far more views than their channel normally gets), helps you learn from the channels you follow, and walks your own videos from idea to published, with optional AI help.
 
 ## Start here
 

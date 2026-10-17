@@ -34,21 +34,21 @@ func installDir() string {
 		if base == "" {
 			base = filepath.Join(home, "AppData", "Local")
 		}
-		return filepath.Join(base, "YT Toolkit Companion")
+		return filepath.Join(base, "Outlier Lab Companion")
 	case "darwin":
-		return filepath.Join(home, "Library", "Application Support", "YT Toolkit Companion")
+		return filepath.Join(home, "Library", "Application Support", "Outlier Lab Companion")
 	default:
 		base := os.Getenv("XDG_DATA_HOME")
 		if base == "" {
 			base = filepath.Join(home, ".local", "share")
 		}
-		return filepath.Join(base, "yt-toolkit-companion")
+		return filepath.Join(base, "outlier-lab-companion")
 	}
 }
 
 func defaultDownloads() string {
 	home, _ := os.UserHomeDir()
-	return filepath.Join(home, "Downloads", "YT Toolkit")
+	return filepath.Join(home, "Downloads", "Outlier Lab")
 }
 
 func loadConfig() config {
@@ -70,7 +70,7 @@ func hostManifest(exe string, ids []string) []byte {
 	}
 	b, _ := json.MarshalIndent(map[string]any{
 		"name":            HostName,
-		"description":     "YT Toolkit companion (video downloads)",
+		"description":     "Outlier Lab companion (video downloads)",
 		"path":            exe,
 		"type":            "stdio",
 		"allowed_origins": origins,
@@ -112,7 +112,7 @@ func install(ids []string, downloads string) error {
 			continue
 		}
 		if !extensionID.MatchString(id) {
-			return fmt.Errorf("%q isn't an extension ID (32 letters a–p, shown in YT Toolkit → Settings → Video downloads)", id)
+			return fmt.Errorf("%q isn't an extension ID (32 letters a–p, shown in Outlier Lab → Settings → Video downloads)", id)
 		}
 		clean = append(clean, id)
 	}
@@ -170,7 +170,7 @@ func install(ids []string, downloads string) error {
 		}
 	}
 	fmt.Println("\nDone. Downloads go to", cfg.Downloads)
-	fmt.Println("Back in YT Toolkit, click \"Check again\" in Settings → Video downloads.")
+	fmt.Println("Back in Outlier Lab, click \"Check again\" in Settings → Video downloads.")
 	return nil
 }
 
@@ -181,7 +181,7 @@ func copySelf(dir string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	name := "yt-toolkit-companion"
+	name := "outlier-lab-companion"
 	if runtime.GOOS == "windows" {
 		name += ".exe"
 	}

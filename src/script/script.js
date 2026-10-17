@@ -97,7 +97,7 @@ function notesCard(idea, entry) {
   function paint() {
     count.textContent = notes.length ? `${notes.length} note${notes.length === 1 ? '' : 's'}` : '';
     dl.hidden = !notes.length;
-    list.replaceChildren(...(notes.length ? notes.map(row) : [h('li', { class: 'muted small empty' }, 'No notes yet. Add one above, click "+ note" next to a transcript line, or use "Add note" in the YT Toolkit panel while watching on YouTube.')]));
+    list.replaceChildren(...(notes.length ? notes.map(row) : [h('li', { class: 'muted small empty' }, 'No notes yet. Add one above, click "+ note" next to a transcript line, or use "Add note" in the Outlier Lab panel while watching on YouTube.')]));
   }
   paint();
 
@@ -433,7 +433,7 @@ async function renderLibrary() {
         rows.length > 0 && h('button', {
           onclick: () => download('hook-library.txt', rows.map((r) => `${r.idea.title} (${fmtMult(r.mult)})\n${videoUrl(r.idea)}\n${r.hook.text}\n`).join('\n')),
         }, 'Export hooks')),
-      h('p', { class: 'muted small' }, 'The first 30 seconds of every saved outlier with a transcript, strongest outliers first. To add one: open a video on YouTube, then Transcript → Save transcript (or Analyze script) in the YT Toolkit panel.')),
+      h('p', { class: 'muted small' }, 'The first 30 seconds of every saved outlier with a transcript, strongest outliers first. To add one: open a video on YouTube, then Transcript → Save transcript (or Analyze script) in the Outlier Lab panel.')),
     rows.length
       ? h('div', { class: 'hooks' }, rows.map((r) =>
           h('div', { class: 'hookrow' },
@@ -442,7 +442,7 @@ async function renderLibrary() {
               h('div', { class: 'row' }, h('a', { class: 't grow', href: `script.html?id=${r.idea.id}` }, r.idea.title), h('span', { class: `pill tier-${tier(r.mult)}` }, fmtMult(r.mult))),
               h('div', { class: 'hook' }, r.hook.text),
               h('div', { class: 'chips' }, r.hook.checks.filter((c) => c.pass).map((c) => h('span', { class: 'chip ok' }, `✓ ${c.label}`)))))))
-      : emptyState('No transcripts yet', 'Open any video on YouTube and click Transcript in the YT Toolkit panel, then Save transcript or Analyze script. Its hook lands here, strongest outliers first, and the full script breakdown opens in the analyzer.', [{ label: 'Saved outliers', href: '../ideas/ideas.html' }]),
+      : emptyState('No transcripts yet', 'Open any video on YouTube and click Transcript in the Outlier Lab panel, then Save transcript or Analyze script. Its hook lands here, strongest outliers first, and the full script breakdown opens in the analyzer.', [{ label: 'Saved outliers', href: '../ideas/ideas.html' }]),
   );
 }
 
@@ -455,7 +455,7 @@ else {
   const data = await load(id);
   ({ downloadsEnabled = false } = await chrome.storage.local.get('downloadsEnabled'));
   if (!data.idea || !data.tx) {
-    main.replaceChildren(errorBox('No saved transcript for this video. On its YouTube page, use Transcript → Save transcript in the YT Toolkit panel.'));
+    main.replaceChildren(errorBox('No saved transcript for this video. On its YouTube page, use Transcript → Save transcript in the Outlier Lab panel.'));
   } else {
     render(data, null);
     // For your own videos, map your real retention drop-offs onto the script.

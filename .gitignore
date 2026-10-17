@@ -14,7 +14,7 @@ Thumbs.db
 *.zip
 
 # Local backups exported from the extension may contain personal data
-yt-toolkit-backup-*.json
+outlier-lab-backup-*.json
 
 # Built release zips
 dist/

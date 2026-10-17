@@ -97,4 +97,4 @@ $('go').addEventListener('submit', (e) => {
 });
 const start = new URLSearchParams(location.search).get('v');
 if (start) show(start);
-else main.replaceChildren(h('div', { class: 'empty-state' }, h('h2', {}, 'Find out what an audience wants'), h('p', {}, 'Paste a video link above, or click "Comments" in the YT Toolkit panel on any YouTube video. Reading the top 100 comments costs 1 API unit and is saved for next time.')));
+else main.replaceChildren(h('div', { class: 'empty-state' }, h('h2', {}, 'Find out what an audience wants'), h('p', {}, 'Paste a video link above, or click "Comments" in the Outlier Lab panel on any YouTube video. Reading the top 100 comments costs 1 API unit and is saved for next time.')));

@@ -149,7 +149,7 @@ function render() {
     archiveBtn.hidden = project.status !== 'published' || !!project.archivedAt;
     if (!project.archivedAt) document.querySelector('.banner')?.remove();
   });
-  document.title = `${project.title} · YT Toolkit`;
+  document.title = `${project.title} · Outlier Lab`;
   main.replaceChildren(
     h('a', { class: 'crumb', href: '../board/board.html' }, '← Idea board'),
     project.archivedAt ? h('div', { class: 'banner' }, `Archived ${ageText(project.archivedAt)}. It's off the board and kept with its final numbers.`, ' ',

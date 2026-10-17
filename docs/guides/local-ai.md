@@ -19,7 +19,7 @@ Then check how much memory the model can use:
 
 ## 2. Install an AI app
 
-**Ollama** (recommended) runs on every system, works with YT Toolkit with no extra setup, and picks a model's context for each request automatically:
+**Ollama** (recommended) runs on every system, works with Outlier Lab with no extra setup, and picks a model's context for each request automatically:
 
 | System | Install |
 | --- | --- |
@@ -27,7 +27,7 @@ Then check how much memory the model can use:
 | Mac (Apple silicon or Intel) | Download Ollama from [ollama.com/download](https://ollama.com/download) and move it to Applications |
 | Linux | `curl -fsSL https://ollama.com/install.sh \| sh` (see [ollama.com/download](https://ollama.com/download)) |
 
-**LM Studio** ([lmstudio.ai](https://lmstudio.ai)) is an alternative with a friendly app for browsing models. In LM Studio, open the **Developer** tab and **start the server**. When you load a model, set its **context length** to at least 16384 (32768 is better), because YT Toolkit can't change it from the extension.
+**LM Studio** ([lmstudio.ai](https://lmstudio.ai)) is an alternative with a friendly app for browsing models. In LM Studio, open the **Developer** tab and **start the server**. When you load a model, set its **context length** to at least 16384 (32768 is better), because Outlier Lab can't change it from the extension.
 
 Any other server that speaks the OpenAI API on this computer (llama.cpp's `llama-server`, Jan…) works the same way as LM Studio.
 
@@ -45,16 +45,16 @@ Get a model with Ollama by running, in a terminal (Command Prompt or PowerShell 
 ollama pull qwen3.5:4b
 ```
 
-Models change quickly. These are good picks as of late 2026, but the [Ollama library](https://ollama.com/library) shows what's current. Prefer models marked **vision** (they can judge thumbnails) and **tools** (they're usually better at the structured answers YT Toolkit asks for).
+Models change quickly. These are good picks as of late 2026, but the [Ollama library](https://ollama.com/library) shows what's current. Prefer models marked **vision** (they can judge thumbnails) and **tools** (they're usually better at the structured answers Outlier Lab asks for).
 
 ## 4. Connect it
 
 1. **Settings → AI assistant → Provider: Local AI (Ollama, LM Studio…)**.
 2. **Server address:** `http://localhost:11434` for Ollama, `http://localhost:1234` for LM Studio.
-3. Click **Connect**. Chrome asks to let YT Toolkit reach `localhost`, which is only your own computer. The model list loads, and models that can see images are marked "sees images".
+3. Click **Connect**. Chrome asks to let Outlier Lab reach `localhost`, which is only your own computer. The model list loads, and models that can see images are marked "sees images".
 4. Pick the model.
 
-**Context window** is how much text the model holds at once: your prompt, the script, the avatars and its answer together. A 10-minute test screening needs about 8k; long transcripts and 20-avatar groups need 16–32k. YT Toolkit sizes each request to what it needs, up to the limit you choose:
+**Context window** is how much text the model holds at once: your prompt, the script, the avatars and its answer together. A 10-minute test screening needs about 8k; long transcripts and 20-avatar groups need 16–32k. Outlier Lab sizes each request to what it needs, up to the limit you choose:
 - **32k** (the default) covers nearly everything.
 - Choose **16k** if the model gets slow or fails to load on a small graphics card.
 - If a request needs more than your limit, you get a clear message instead of a silently cut-off prompt. You can raise the limit, use fewer avatars or a shorter script, or switch that one task to a cloud provider.
@@ -76,7 +76,7 @@ Bigger groups and longer scripts take proportionally longer. Small models follow
 ## Troubleshooting
 
 - **"Couldn't reach your local AI":** start Ollama (or LM Studio's server) and check the address and port.
-- **"refused the extension (403)":** YT Toolkit normally removes the browser's Origin header for local requests, so Ollama accepts them. If it still refuses, reload the extension once. As a last resort, allow extensions in Ollama:
+- **"refused the extension (403)":** Outlier Lab normally removes the browser's Origin header for local requests, so Ollama accepts them. If it still refuses, reload the extension once. As a last resort, allow extensions in Ollama:
   - **Windows:** System Properties → Environment Variables → new user variable `OLLAMA_ORIGINS` = `chrome-extension://*`, then quit and restart Ollama.
   - **Mac:** `launchctl setenv OLLAMA_ORIGINS "chrome-extension://*"`, then restart Ollama.
   - **Linux (systemd):** `sudo systemctl edit ollama`, add `[Service]` and `Environment="OLLAMA_ORIGINS=chrome-extension://*"`, then `sudo systemctl restart ollama`.

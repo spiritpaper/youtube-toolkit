@@ -15,13 +15,13 @@ Releases are built by GitHub Actions when you push a version tag. Each release g
    ```
    npm run check-version     # manifest, package.json and changelog agree
    npm test
-   npm run package           # builds dist/youtube-toolkit-v0.7.0.zip from HEAD
+   npm run package           # builds dist/outlier-lab-v0.7.0.zip from HEAD
    ```
    Load the zip (unzipped) in Chrome and try it.
 4. **Commit, tag and push**:
    ```
    git commit -am "Release 0.7.0"
-   git tag -a v0.7.0 -m "YT Toolkit 0.7.0"
+   git tag -a v0.7.0 -m "Outlier Lab 0.7.0"
    git push origin main
    git push origin v0.7.0
    ```
@@ -29,7 +29,7 @@ Releases are built by GitHub Actions when you push a version tag. Each release g
    1. checks the tag matches the manifest, `package.json` and the changelog
    2. runs the tests
    3. builds the zip
-   4. publishes a GitHub Release named "YT Toolkit v0.7.0" with the zip attached and the changelog section as notes
+   4. publishes a GitHub Release named "Outlier Lab v0.7.0" with the zip attached and the changelog section as notes
 
    If any check fails, nothing is published. Fix it, delete the tag (`git push origin :v0.7.0`, `git tag -d v0.7.0`), and tag again.
 

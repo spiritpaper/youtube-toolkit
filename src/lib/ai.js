@@ -176,7 +176,7 @@ export async function generate({ provider, key, model, system, prompt, image, im
     const url =
       provider === 'openai' ? 'https://api.openai.com/v1/chat/completions' : 'https://openrouter.ai/api/v1/chat/completions';
     const headers = { authorization: `Bearer ${key}`, 'content-type': 'application/json' };
-    if (provider === 'openrouter') headers['X-Title'] = 'YT Toolkit';
+    if (provider === 'openrouter') headers['X-Title'] = 'Outlier Lab';
     const body = await request(
       url,
       {

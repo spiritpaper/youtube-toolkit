@@ -240,7 +240,7 @@ export function mountShell(active) {
   document.body.classList.add('shell');
   const nav = document.createElement('nav');
   nav.className = 'app-nav';
-  nav.setAttribute('aria-label', 'YT Toolkit');
+  nav.setAttribute('aria-label', 'Outlier Lab');
 
   const brand = document.createElement('a');
   brand.className = 'nav-brand';
@@ -248,7 +248,7 @@ export function mountShell(active) {
   const img = document.createElement('img');
   img.src = chrome.runtime.getURL('icons/icon32.png');
   img.alt = '';
-  brand.append(img, document.createTextNode('YT Toolkit'));
+  brand.append(img, document.createTextNode('Outlier Lab'));
   nav.append(brand);
 
   const find = document.createElement('button');

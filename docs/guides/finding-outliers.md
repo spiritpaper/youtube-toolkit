@@ -18,7 +18,7 @@ Hover a badge to see the channel median, views and age. Too much noise? In the p
 
 ## The video panel
 
-When you watch a video, a **YT Toolkit** panel appears at the top of the sidebar (on Shorts it floats on the right):
+When you watch a video, a **Outlier Lab** panel appears at the top of the sidebar (on Shorts it floats on the right):
 
 - **Outlier score** and verdict, compared with the channel's median
 - **Views per day / per hour**, channel median and average, like and comment rates, subscribers, views ÷ subscribers, age and the **channel trend** (growing, stable or declining)

@@ -3,7 +3,7 @@
 ## Setup
 
 **"Add your YouTube Data API key in the extension popup."**
-No key is saved. Click the YT Toolkit icon and paste your key ([getting started](../getting-started.md#2-add-a-youtube-data-api-key-free)).
+No key is saved. Click the Outlier Lab icon and paste your key ([getting started](../getting-started.md#2-add-a-youtube-data-api-key-free)).
 
 **"Your YouTube API key is invalid."**
 Copy the key again from [Credentials](https://console.cloud.google.com/apis/credentials). If you restricted the key, make sure **YouTube Data API v3** is allowed.

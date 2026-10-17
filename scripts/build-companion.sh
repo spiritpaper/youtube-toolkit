@@ -12,14 +12,14 @@ mkdir -p "$out"
 for target in windows/amd64/windows-x64 windows/arm64/windows-arm64 darwin/arm64/macos-arm64 darwin/amd64/macos-x64 linux/amd64/linux-x64 linux/arm64/linux-arm64; do
   goos=${target%%/*}; rest=${target#*/}; goarch=${rest%%/*}; label=${rest#*/}
   stage=$(mktemp -d)
-  bin=yt-toolkit-companion
+  bin=outlier-lab-companion
   [ "$goos" = windows ] && bin="$bin.exe"
   (cd "$root/companion" && CGO_ENABLED=0 GOOS=$goos GOARCH=$goarch go build -trimpath -ldflags "-s -w -X main.Version=$version" -o "$stage/$bin" .)
   cp "$root/companion/README.txt" "$stage/README.txt"
   if [ "$goos" = linux ]; then
-    tar -C "$stage" -czf "$out/yt-toolkit-companion-$label.tar.gz" .
+    tar -C "$stage" -czf "$out/outlier-lab-companion-$label.tar.gz" .
   else
-    (cd "$stage" && zip -q -X "$out/yt-toolkit-companion-$label.zip" "$bin" README.txt)
+    (cd "$stage" && zip -q -X "$out/outlier-lab-companion-$label.zip" "$bin" README.txt)
   fi
   rm -rf "$stage"
 done

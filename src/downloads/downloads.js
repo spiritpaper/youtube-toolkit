@@ -10,14 +10,14 @@ import { formatTime } from '../lib/stats.js';
 mountShell('downloads');
 const main = document.getElementById('main');
 const params = new URLSearchParams(location.search);
-const RELEASE = 'https://github.com/spiritpaper/youtube-toolkit/releases/latest/download/';
+const RELEASE = 'https://github.com/spiritpaper/outlier-lab/releases/latest/download/';
 const ASSETS = [
-  ['Windows', 'yt-toolkit-companion-windows-x64.zip'],
-  ['Windows (ARM)', 'yt-toolkit-companion-windows-arm64.zip'],
-  ['Mac (Apple silicon)', 'yt-toolkit-companion-macos-arm64.zip'],
-  ['Mac (Intel)', 'yt-toolkit-companion-macos-x64.zip'],
-  ['Linux', 'yt-toolkit-companion-linux-x64.tar.gz'],
-  ['Linux (ARM)', 'yt-toolkit-companion-linux-arm64.tar.gz'],
+  ['Windows', 'outlier-lab-companion-windows-x64.zip'],
+  ['Windows (ARM)', 'outlier-lab-companion-windows-arm64.zip'],
+  ['Mac (Apple silicon)', 'outlier-lab-companion-macos-arm64.zip'],
+  ['Mac (Intel)', 'outlier-lab-companion-macos-x64.zip'],
+  ['Linux', 'outlier-lab-companion-linux-x64.tar.gz'],
+  ['Linux (ARM)', 'outlier-lab-companion-linux-arm64.tar.gz'],
 ];
 
 let status = null; // companionHello result
@@ -38,17 +38,17 @@ function setupCard() {
       h('h2', {}, 'Turn on video downloads'),
       h('p', {}, 'Downloads work through a small, separate companion app you install on your computer. It keeps a well-known open-source downloader up to date, runs it with a fixed, minimal set of options, and saves files to one folder. Nothing is installed until you choose to.'),
       h('button', { class: 'primary', onclick: enable }, 'Turn on downloads'),
-      h('p', { class: 'muted small' }, 'Chrome will ask to let YT Toolkit "communicate with cooperating native applications": that\'s the companion.'));
+      h('p', { class: 'muted small' }, 'Chrome will ask to let Outlier Lab "communicate with cooperating native applications": that\'s the companion.'));
   }
   if (status.error) {
     return h('section', { class: 'card' },
       h('div', { class: 'status' }, h('span', { class: 'dot warn' }), h('b', {}, 'Install the companion app'), h('span', { class: 'muted small' }, status.error)),
       h('ol', { class: 'steps' },
         h('li', {}, 'Download it for your computer:', h('div', { class: 'os-links' }, ASSETS.map(([label, file]) => h('a', { class: 'button-link', href: RELEASE + file }, label)))),
-        h('li', {}, 'Unzip it and run ', h('code', {}, 'yt-toolkit-companion'), ' (on Windows, double-click ', h('code', {}, 'yt-toolkit-companion.exe'), '; on a Mac or Linux, run it in a terminal).'),
+        h('li', {}, 'Unzip it and run ', h('code', {}, 'outlier-lab-companion'), ' (on Windows, double-click ', h('code', {}, 'outlier-lab-companion.exe'), '; on a Mac or Linux, run it in a terminal).'),
         h('li', {}, 'When it asks, paste this ID:', idBox()),
         h('li', {}, 'Come back and click ', h('b', {}, 'Check again'), '.')),
-      h('div', { class: 'idbox' }, h('button', { class: 'primary', onclick: refresh }, 'Check again'), h('a', { href: 'https://github.com/spiritpaper/youtube-toolkit/blob/main/docs/guides/video-downloads.md', target: '_blank', rel: 'noopener' }, 'Setup guide')));
+      h('div', { class: 'idbox' }, h('button', { class: 'primary', onclick: refresh }, 'Check again'), h('a', { href: 'https://github.com/spiritpaper/outlier-lab/blob/main/docs/guides/video-downloads.md', target: '_blank', rel: 'noopener' }, 'Setup guide')));
   }
   const s = status;
   return h('section', { class: 'card' },
@@ -152,7 +152,7 @@ function listCard() {
     h('div', { class: 'status' }, h('h2', { style: 'margin:0;flex:1' }, 'Recent downloads'), finished && h('button', { onclick: () => send({ type: 'downloadsClear' }) }, 'Clear finished')),
     downloads.length
       ? h('div', { class: 'list' }, downloads.map(row))
-      : emptyState('Nothing downloaded yet', 'Paste a link above, or use Download in the YT Toolkit panel on YouTube. Clips from the Script lab\'s Shorts card land here too.'));
+      : emptyState('Nothing downloaded yet', 'Paste a link above, or use Download in the Outlier Lab panel on YouTube. Clips from the Script lab\'s Shorts card land here too.'));
 }
 
 // ---------- page ----------

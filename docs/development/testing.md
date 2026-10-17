@@ -30,7 +30,7 @@ The tests (`test/*.test.js`, Node's built-in test runner) cover:
 
 1. `chrome://extensions` → **Load unpacked** → this folder.
 2. After changing code, click the extension's reload icon, then reload YouTube tabs.
-3. Service-worker logs: `chrome://extensions` → YT Toolkit → **Inspect views: service worker**. Page logs: right-click a page → Inspect.
+3. Service-worker logs: `chrome://extensions` → Outlier Lab → **Inspect views: service worker**. Page logs: right-click a page → Inspect.
 
 ## Adding a feature
 

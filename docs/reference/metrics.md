@@ -1,6 +1,6 @@
 # How the numbers are calculated
 
-Every number in YT Toolkit comes from public YouTube data (or, for **My channel**, your own analytics) through simple, documented math. Formulas live in `src/lib/` (mostly `stats.js`) and are covered by tests.
+Every number in Outlier Lab comes from public YouTube data (or, for **My channel**, your own analytics) through simple, documented math. Formulas live in `src/lib/` (mostly `stats.js`) and are covered by tests.
 
 ## Outlier score
 

@@ -117,7 +117,7 @@ test('backup excludes keys and cache; restore merges by recency', async () => {
   assert.equal(res.ideasAdded, 1);
   assert.equal(store.ideas.a.title, 'new');
   assert.equal(store.apiKey, 'secret', 'API keys are never imported');
-  await assert.rejects(admin.importAll({ foo: 1 }), /Not a YT Toolkit backup/);
+  await assert.rejects(admin.importAll({ foo: 1 }), /Not an Outlier Lab backup/);
 });
 
 test('backup carries followed channels with their stats; restore merges them', async () => {
@@ -169,7 +169,7 @@ test('restored AI settings keep this browser\'s keys and choices', async () => {
   await admin.importAll({ app: 'yt-toolkit', version: 2, data: { ai: { provider: 'gemini', keys: { gemini: 'evil' }, models: { gemini: 'flash' }, niche: 'coding vlogs' }, google: { clientId: 'cid' } } });
   assert.deepEqual(store.ai, { provider: 'openai', keys: { openai: 'mine' }, models: { gemini: 'flash', openai: 'gpt' }, niche: 'coding vlogs' });
   assert.deepEqual(store.google, { clientId: 'cid' });
-  assert.throws(() => admin.summarizeBackup({ app: 'other' }), /Not a YT Toolkit backup/);
+  assert.throws(() => admin.summarizeBackup({ app: 'other' }), /Not an Outlier Lab backup/);
 });
 
 test('restoring merges notebook lessons and experiments item by item', async () => {

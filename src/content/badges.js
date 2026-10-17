@@ -60,7 +60,7 @@ YTK.badges = (() => {
       data = await YTK.send({ type: 'scoreVideos', ids });
     } catch (err) {
       if (['noKey', 'quotaExceeded', 'keyInvalid', 'stale'].includes(err.reason)) {
-        if (!halted) YTK.toast(`YT Toolkit: ${err.message}`);
+        if (!halted) YTK.toast(`Outlier Lab: ${err.message}`);
         halted = err.reason;
         return;
       }

@@ -183,7 +183,7 @@ const prefixed = (data, p) => Object.keys(data).filter((k) => k.startsWith(p)).l
 
 /** What a backup holds, for the restore preview: [{ label, count }]. */
 export function summarizeBackup(backup) {
-  if (backup?.app !== 'yt-toolkit' || typeof backup.data !== 'object' || !backup.data) throw new Error('Not a YT Toolkit backup file.');
+  if (backup?.app !== 'yt-toolkit' || typeof backup.data !== 'object' || !backup.data) throw new Error('Not an Outlier Lab backup file.');
   const d = backup.data;
   const projects = Object.values(d.projects ?? {});
   return [

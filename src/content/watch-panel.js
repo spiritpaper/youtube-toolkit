@@ -94,7 +94,7 @@ YTK.watchPanel = (() => {
       h(
         'div',
         { class: 'head' },
-        h('span', { class: 'brand' }, 'YT Toolkit'),
+        h('span', { class: 'brand' }, 'Outlier Lab'),
         report && h('span', { class: 'chip' }, report.video.format === 'short' ? 'Short' : 'Long-form'),
         h(
           'button',

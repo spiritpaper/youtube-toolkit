@@ -44,14 +44,14 @@ if (steps.some(([done]) => !done)) {
   $('setup').replaceWith(
     h('section', { class: 'setup' }, h('h2', {}, `Getting started · ${steps.filter(([d]) => d).length} of ${steps.length} done`),
       h('ul', { class: 'steps' }, steps.map(([done, label, link, linkText]) =>
-        h('li', {}, h('span', { class: done ? 'ok' : 'todo' }, done ? '✓' : '○'), h('span', {}, label), !done && link !== 'popup' && h('a', { href: page(link) }, `${linkText} →`), !done && link === 'popup' && h('span', { class: 'muted small', style: 'margin-left:auto' }, 'click the YT Toolkit icon in the toolbar'))))),
+        h('li', {}, h('span', { class: done ? 'ok' : 'todo' }, done ? '✓' : '○'), h('span', {}, label), !done && link !== 'popup' && h('a', { href: page(link) }, `${linkText} →`), !done && link === 'popup' && h('span', { class: 'muted small', style: 'margin-left:auto' }, 'click the Outlier Lab icon in the toolbar'))))),
   );
 }
 
 // A newer release on GitHub (public build only; see background/updates.js).
 if (s.updateAvailable?.version) {
   $('grid').before(h('div', { class: 'banner update-banner' },
-    h('b', {}, `YT Toolkit ${s.updateAvailable.version} is out.`), ' ',
+    h('b', {}, `Outlier Lab ${s.updateAvailable.version} is out.`), ' ',
     s.updateAvailable.zip && h('a', { href: s.updateAvailable.zip }, 'Download'), ' · ',
     h('a', { href: s.updateAvailable.url, target: '_blank', rel: 'noopener' }, "What's new"), ' · ',
     h('a', { href: page('options/options.html#updates') }, 'How to update')));

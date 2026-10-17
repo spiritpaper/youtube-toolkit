@@ -94,7 +94,7 @@ function render() {
   $('list').replaceChildren(
     ...(list.length
       ? list.map(card)
-      : [h('div', { class: 'empty-state' }, h('h2', {}, 'Follow channels you want to learn from'), h('p', {}, 'Paste a channel above, or click Follow in the YT Toolkit panel on any YouTube video or channel page. Followed channels are tracked daily (growth, uploads, outliers) and feed Compare, Content gaps and the Radar.'))]),
+      : [h('div', { class: 'empty-state' }, h('h2', {}, 'Follow channels you want to learn from'), h('p', {}, 'Paste a channel above, or click Follow in the Outlier Lab panel on any YouTube video or channel page. Followed channels are tracked daily (growth, uploads, outliers) and feed Compare, Content gaps and the Radar.'))]),
   );
 }
 

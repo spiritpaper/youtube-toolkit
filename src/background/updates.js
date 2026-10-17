@@ -4,7 +4,7 @@
 //    files are copied in (by scripts/update.sh, or by unzipping a release
 //    over it), the running copy and the files on disk differ. Every few
 //    minutes this compares them and reloads the extension, but only while
-//    no YT Toolkit page is open, so nothing you're working in is closed.
+//    no Outlier Lab page is open, so nothing you're working in is closed.
 // 2. Update notice (public build): once a day, the latest GitHub release is
 //    compared with this version; Home and Settings show a notice if newer.
 

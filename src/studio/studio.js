@@ -30,7 +30,7 @@ function setTab(tab) {
   history.replaceState(null, '', `#${tab}`);
   shell.setActive(tab);
   document.querySelector('.top h1').textContent = TAB_TITLES[tab];
-  document.title = `${TAB_TITLES[tab]} · YT Toolkit`;
+  document.title = `${TAB_TITLES[tab]} · Outlier Lab`;
   for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === tab));
   ({ mine: renderMine, compare: renderCompare, radar: renderRadar, gaps: renderGaps, titles: renderTitles })[tab]();
 }

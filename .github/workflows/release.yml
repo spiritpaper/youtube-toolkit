@@ -39,7 +39,7 @@ jobs:
             on && /^## \[/ { exit }
             on { print }
           ' CHANGELOG.md > notes.md
-          printf '\n**Video downloads (optional):** the `yt-toolkit-companion-*` files are the companion app for your system. See [Video downloads](https://github.com/%s/blob/%s/docs/guides/video-downloads.md).\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
+          printf '\n**Video downloads (optional):** the `outlier-lab-companion-*` files are the companion app for your system. See [Video downloads](https://github.com/%s/blob/%s/docs/guides/video-downloads.md).\n' "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
           printf '\n---\n**Install:** download `%s`, unzip it into a folder, then open `chrome://extensions`, turn on Developer mode, click **Load unpacked** and choose that folder. See [Getting started](https://github.com/%s/blob/%s/docs/getting-started.md).\n' \
             "$(basename "${{ steps.zip.outputs.path }}")" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
       - name: Publish the release
@@ -47,6 +47,6 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release create "$GITHUB_REF_NAME" "${{ steps.zip.outputs.path }}" dist/companion/* \
-            --title "YT Toolkit ${GITHUB_REF_NAME}" \
+            --title "Outlier Lab ${GITHUB_REF_NAME}" \
             --notes-file notes.md \
             --verify-tag

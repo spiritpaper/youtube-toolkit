@@ -293,7 +293,7 @@ async function showLastBackup() {
 $('backup').addEventListener('click', async () => {
   const backup = await send({ type: 'exportData' });
   const url = URL.createObjectURL(new Blob([JSON.stringify(backup)], { type: 'application/json' }));
-  const a = Object.assign(document.createElement('a'), { href: url, download: `yt-toolkit-backup-${new Date().toISOString().slice(0, 10)}.json` });
+  const a = Object.assign(document.createElement('a'), { href: url, download: `outlier-lab-backup-${new Date().toISOString().slice(0, 10)}.json` });
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   const items = summarizeBackup(backup).reduce((n, r) => n + r.count, 0);
@@ -334,7 +334,7 @@ $('restore').addEventListener('change', async (e) => {
     dataMessage('');
   } catch (err) {
     closePreview();
-    dataMessage(err instanceof SyntaxError ? 'That file is not a YT Toolkit backup (it is not valid JSON).' : err.message, 'err');
+    dataMessage(err instanceof SyntaxError ? 'That file is not an Outlier Lab backup (it is not valid JSON).' : err.message, 'err');
   }
 });
 $('restore-cancel').addEventListener('click', closePreview);

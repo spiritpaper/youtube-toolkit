@@ -1,3 +1,3 @@
-module github.com/spiritpaper/youtube-toolkit/companion
+module github.com/spiritpaper/outlier-lab/companion
 
 go 1.22

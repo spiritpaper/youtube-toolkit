@@ -22,7 +22,7 @@ function connect() {
   port.onDisconnect.addListener(() => {
     const why = chrome.runtime.lastError?.message ?? 'The companion closed.';
     port = null;
-    for (const w of helloWaiters) w.reject(new Error(notInstalled(why) ? 'The companion app isn\'t installed (or not for this copy of YT Toolkit).' : why));
+    for (const w of helloWaiters) w.reject(new Error(notInstalled(why) ? 'The companion app isn\'t installed (or not for this copy of Outlier Lab).' : why));
     helloWaiters = [];
     // Anything still running can't report back any more.
     mutate((list) => {

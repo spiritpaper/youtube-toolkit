@@ -1,6 +1,13 @@
-# YT Toolkit
+# Outlier Lab
 
-A Chrome extension for YouTube creators: find outliers, learn from the channels you follow, and plan, write, film and track your own videos. AI is optional (bring your own key).
+**A creator's laboratory for YouTube.** Find the videos that beat their channel, test your own ideas on realistic viewers before you publish, and learn from what really happened, so every video teaches the next one.
+
+Free and open source. Your data stays in your browser. AI is optional: use your own key (Gemini has a free tier), or run it fully offline on your own computer with Ollama.
+
+- **Discover:** outlier badges right on YouTube, a keyword explorer, video webs, a radar on the channels you follow, and content gaps.
+- **Plan:** an idea board where every video gets a workspace for its angle, titles, outline, script with script checks, shot list and thumbnail.
+- **Test:** the **Audience lab** builds avatars of your real audience from your analytics and comments. Pitch ideas to them, ask them questions, and test-screen your title, opening and script before you publish.
+- **Learn:** after publishing, **Forecast vs reality** compares the screening with the real numbers and updates the avatars from real viewers. The **Lab notebook** keeps your notes, lessons and experiments, and brings the right ones back while you write.
 
 Every extension page shares one sidebar:
 
@@ -9,7 +16,7 @@ Every extension page shares one sidebar:
 | **Home** | Setup checklist, radar, top-moving channels, recent ideas, rabbit holes and webs (reads saved data only, so no API cost) |
 | **Discover** | Keyword explorer (rabbit holes) · Video web · Radar |
 | **Channels** | Following · Compare · Content gaps |
-| **Create** | Idea board · Saved outliers · Title lab · Script lab (hook library, script analyzer, audience questions) |
+| **Create** | Idea board · Saved outliers · Title lab · Script lab (hook library, script analyzer, audience questions) · Audience lab · Lab notebook · Downloads |
 | **You** | My channel (Google sign-in) · Settings |
 
 On YouTube itself:
@@ -30,6 +37,9 @@ On YouTube itself:
   - **Shot list**: a starter from your script, or AI-generated (A-roll, B-roll, on-screen text, props), to download or print
   - **Thumbnail**: upload it and see it in a mock home feed next to your outliers, dark or light, full size and phone size. AI critiques it against the outliers' thumbnails.
   - **After publishing**: link the video and it's tracked for 30 days (views and outlier score vs your median at 48 hours and 7 days, next to the outliers you modelled it on). If you're signed in, your real retention curve, average % viewed and thumbnail click-through rate are added. After 30 days it moves to the board's **Archive** with its final numbers.
+- **Audience lab**: avatar groups built from your real analytics (ages, countries, devices, subscribers, how people find you) and comments. **Ask your audience** to react to one-line pitches or answer questions. **Test screenings** show who clicks, who stays past the opening and where they leave, beat by beat, with ranked changes. **Compare titles** on the same audience. After publishing, **Forecast vs reality** checks the screening against the real numbers, calibrates the next ones, and proposes updates to the avatars. See [Audience lab](docs/guides/audience-lab.md).
+- **Lab notebook**: every timestamped note you take on videos (group them with #tags), lessons you've learned, and experiments that test an idea across videos against your real numbers. While you write an outline or script, the matching notes and lessons appear under it. See [Lab notebook](docs/guides/lab-notebook.md).
+- **Local AI**: every AI feature can run on Ollama or LM Studio on your own computer, free and private. See [Local AI](docs/guides/local-ai.md) for what to install and which model fits your machine.
 - **Honest channel review** (AI, My channel): built only on your own analytics (retention drop-offs with what you said there, top videos, traffic, followed channels), listing every problem with where it is, the evidence and how to fix it.
 - **Shorts from a long video** (Script analyzer): clips around the most replayed moments, and an AI plan with hooks, cuts and loop endings.
 - **Quick search** (Ctrl+K on any page) across projects, saved videos, channels, notes and rabbit holes.
@@ -46,9 +56,14 @@ Home, Following, the Idea board and the project pages read saved data only.
 
 ## Quick start
 
-1. Download the latest zip from [Releases](https://github.com/spiritpaper/youtube-toolkit/releases) and unzip it into a folder (or clone this repository). In Chrome, open `chrome://extensions`, turn on **Developer mode**, click **Load unpacked** and pick that folder.
-2. Get a free [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) key (**Credentials → Create credentials → API key**), click the YT Toolkit icon and paste it.
-3. Reload YouTube. Then open **Home** from the popup and follow its checklist.
+> **Why isn't it on the Chrome Web Store?** Publishing there needs a paid developer account, which this project can't cover yet. Installing by hand takes about two minutes, and later updates are one double-click (one command on Mac and Linux).
+
+1. Download `outlier-lab-v….zip` from the [latest release](https://github.com/spiritpaper/outlier-lab/releases/latest) and unzip it into a folder you'll keep (for example `Documents/Outlier Lab`). Chrome runs it from that folder, so don't delete it.
+2. In Chrome, open `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked** and pick that folder.
+3. Get a free [YouTube Data API v3](https://console.cloud.google.com/apis/library/youtube.googleapis.com) key (**Credentials → Create credentials → API key**), click the Outlier Lab icon and paste it.
+4. Reload YouTube. Then open **Home** from the popup and follow its checklist.
+
+To update later, Outlier Lab tells you when a new version is out, and the update script in its folder (`scripts/update.cmd` on Windows) installs it in place, keeping your data. See [Getting started](docs/getting-started.md).
 
 Full walkthrough: **[Getting started](docs/getting-started.md)**.
 
@@ -56,7 +71,7 @@ Full walkthrough: **[Getting started](docs/getting-started.md)**.
 
 | | |
 | --- | --- |
-| **Guides** | [Finding outliers](docs/guides/finding-outliers.md) · [Keyword explorer](docs/guides/keyword-explorer.md) · [Video web](docs/guides/video-web.md) · [Channels, Radar & gaps](docs/guides/channels.md) · [Idea board & projects](docs/guides/idea-board.md) · [Scripts, hooks & titles](docs/guides/scripts-and-titles.md) · [My channel](docs/guides/my-channel.md) · [AI assistant](docs/guides/ai-assistant.md) · [Data & storage](docs/guides/data-and-storage.md) |
+| **Guides** | [Audience lab](docs/guides/audience-lab.md) · [Lab notebook](docs/guides/lab-notebook.md) · [Local AI](docs/guides/local-ai.md) · [Video downloads](docs/guides/video-downloads.md) · [Finding outliers](docs/guides/finding-outliers.md) · [Keyword explorer](docs/guides/keyword-explorer.md) · [Video web](docs/guides/video-web.md) · [Channels, Radar & gaps](docs/guides/channels.md) · [Idea board & projects](docs/guides/idea-board.md) · [Scripts, hooks & titles](docs/guides/scripts-and-titles.md) · [My channel](docs/guides/my-channel.md) · [AI assistant](docs/guides/ai-assistant.md) · [Data & storage](docs/guides/data-and-storage.md) |
 | **Reference** | [How the numbers are calculated](docs/reference/metrics.md) · [API quota & caching](docs/reference/quota.md) · [Privacy](docs/reference/privacy.md) · [Troubleshooting](docs/reference/troubleshooting.md) |
 | **Developers** | [Architecture](docs/development/architecture.md) · [Testing & contributing](docs/development/testing.md) |
 
@@ -67,11 +82,11 @@ The core idea in one line: **outlier score = video views ÷ median views of the 
 No build step and no dependencies: plain ES modules loaded straight from `src/`.
 
 ```
-npm test      # 76 tests: math, the background against a fake YouTube API, AI providers, storage, UI helpers
+npm test      # 140 tests: math, the background against a fake YouTube API, AI providers (cloud and local), the Audience lab, storage, UI helpers
 ```
 
 After editing, click the extension's reload icon in `chrome://extensions`, then reload YouTube tabs. See [Architecture](docs/development/architecture.md) and [Releasing](docs/development/releasing.md) (push a `vX.Y.Z` tag and GitHub Actions publishes the release zip). Changes are listed in the [changelog](CHANGELOG.md).
 
 ## Support
 
-If YT Toolkit helps you, you can support its development. The link appears in the popup and Settings once `SUPPORT_URL` is set in `src/lib/support.js`. It stays hidden while that's empty.
+If Outlier Lab helps you, you can support its development. The link appears in the popup and Settings once `SUPPORT_URL` is set in `src/lib/support.js`. It stays hidden while that's empty.

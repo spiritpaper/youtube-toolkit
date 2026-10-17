@@ -1,6 +1,6 @@
 # Privacy
 
-YT Toolkit has **no server**. Nothing about you is collected by the extension's author.
+Outlier Lab has **no server**. Nothing about you is collected by the extension's author.
 
 ## What's stored, and where
 

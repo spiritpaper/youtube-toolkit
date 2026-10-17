@@ -1,12 +1,12 @@
-// YT Toolkit companion: an optional helper that lets the YT Toolkit browser
+// Outlier Lab companion: an optional helper that lets the Outlier Lab browser
 // extension download videos. Chrome starts it as a "native messaging host";
 // run it yourself once to install it:
 //
-//	yt-toolkit-companion                 interactive install (asks for the extension ID)
-//	yt-toolkit-companion install --extension-id ID [--extension-id ID2]
-//	yt-toolkit-companion update          get the latest downloader
-//	yt-toolkit-companion uninstall
-//	yt-toolkit-companion version
+//	outlier-lab-companion                 interactive install (asks for the extension ID)
+//	outlier-lab-companion install --extension-id ID [--extension-id ID2]
+//	outlier-lab-companion update          get the latest downloader
+//	outlier-lab-companion uninstall
+//	outlier-lab-companion version
 package main
 
 import (
@@ -50,7 +50,7 @@ func main() {
 	case "uninstall":
 		err = uninstall()
 	case "version", "--version", "-v":
-		fmt.Println("yt-toolkit-companion", Version)
+		fmt.Println("outlier-lab-companion", Version)
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown command %q. Use install, update, uninstall or version.\n", cmd)
 		os.Exit(2)
@@ -72,15 +72,15 @@ func (l *idList) Set(v string) error { *l = append(*l, strings.Split(v, ",")...)
 func runInstall(args []string) error {
 	fs := flag.NewFlagSet("install", flag.ContinueOnError)
 	var ids idList
-	fs.Var(&ids, "extension-id", "YT Toolkit's extension ID (Settings → Video downloads); repeat for several")
-	folder := fs.String("downloads", "", "where downloads go (default: your Downloads folder, \"YT Toolkit\")")
+	fs.Var(&ids, "extension-id", "Outlier Lab's extension ID (Settings → Video downloads); repeat for several")
+	folder := fs.String("downloads", "", "where downloads go (default: your Downloads folder, \"Outlier Lab\")")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
 	if len(ids) == 0 {
-		fmt.Println("YT Toolkit companion " + Version + " (video downloads add-on)")
+		fmt.Println("Outlier Lab companion " + Version + " (video downloads add-on)")
 		fmt.Println()
-		fmt.Println("Open YT Toolkit → Settings → Video downloads and copy the extension ID.")
+		fmt.Println("Open Outlier Lab → Settings → Video downloads and copy the extension ID.")
 		fmt.Print("Paste it here and press Enter: ")
 		line, _ := bufio.NewReader(os.Stdin).ReadString('\n')
 		ids = append(ids, strings.Fields(strings.ReplaceAll(line, ",", " "))...)

@@ -61,7 +61,7 @@ const tagChips = (tags) => (tags.length ? h('div', { class: 'chips' }, tags.map(
 function notesView() {
   const notes = items.filter((i) => i.kind === 'note');
   if (!notes.length) {
-    return h('section', { class: 'card' }, emptyState('No notes yet', 'Take notes while you watch: "Add note" in the YT Toolkit panel on YouTube, or in the Script lab. Add #tags (like #hook or #pacing) to group them. They come back to you while you write a project\'s outline or script.', [{ label: 'Open the Script lab', href: '../script/script.html' }]));
+    return h('section', { class: 'card' }, emptyState('No notes yet', 'Take notes while you watch: "Add note" in the Outlier Lab panel on YouTube, or in the Script lab. Add #tags (like #hook or #pacing) to group them. They come back to you while you write a project\'s outline or script.', [{ label: 'Open the Script lab', href: '../script/script.html' }]));
   }
   const shown = notes.filter(matches);
   const byVideo = new Map();

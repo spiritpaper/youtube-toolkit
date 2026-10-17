@@ -1,6 +1,6 @@
 # Architecture
 
-YT Toolkit is a Manifest V3 Chrome extension written in plain JavaScript (ES modules), with no build step and no dependencies. Load the folder unpacked and it runs.
+Outlier Lab is a Manifest V3 Chrome extension written in plain JavaScript (ES modules), with no build step and no dependencies. Load the folder unpacked and it runs.
 
 ## The four parts
 
