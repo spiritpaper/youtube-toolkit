@@ -1,6 +1,8 @@
 // Bring-your-own-key AI providers. Called from extension pages (not the
 // service worker, which may be suspended during a long generation).
 
+import { localGenerate, LOCAL_ORIGINS } from './local-ai.js';
+
 export const PROVIDERS = {
   gemini: {
     label: 'Google Gemini',
@@ -31,6 +33,15 @@ export const PROVIDERS = {
     origins: ['https://openrouter.ai/*'],
     suggested: ['google/gemini-flash-latest', 'google/gemini-3.6-flash', 'openai/gpt-5.4-mini', 'anthropic/claude-sonnet-5.5'],
   },
+  // Ollama, LM Studio or another server on this computer (local-ai.js). No key.
+  local: {
+    label: 'Local AI (Ollama, LM Studio…)',
+    keyless: true,
+    keyUrl: '',
+    keyHint: '',
+    origins: LOCAL_ORIGINS,
+    suggested: [],
+  },
 };
 
 export class AiError extends Error {}
@@ -43,11 +54,12 @@ export async function getAiSettings() {
 // Settings for the active provider, or null if AI isn't set up.
 export async function activeAi() {
   const s = await getAiSettings();
-  const key = s.keys[s.provider];
+  if (!PROVIDERS[s.provider]) return null;
+  const key = PROVIDERS[s.provider].keyless ? 'local' : s.keys[s.provider];
   const model = s.models[s.provider];
   if (!key || !model) return null;
   const granted = await chrome.permissions.contains({ origins: PROVIDERS[s.provider].origins });
-  return granted ? { provider: s.provider, key, model, niche: s.niche } : null;
+  return granted ? { provider: s.provider, key, model, niche: s.niche, ...(s.provider === 'local' ? { local: s.local ?? {} } : {}) } : null;
 }
 
 async function request(url, init, provider, { retry = true } = {}) {
@@ -130,8 +142,15 @@ export function pickDefaultModel(provider, models) {
  * One-shot text generation. Images are optional: `image` ({ mime, data }
  * base64) or `images` (several, in order). Returns the model's text (Markdown).
  */
-export async function generate({ provider, key, model, system, prompt, image, images = [] }) {
+export async function generate({ provider, key, model, system, prompt, image, images = [], local }) {
   const pics = [...(image ? [image] : []), ...images].filter(Boolean);
+  if (provider === 'local') {
+    try {
+      return await localGenerate({ model, system, prompt, images: pics, local });
+    } catch (err) {
+      throw new AiError(err.message);
+    }
+  }
   if (provider === 'gemini') {
     const parts = pics.map((img) => ({ inline_data: { mime_type: img.mime, data: img.data } }));
     parts.push({ text: prompt });

@@ -58,6 +58,22 @@ async function setup() {
   await updateBadge();
 }
 
+// Local AI: Ollama refuses requests that carry an extension Origin. Remove
+// that header on this extension's own requests to localhost (only takes
+// effect once the user grants access to localhost in Settings → AI).
+async function localAiRule() {
+  await chrome.declarativeNetRequest?.updateDynamicRules({
+    removeRuleIds: [1],
+    addRules: [{
+      id: 1,
+      priority: 1,
+      action: { type: 'modifyHeaders', requestHeaders: [{ header: 'origin', operation: 'remove' }] },
+      condition: { requestDomains: ['localhost', '127.0.0.1'], initiatorDomains: [chrome.runtime.id], resourceTypes: ['xmlhttprequest', 'other'] },
+    }],
+  });
+}
+
+chrome.runtime.onInstalled.addListener(() => localAiRule().catch(() => {}));
 chrome.runtime.onInstalled.addListener(setup);
 chrome.runtime.onStartup.addListener(setup);
 chrome.runtime.onInstalled.addListener(() => rememberLoadedBuild().catch(() => {}));
@@ -287,6 +303,7 @@ const handlers = {
   avatarGroupDelete: ({ id }) => deleteGroup(id),
   avatarSave: ({ groupId, avatar }) => saveAvatar(groupId, avatar),
   avatarDelete: ({ groupId, avatarId }) => deleteAvatar(groupId, avatarId),
+  localAiRule: () => localAiRule(),
   notebook: () => getNotebook(),
   lessonSave: ({ lesson }) => saveLesson(lesson),
   lessonDelete: ({ id }) => deleteLesson(id),

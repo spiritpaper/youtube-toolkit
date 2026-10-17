@@ -8,7 +8,8 @@
     "storage",
     "unlimitedStorage",
     "alarms",
-    "identity"
+    "identity",
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "https://www.googleapis.com/*",
@@ -22,7 +23,9 @@
     "https://generativelanguage.googleapis.com/*",
     "https://api.openai.com/*",
     "https://api.anthropic.com/*",
-    "https://openrouter.ai/*"
+    "https://openrouter.ai/*",
+    "http://localhost/*",
+    "http://127.0.0.1/*"
   ],
   "background": {
     "service_worker": "src/background/index.js",
