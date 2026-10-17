@@ -5,6 +5,7 @@ All notable changes to YT Toolkit. Each release's section becomes its GitHub Rel
 ## [Unreleased]
 
 ### Added
+- **Avatars that learn from real viewers**: after checking a published video, **Update the audience from this video** (or **Update from real data** on any group) proposes changes to the avatars from your analytics, real comments and forecast-vs-reality lessons: field-by-field edits with the evidence, missing kinds of viewers to add, avatars to retire and new audience shares. You tick what to apply; locked avatars start unticked, and each group keeps a history of its updates.
 - **Ask your audience**: pitch up to 4 one-line ideas to an avatar group before writing anything (who'd watch each, what they'd expect, what they'd rather see, who each idea wins over, and the group's takeaways), and ask follow-up questions in a chat, to everyone or one viewer. On every project and in the Audience lab.
 - **Thumbnails in the video web**: hover a video for a card with its thumbnail, title, views and score; zoom in and the dots become thumbnails ringed in their outlier color. The web's layout is unchanged, and thumbnails load only when in view.
 

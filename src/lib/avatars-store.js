@@ -27,7 +27,7 @@ const group = (all, id) => {
 };
 
 /** Creates a group, or replaces an existing one's details and avatars. */
-export function saveGroup({ id, name, focus = '', source = { kind: 'manual' }, basis = '', avatars = [] }) {
+export function saveGroup({ id, name, focus = '', source = { kind: 'manual' }, basis = '', avatars = [], revision = null }) {
   return mutate((all) => {
     const now = Date.now();
     const gid = id && all[id] ? id : newId('g');
@@ -41,6 +41,8 @@ export function saveGroup({ id, name, focus = '', source = { kind: 'manual' }, b
       avatars: normalizeWeights(avatars.slice(0, MAX_COUNT).map((a) => normalizeAvatar(a, { source: a.source }))),
       createdAt: prev?.createdAt ?? now,
       updatedAt: now,
+      // How the group changed from real data over time (newest first, last 20).
+      revisions: [...(revision ? [{ ...revision, at: now }] : []), ...(prev?.revisions ?? [])].slice(0, 20),
     };
     return all[gid];
   });

@@ -6,23 +6,25 @@ import { send, h } from '../lib/ui.js';
 import { activeAi } from '../lib/ai.js';
 import { checkScreening, publishedVideo } from '../lab/accuracy-run.js';
 import { renderAccuracy, REPORT_CSS } from '../lab/report.js';
+import { proposeUpdate, reviewUpdate, EVOLVE_CSS } from '../lab/evolve-run.js';
 
 const DAY = 86_400_000;
 let styled = false;
 
 export function accuracySection(project) {
   if (!styled) {
-    document.head.append(h('style', {}, REPORT_CSS));
+    document.head.append(h('style', {}, REPORT_CSS + EVOLVE_CSS));
     styled = true;
   }
   const body = h('div', {});
   const section = h('section', { class: 'card', id: 'accuracy', hidden: true }, h('div', { class: 'card-head' }, h('h2', {}, 'Forecast vs reality')), body);
 
   async function draw(status = null) {
-    const [sims, auth, all] = await Promise.all([
+    const [sims, auth, all, groups] = await Promise.all([
       send({ type: 'screenings', projectId: project.id }).catch(() => []),
       send({ type: 'authStatus' }).catch(() => ({})),
       send({ type: 'projects' }).catch(() => ({})),
+      send({ type: 'avatarGroups' }).catch(() => ({})),
     ]);
     project = all[project.id] ?? project;
     const video = publishedVideo(project);
@@ -62,10 +64,29 @@ export function accuracySection(project) {
       };
       check.addEventListener('click', () => run(false));
       explain.addEventListener('click', () => run(true));
+      // Teach the avatars themselves, not only the numbers.
+      const updated = sim.accuracy && groups[sim.groupId]?.revisions?.find((r) => r.from?.simId === sim.id);
+      const evolve = sim.accuracy && groups[sim.groupId] && h('button', { title: 'Asks the AI how the avatars should change after this video, for you to review (1 AI call)' }, updated ? 'Update the audience again' : 'Update the audience from this video');
+      evolve?.addEventListener('click', async () => {
+        const ai = await activeAi();
+        if (!ai) return draw(h('p', { class: 'muted' }, 'Updating the audience uses AI. Connect a provider in Settings.'));
+        check.disabled = explain.disabled = evolve.disabled = true;
+        const progress = h('div', { class: 'loading inline' }, 'Gathering…');
+        body.append(progress);
+        try {
+          const proposal = await proposeUpdate({ ai, group: groups[sim.groupId], sim, onProgress: (t) => (progress.textContent = t) });
+          progress.remove();
+          const saved = await reviewUpdate(groups[sim.groupId], proposal);
+          draw(saved ? h('p', { class: 'small' }, `Updated "${saved.name}". Its next screenings use the new avatars. `, h('a', { href: '../lab/lab.html' }, 'See the group')) : null);
+        } catch (err) {
+          draw(err.cancelled ? null : h('p', { class: 'error' }, err.message));
+        }
+      });
       return h('div', { class: 'acc-block' },
         h('div', { class: 'small muted' }, `Screening of ${new Date(sim.at).toLocaleDateString()} · "${sim.title}" · ${sim.groupName}`, ' · ', h('a', { href: `../lab/lab.html#sim=${sim.id}` }, 'report')),
         renderAccuracy(sim, { title: 'How close it was' }),
-        h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px' }, check, explain));
+        h('div', { class: 'row', style: 'display:flex;gap:8px;flex-wrap:wrap;margin-top:6px' }, check, explain, evolve),
+        updated && h('p', { class: 'muted small' }, `The audience was updated from this video on ${new Date(updated.at).toLocaleDateString()}.`));
     };
 
     body.replaceChildren(...[

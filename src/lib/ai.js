@@ -975,3 +975,40 @@ Reply with ONLY a JSON array:
 [{"id": "…", "reply": "…"}]`;
   return { system: SCREENING_SYSTEM, prompt };
 }
+
+/**
+ * Updating an audience group from real data: current analytics and comments,
+ * and what checked screenings (forecast vs reality) taught. Proposes edits,
+ * new avatars, retirements and new shares; the creator reviews them.
+ * Replies with one JSON object.
+ */
+export function evolvePrompt({ avatars, sheet = '', lessons = '', calibration = '', video = '', niche = '' }) {
+  const system = `You are an audience researcher keeping a set of viewer personas true to a real YouTube audience. Personas are fictional composites: never a real person, never a real commenter's name or handle, never copied comment text.
+
+Rules:
+- Change a persona only where real data shows it is wrong: how patient they are, what they know, what they want, how they find videos, how they watch. Name the evidence in each reason.
+- Keep what the data doesn't contradict. Small, specific edits beat rewrites. No change at all is a fine answer.
+- Add a persona only for a kind of real viewer the group is missing (from comments, demographics or traffic), and retire one only if nothing in the data looks like them.
+- Shares (weights) should follow the real demographics, devices, subscribers and traffic.
+- Describe people with respect and without judgment: frustration, boredom and disagreement are normal reactions.`;
+  const prompt = `${nicheLine(niche)}
+
+The personas now (id in brackets, share of viewers at the end):
+${avatars.map((a) => `- ${a.brief} Share: ${Math.round(a.weight * 100)}%.${a.locked ? ' (The creator locked this one: change it only for strong evidence.)' : ''}`).join('\n')}
+
+${sheet ? `The real audience now:\n${sheet}\n` : 'No current analytics (not signed in).\n'}
+${calibration ? `How past test screenings with these personas compared with real results:\n${calibration}\n` : ''}${lessons ? `\nLessons from published videos (forecast vs reality reviews):\n${lessons}\n` : ''}${video ? `\nThis update is about one published video:\n${video}\n` : ''}
+Propose how to update the personas so the next test screenings behave more like the real audience.
+
+Fields you may change in "changes": age, gender, location, occupation, lifeStage, interests (array), knowledge (new|some|expert), wants, beliefs (array), frustrations (array), moves, turnoffs, device (phone|computer|tv|tablet), discovery (search|browse|suggested|subscriptions|shorts|external), relationship (subscriber|returning|new), habits, commentStyle, quote, basedOn.
+
+Reply with ONLY a JSON object, no other text:
+{
+  "summary": "2-3 sentences: what the real data says about this audience that the personas got wrong",
+  "edits": [{"id": "…", "changes": {"habits": "…"}, "reason": "the evidence"}],
+  "add": [{"avatar": {"name": "…", "age": 30, "occupation": "…", "wants": "…", "…": "same fields as above"}, "reason": "…"}],
+  "retire": [{"id": "…", "reason": "…"}],
+  "weights": {"<id>": 0.2}
+}`;
+  return { system, prompt };
+}

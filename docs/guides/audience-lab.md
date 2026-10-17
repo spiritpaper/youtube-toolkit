@@ -115,6 +115,7 @@ Everything runs on your own AI key; the extension adds no cost of its own.
 | Test screening | 3 (5 when run twice; the first carries images if you include the thumbnail) |
 | Compare titles | 1 |
 | Explain the differences after publishing | 1 (plus 1 YouTube API unit for the comments) |
+| Update the audience from real data | 1 (plus 1 YouTube API unit for recent comments) |
 
 Free AI tiers have daily limits. On some Gemini free tiers, that's about 20 requests a day per model, or roughly 4–6 screenings. If you hit the limit, switch to a "lite" model in **Settings → AI** (it has its own limit), use a paid key, or wait for the limit to reset.
 
@@ -143,3 +144,21 @@ You get the differences, a chart of the forecast vs. the real retention, and a v
 Without signing in, only views and comments can be compared, and the numbers aren't calibrated.
 
 The title comparison is checked too: the card says whether you published the title the comparison favored.
+
+## The avatars get better too
+
+Calibration corrects the **numbers**; updating the audience corrects the **people**. If real viewers turn out to be less patient, newer to the topic, or a kind of viewer no avatar stands for, the avatars themselves should change.
+
+There are two ways to do it:
+- **Update the audience from this video**, on the Forecast vs reality card, after you check a video (best after **Explain the differences**). It focuses on what that video showed.
+- **Update from real data**, on any group in the Audience lab. It looks at everything: your current analytics and recent comments (signed in), the lessons from every checked video, and the group's track record.
+
+The AI (1 call) proposes:
+- **Changes** to avatars, field by field (before → after), each with the evidence behind it. For example: "Kyle is far too patient for a suggested-video viewer on a phone."
+- **New avatars**, for real viewers the group is missing, like the beginners and parents who showed up in your comments.
+- **Retirements**, for avatars nothing in the data looks like.
+- **New shares of viewers**, to match your real demographics, devices and traffic.
+
+Nothing changes until you review it. Tick what to apply; changes to locked avatars start unticked. Each update is kept in the group's history (**Updated from real data** under the track record), with what changed and why.
+
+The more videos you publish and check, the closer your avatars get to your real audience.

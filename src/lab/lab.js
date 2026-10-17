@@ -9,11 +9,12 @@ import { renderReport, expectations, REPORT_CSS } from './report.js';
 import { askPanel } from './ask-panel.js';
 import { ASK_CSS } from './ask-view.js';
 import { runScreening } from './screen-run.js';
+import { proposeUpdate, reviewUpdate, EVOLVE_CSS } from './evolve-run.js';
 import { calibration as learnCalibration } from '../lib/accuracy.js';
 import { audienceSheet, parseAvatars, mergeRegenerated, normalizeAvatar, DEFAULT_COUNT, MAX_COUNT, KNOWLEDGE, DEVICES, DISCOVERY, RELATIONSHIP } from '../lib/avatars.js';
 
 mountShell('lab');
-document.head.append(h('style', {}, REPORT_CSS + ASK_CSS));
+document.head.append(h('style', {}, REPORT_CSS + ASK_CSS + EVOLVE_CSS));
 const main = document.getElementById('main');
 const dlg = document.getElementById('edit');
 
@@ -90,18 +91,45 @@ function trackRecord(g) {
     fixes.length ? h('div', { class: 'muted' }, `Corrections applied to new screenings: ${fixes.join(' · ')}`) : null);
 }
 
+// How the group changed from real data.
+function revisions(g) {
+  if (!g.revisions?.length) return null;
+  const line = (r) => [r.edited && `${r.edited} edited`, r.added && `${r.added} added`, r.retired && `${r.retired} retired`, r.weights && 'shares rebalanced'].filter(Boolean).join(', ') || 'no changes';
+  return h('details', { class: 'basis' }, h('summary', {}, `Updated from real data ${g.revisions.length} time${g.revisions.length === 1 ? '' : 's'}`),
+    h('ul', { class: 'revs small' }, g.revisions.map((r) => h('li', {}, h('b', {}, new Date(r.at).toLocaleDateString()), ` · ${line(r)}${r.basis ? ` · from ${r.basis}` : ''}`, r.summary && h('div', { class: 'muted' }, r.summary)))));
+}
+
+async function updateFromData(g) {
+  const ai = await activeAi();
+  if (!ai) return alert('Updating avatars uses AI. Connect a provider in Settings first.');
+  busy = { text: 'Gathering what real viewers did…' };
+  render();
+  let proposal = null;
+  try {
+    proposal = await proposeUpdate({ ai, group: g, onProgress: (text) => { busy.text = text; render(); } });
+  } catch (err) {
+    if (!err.cancelled) alert(err.message);
+  }
+  busy = null;
+  render();
+  if (proposal && (await reviewUpdate(g, proposal))) load();
+}
+
 function groupView(g) {
+  const evolve = h('button', { title: 'Compare the avatars with your current analytics, comments and checked videos, and review proposed changes (1 AI call)', onclick: () => updateFromData(g) }, 'Update from real data');
   const regen = h('button', { onclick: () => build({ group: g }) }, `Regenerate unlocked (${g.avatars.filter((a) => !a.locked).length || DEFAULT_COUNT})`);
   return h('div', { class: 'lab-group' },
     h('section', { class: 'card' },
       h('div', { class: 'ghead' },
         h('h2', {}, g.name),
+        g.avatars.length > 0 && evolve,
         g.source?.kind !== 'manual' && regen,
         h('button', { onclick: () => editAvatar(g, null), disabled: g.avatars.length >= MAX_COUNT }, 'Add an avatar'),
         h('button', { class: 'danger', onclick: () => confirm(`Delete the group "${g.name}" and its ${g.avatars.length} avatars?`) && send({ type: 'avatarGroupDelete', id: g.id }).then(() => { current = null; load(); }) }, 'Delete group')),
       h('div', { class: 'muted small' }, `Built from ${SOURCE_LABEL[g.source?.kind] ?? 'your data'}${g.source?.title ? ` (${g.source.title})` : ''}${g.focus ? ` · represents: ${g.focus}` : ''} · updated ${new Date(g.updatedAt).toLocaleDateString()}`),
       summary(g),
       trackRecord(g),
+      revisions(g),
       g.basis && h('details', { class: 'basis' }, h('summary', {}, 'The data these avatars are based on'), h('pre', {}, g.basis))),
     g.avatars.length
       ? h('div', { class: 'grid' }, g.avatars.map((a) => avatarCard(g, a)))
