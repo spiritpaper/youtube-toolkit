@@ -18,12 +18,16 @@ function tile(label, value, note, title) {
 export function headline(sim) {
   const r = sim.result;
   const b = sim.baseline;
+  const c = r.counts ?? {};
+  const of = (n, d) => `${n} of ${d} viewer${d === 1 ? '' : 's'}`;
+  // With very few viewers behind a number, say so instead of a confident %.
+  const few = (n) => n < 3;
   return h('div', { class: 'tiles' },
-    tile('Would click', pct(r.clickShare), b?.ctr != null ? `your real click rate: ${b.ctr.toFixed(1)}% of impressions` : 'share of this audience', 'Weighted by each viewer\'s share of the audience; "maybe" counts half. People shown a video in a real feed click far less often, so compare titles and versions, not this number with YouTube\'s.'),
-    tile('Stay past the hook', pct(r.hookHold), sim.material?.hook ? 'of those who click' : 'no script yet'),
+    tile('Would click', pct(r.clickShare), b?.ctr != null ? `your real click rate: ${b.ctr.toFixed(1)}% of impressions` : of(c.clicked ?? 0, c.avatars ?? 0), 'Weighted by each viewer\'s share of the audience; "maybe" counts half. People shown a video in a real feed click far less often, so compare titles and versions, not this number with YouTube\'s.'),
+    tile('Stay past the hook', pct(r.hookHold), sim.material?.hook ? of(c.stayed ?? 0, c.clicked ?? 0) : 'no script yet'),
     tile('Watch on average', pct(r.watchedShare), b?.avgViewed != null ? `your real average: ${Math.round(b.avgViewed)}%` : 'estimated, of those who click', b?.bySub?.subscribed != null || b?.bySub?.unsubscribed != null ? 'Each viewer was anchored to your channel\'s real watch time for subscribers and non-subscribers.' : 'Each viewer was anchored to typical YouTube watch times (sign in on My channel to use your own).'),
-    tile('Reach the end', pct(r.finishShare), r.score != null ? `score ${r.score.toFixed(1)}/10` : ''),
-    r.score != null && tile('Would subscribe', pct(r.subscribe), `like ${pct(r.like)} · share ${pct(r.share)}`, 'Among those who reach the end'));
+    tile('Reach the end', pct(r.finishShare), `${of(c.finished ?? 0, c.clicked ?? 0)}${r.score != null ? ` · ${r.score.toFixed(1)}/10` : ''}`),
+    r.score != null && tile('Would subscribe', few(c.finished) ? `${Math.round(r.subscribe * c.finished)} of ${c.finished}` : pct(r.subscribe), few(c.finished) ? 'too few finished to give a %' : `of those who finish · like ${pct(r.like)}`, 'Among those who reach the end'));
 }
 
 function curveChart(sim) {
