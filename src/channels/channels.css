@@ -1,5 +1,3 @@
-:root { --series-1: #2a78d6; --grid: #e8e7e3; --text-muted: #77756f; }
-@media (prefers-color-scheme: dark) { :root { --series-1: #3987e5; --grid: #2f2f2d; --text-muted: #9a998f; } }
 .muted { color: var(--fg-2); }
 .small { font-size: 12px; }
 .grow { flex: 1; }
@@ -37,16 +35,5 @@ details summary { cursor: pointer; font-size: 13px; color: var(--fg-2); }
 .x { border: 0; background: none; color: var(--fg-2); }
 .error { color: var(--danger); font-size: 13px; }
 /* charts (shared line chart) */
-.viz { position: relative; }
-.viz-svg { display: block; overflow: visible; }
-.viz-grid { stroke: var(--grid); stroke-width: 1; }
-.viz-axis { fill: var(--text-muted); font-size: 11px; }
-.viz-line { fill: none; stroke-width: 2; }
-.viz-area { opacity: 0.12; }
-.viz-hair { stroke: var(--text-muted); }
-.viz-dot { stroke: var(--bg); stroke-width: 2; }
-.viz-tip { position: absolute; top: 4px; pointer-events: none; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-size: 12px; }
-.viz-tip-row { display: flex; gap: 6px; align-items: center; }
-.viz-key { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
 @media (max-width: 800px) { .detail { grid-template-columns: 1fr; } .add { margin-left: 0; } }
 .stale { color: var(--warn); margin-top: 2px; }

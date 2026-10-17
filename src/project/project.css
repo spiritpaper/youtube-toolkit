@@ -37,8 +37,6 @@ textarea.mid { min-height: 120px; }
 .cmp td.low { color: var(--danger); font-weight: 600; }
 @media (max-width: 860px) { .tool-grid { grid-template-columns: 1fr; } }
 
-:root { --series-1: #2a78d6; --grid: #e8e7e3; --text-muted: #77756f; }
-@media (prefers-color-scheme: dark) { :root { --series-1: #3987e5; --grid: #2f2f2d; --text-muted: #9a998f; } }
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
 .kpi { background: var(--bg-2); border-radius: 12px; padding: 10px 12px; }
 .kpi .k { font-size: 12px; color: var(--fg-2); }
@@ -53,14 +51,3 @@ textarea.mid { min-height: 120px; }
 .small-feed { grid-template-columns: repeat(4, 168px); justify-content: start; }
 .small-feed .ft { font-size: 12px; line-height: 16px; }
 /* charts */
-.viz { position: relative; }
-.viz-svg { display: block; overflow: visible; }
-.viz-grid { stroke: var(--grid); }
-.viz-axis { fill: var(--text-muted); font-size: 11px; }
-.viz-line { fill: none; stroke-width: 2; }
-.viz-area { opacity: 0.12; }
-.viz-hair { stroke: var(--text-muted); }
-.viz-dot { stroke: var(--bg); stroke-width: 2; }
-.viz-tip { position: absolute; top: 4px; pointer-events: none; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 5px 8px; font-size: 12px; }
-.viz-tip-row { display: flex; gap: 6px; align-items: center; }
-.viz-key { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }

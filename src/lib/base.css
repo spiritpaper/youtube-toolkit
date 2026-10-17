@@ -194,3 +194,40 @@ dialog.qs::backdrop { background: rgba(0, 0, 0, 0.35); }
 .button-link.primary { background: var(--fg); color: var(--bg); border-color: transparent; }
 .loading.inline { flex-direction: row; justify-content: flex-start; padding: 8px 0; font-size: 13px; text-align: left; } .loading.inline::before { width: 16px; height: 16px; flex: none; }
 button.small-btn { padding: 3px 10px; font-size: 12px; }
+
+/* Charts (lib/linechart.js), shared by every page */
+/* Chart palette: the dataviz reference instance (first three categorical slots
+   validate all-pairs in both modes), stepped separately for dark. */
+:root {
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+  --grid: #e8e7e3;
+  --text-muted: #77756f;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --grid: #2f2f2d;
+    --text-muted: #9a998f;
+  }
+}
+.viz { position: relative; }
+.viz-svg { display: block; overflow: visible; }
+.viz-ref-label { paint-order: stroke; stroke: var(--bg); stroke-width: 4px; }
+.viz-grid { stroke: var(--grid); stroke-width: 1; }
+.viz-ref { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 4 3; }
+.viz-axis { fill: var(--text-muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.viz-line { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.viz-area { opacity: 0.12; }
+.viz-hair { stroke: var(--text-muted); stroke-width: 1; }
+.viz-dot { stroke: var(--bg); stroke-width: 2; }
+.viz-tip { position: absolute; top: 4px; pointer-events: none; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 6px 9px; font-size: 12px; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15); min-width: 120px; }
+.viz-tip-head { color: var(--fg-2); margin-bottom: 3px; }
+.viz-tip-row { display: flex; gap: 6px; align-items: center; }
+.viz-key { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex: none; }
+.viz-key.line { height: 3px; width: 14px; border-radius: 2px; }
+.viz-legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--fg-2); margin-top: 6px; }
+.viz-legend span { display: inline-flex; align-items: center; gap: 6px; }
