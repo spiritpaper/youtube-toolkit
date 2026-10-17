@@ -7,6 +7,7 @@ import { activeAi, generate, avatarsPrompt, PROVIDERS } from '../lib/ai.js';
 import { face } from './face.js';
 import { renderReport, expectations, REPORT_CSS } from './report.js';
 import { runScreening } from './screen-run.js';
+import { calibration as learnCalibration } from '../lib/accuracy.js';
 import { audienceSheet, parseAvatars, mergeRegenerated, normalizeAvatar, DEFAULT_COUNT, MAX_COUNT, KNOWLEDGE, DEVICES, DISCOVERY, RELATIONSHIP } from '../lib/avatars.js';
 
 mountShell('lab');
@@ -67,6 +68,26 @@ function summary(g) {
 
 const SOURCE_LABEL = { analytics: 'your channel\'s analytics and comments', niche: 'your channel description', channel: 'a channel you follow', manual: 'added by hand' };
 
+// How this group's forecasts have compared with published videos.
+function trackRecord(g) {
+  const checked = allSims.filter((s) => s.groupId === g.id && s.accuracy);
+  if (!checked.length) {
+    return h('p', { class: 'muted small' }, 'Track record: no published videos checked yet. After you publish a screened video, check it in the project\'s Forecast vs reality card; this group then corrects its own forecasts.');
+  }
+  const cal = learnCalibration(checked);
+  const misses = cal.history.map((x) => x.meanErr).filter((x) => x != null);
+  const trend = misses.length >= 2 ? (misses.at(-1) < misses[0] - 2 ? ' · getting closer' : misses.at(-1) > misses[0] + 2 ? ' · drifting further' : ' · steady') : '';
+  const fixes = [
+    cal.watch && `watch time ${cal.watch.value > 0 ? '−' : '+'}${Math.abs(cal.watch.value)} pts`,
+    cal.hook && `opening ${cal.hook.value > 0 ? '−' : '+'}${Math.abs(cal.hook.value)} pts`,
+    cal.ctrRatio && `"would click" × ${cal.ctrRatio.value.toFixed(3)} → click-through`,
+  ].filter(Boolean);
+  return h('div', { class: 'track small' },
+    h('b', {}, 'Track record: '), `${cal.n} published video${cal.n === 1 ? '' : 's'} checked`,
+    misses.length ? ` · average miss ${misses.map((m) => `${Math.round(m)}`).join(' → ')} pts${trend}` : '',
+    fixes.length ? h('div', { class: 'muted' }, `Corrections applied to new screenings: ${fixes.join(' · ')}`) : null);
+}
+
 function groupView(g) {
   const regen = h('button', { onclick: () => build({ group: g }) }, `Regenerate unlocked (${g.avatars.filter((a) => !a.locked).length || DEFAULT_COUNT})`);
   return h('div', { class: 'lab-group' },
@@ -78,6 +99,7 @@ function groupView(g) {
         h('button', { class: 'danger', onclick: () => confirm(`Delete the group "${g.name}" and its ${g.avatars.length} avatars?`) && send({ type: 'avatarGroupDelete', id: g.id }).then(() => { current = null; load(); }) }, 'Delete group')),
       h('div', { class: 'muted small' }, `Built from ${SOURCE_LABEL[g.source?.kind] ?? 'your data'}${g.source?.title ? ` (${g.source.title})` : ''}${g.focus ? ` · represents: ${g.focus}` : ''} · updated ${new Date(g.updatedAt).toLocaleDateString()}`),
       summary(g),
+      trackRecord(g),
       g.basis && h('details', { class: 'basis' }, h('summary', {}, 'The data these avatars are based on'), h('pre', {}, g.basis))),
     g.avatars.length
       ? h('div', { class: 'grid' }, g.avatars.map((a) => avatarCard(g, a)))
@@ -192,7 +214,7 @@ async function renderScreenings() {
             h('div', {}, h('b', {}, sm.projectTitle), h('div', { class: 'muted small' }, `"${sm.title}" · ${sm.groupName} · ${new Date(sm.at).toLocaleString()}`)),
             sm.kind === 'titles'
               ? h('div', { class: 'sim-nums' }, `title comparison · ★ ${sm.scored.titles.find((t) => t.letter === sm.scored.winner)?.title ?? '—'}`)
-              : h('div', { class: 'sim-nums' }, `click ${Math.round(sm.result.clickShare * 100)}%`, ' · ', `watch ${sm.result.watchedShare == null ? '—' : `${Math.round(sm.result.watchedShare * 100)}%`}`, sm.result.score != null ? ` · ${sm.result.score.toFixed(1)}/10` : '', sm.result.passes > 1 ? ' · 2 runs' : ''))))
+              : h('div', { class: 'sim-nums' }, sm.accuracy?.verdict ? h('span', { class: `verdict v-${sm.accuracy.verdict}`, title: 'Checked against the published video' }, { close: 'forecast close', fair: 'roughly right', off: 'forecast off' }[sm.accuracy.verdict]) : '', ' ', `click ${Math.round(sm.result.clickShare * 100)}%`, ' · ', `watch ${sm.result.watchedShare == null ? '—' : `${Math.round(sm.result.watchedShare * 100)}%`}`, sm.result.score != null ? ` · ${sm.result.score.toFixed(1)}/10` : '', sm.result.passes > 1 ? ' · 2 runs' : ''))))
         : emptyState('No test screenings yet', 'Run one above, or from the Test screening card on any project.')));
 }
 
@@ -330,8 +352,9 @@ function editAvatar(g, a) {
 const screeningPrinciples = [];
 let me = null;
 let followed = {};
+let allSims = [];
 async function load() {
-  groups = await send({ type: 'avatarGroups' }).catch(() => ({}));
+  [groups, allSims] = await Promise.all([send({ type: 'avatarGroups' }).catch(() => ({})), send({ type: 'screenings' }).catch(() => [])]);
   render();
 }
 

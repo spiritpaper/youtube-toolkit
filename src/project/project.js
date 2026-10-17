@@ -7,6 +7,7 @@ import { mdEditor } from '../lib/md-view.js';
 import { scriptToolsSection } from './script-tools.js';
 import { shotListSection, thumbnailSection, publishedSection } from './production.js';
 import { screeningSection } from './screening-card.js';
+import { accuracySection } from './accuracy-card.js';
 
 mountShell('board');
 const main = document.getElementById('main');
@@ -168,6 +169,7 @@ function render() {
     thumbnailSection(project, { ideas }),
     screeningSection(project),
     publishedSection(project, { ideas, onChange: (p) => { project = p; render(); } }),
+    accuracySection(project),
   );
 }
 

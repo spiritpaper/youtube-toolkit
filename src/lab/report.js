@@ -32,6 +32,64 @@ export function headline(sim) {
     r.score != null && tile('Would subscribe', few(c.finished) ? `${Math.round(r.subscribe * c.finished)} of ${c.finished}` : pct(r.subscribe), few(c.finished) ? 'too few finished to give a %' : `of those who finish · like ${pct(r.like)}`, 'Among those who reach the end'));
 }
 
+// ---------- forecast vs reality ----------
+
+const VERDICT = { close: 'Close', fair: 'Roughly right', off: 'Off' };
+const signed = (x) => (x == null ? '' : `${Math.round(x) > 0 ? '+' : ''}${Math.round(x)} pts`);
+
+/** The calibrated estimates under the headline, when past videos have been checked. */
+function calibratedLine(sim) {
+  const c = sim.calibrated;
+  if (!c) return null;
+  const parts = [
+    c.ctr != null && `≈ ${c.ctr.toFixed(1)}% click-through on your channel`,
+    c.hookHold != null && `${pct(c.hookHold)} past the opening`,
+    c.watched != null && `${pct(c.watched)} watched on average`,
+  ].filter(Boolean);
+  return parts.length
+    ? h('p', { class: 'calibrated small' }, h('b', {}, 'Corrected with past results: '), parts.join(' · '), h('span', { class: 'muted' }, ` (learned from ${c.n} published video${c.n === 1 ? '' : 's'} with this audience)`))
+    : null;
+}
+
+/** Forecast vs reality for a checked screening. */
+export function renderAccuracy(sim, { title = 'Forecast vs reality' } = {}) {
+  const a = sim.accuracy;
+  const act = sim.actual;
+  if (!a || !act) return null;
+  const r = sim.result;
+  const row = (label, forecast, real, diff) => h('tr', {}, h('td', {}, label), h('td', {}, forecast), h('td', {}, real), h('td', { class: diff && Math.abs(parseFloat(diff)) > 10 ? 'off' : '' }, diff || '—'));
+  const table = h('table', { class: 'beats acc' },
+    h('thead', {}, h('tr', {}, h('th', {}, ''), h('th', {}, 'Forecast'), h('th', {}, 'Real'), h('th', {}, 'Difference'))),
+    h('tbody', {},
+      row('Watch on average', pct(r.watchedShare), act.avgViewed == null ? '—' : `${Math.round(act.avgViewed)}%`, signed(a.watchErr)),
+      row('Still watching at 0:30', pct(r.hookHold), act.hold30 == null ? '—' : pct(act.hold30), signed(a.hookErr)),
+      row('Would click → click-through', `${pct(r.clickShare)} of this audience`, act.ctr == null ? '—' : `${act.ctr.toFixed(1)}% of impressions`, a.ctrRatio != null ? 'used to calibrate' : ''),
+      a.curveErr != null && row('Retention curve', '', '', `${Math.round(a.curveErr)} pts off on average`),
+      a.dropMatch != null && row('Biggest drop-off', '', '', a.dropMatch ? 'found the real one' : 'in a different place')));
+  const chart = a.curve.length >= 2 ? lineChart({
+    label: 'Forecast vs real retention',
+    height: 160,
+    series: [
+      { name: 'Forecast: still watching', color: 'var(--series-1)', points: a.curve.map((p) => ({ x: p.at * 100, y: p.predicted * 100 })) },
+      { name: 'Real: still watching', color: 'var(--series-3)', points: a.curve.map((p) => ({ x: p.at * 100, y: p.real * 100 })) },
+    ],
+    xFormat: (x) => `${Math.round(x)}%`,
+    yFormat: (y) => `${Math.round(y)}%`,
+    yMax: 100,
+  }) : null;
+  const notes = sim.accuracyNotes?.text ? (() => {
+    const d = h('div', { class: 'md' });
+    d.innerHTML = markdownToHtml(sim.accuracyNotes.text); // escapes everything first
+    return d;
+  })() : null;
+  return h('section', { class: 'card accuracy' },
+    h('h3', {}, title, a.verdict && h('span', { class: `verdict v-${a.verdict}` }, VERDICT[a.verdict])),
+    h('p', { class: 'muted small' }, `Checked ${new Date(act.at).toLocaleString()}${act.views != null ? ` · ${Math.round(act.views).toLocaleString()} views` : ''}${act.signedIn === false ? ' · not signed in: only comments and views can be compared' : ''}`),
+    table,
+    chart,
+    notes && h('details', { open: true }, h('summary', {}, 'What the screening got right and wrong'), notes));
+}
+
 function curveChart(sim) {
   const beats = sim.material.beats;
   const pts = sim.result.curve.filter((c) => c.attention != null);
@@ -110,6 +168,7 @@ export function renderReport(sim, { compact = false } = {}) {
     return h('div', { class: 'sim-report compact' },
       h('div', { class: 'muted small' }, meta),
       headline(sim),
+      calibratedLine(sim),
       drops.length > 0 && h('p', { class: 'small' }, h('b', {}, 'Biggest drop-offs: '), drops.map((l) => {
         const b = sim.material.beats[l.i];
         return `${b.start != null ? clock(b.start) : `beat ${l.i + 1}`} “${b.first.slice(0, 60)}” (${pct(l.share)})`;
@@ -119,6 +178,8 @@ export function renderReport(sim, { compact = false } = {}) {
   return h('div', { class: 'sim-report' },
     h('div', { class: 'muted small' }, meta),
     headline(sim),
+    calibratedLine(sim),
+    renderAccuracy(sim),
     sim.material.beats.length > 0 && h('section', { class: 'card' }, h('h3', {}, 'Through the video'), curveChart(sim), beatTable(sim),
       sim.material.outline && h('p', { class: 'muted small' }, 'Based on the outline: write the script for a sharper screening.')),
     h('section', { class: 'card' }, h('h3', {}, "The editor's notes"), md),
@@ -176,6 +237,13 @@ export function expectations() {
 
 export const REPORT_CSS = `
 .expect { font-size: 13px; }
+.calibrated { margin: 0; }
+.accuracy h3 { display: flex; gap: 10px; align-items: center; }
+.verdict { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; background: var(--bg-2); }
+.verdict.v-close { color: var(--ok); }
+.verdict.v-fair { color: var(--warn); }
+.verdict.v-off { color: var(--danger); }
+table.acc td.off { color: var(--danger); }
 .screen-form { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
 .screen-form label { display: inline-flex; gap: 5px; align-items: center; }
 .screen-latest h3 { font-size: 14px; margin: 12px 0 6px; }

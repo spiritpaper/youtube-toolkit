@@ -51,3 +51,4 @@ dialog.edit::backdrop { background: rgba(0, 0, 0, 0.4); }
 .sim-row:hover { background: var(--bg-2); }
 .sim-nums { font-size: 13px; font-variant-numeric: tabular-nums; }
 .grow { flex: 1; }
+.track { margin-top: 6px; }

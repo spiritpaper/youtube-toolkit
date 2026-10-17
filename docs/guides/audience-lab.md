@@ -76,7 +76,7 @@ The same notes are on every Test screening card:
 - **Best for comparing:** two titles, or a script before and after a rewrite, on the same audience. Also for finding where viewers drift and why.
 - **Estimates, not view counts:** simulated viewers can't know how far YouTube will push a video.
 - **Small groups vary:** every number shows how many viewers it rests on; run twice for steadier numbers, and re-test close calls.
-- **It gets better the more you use it.** Every screening is saved. Once a video is published, the lab compares its forecast with what really happened and corrects the next screenings with it. Locking the avatars that ring true, and building groups from your own analytics, sharpens it too.
+- **It gets better the more you use it.** Every screening is saved. Once a video is published, check it (below): the lab compares its forecast with what really happened and corrects that audience's next screenings. Locking the avatars that ring true, and building groups from your own analytics, sharpens it too.
 
 ### Keeping it honest
 
@@ -85,4 +85,30 @@ Simulated viewers tend to be too kind. To counter that:
 - Viewers watch rather than read, and the instructions say plainly that a group where everyone finishes is unrealistic.
 - Reactions are reported without judging the viewer: boredom, doubt and irritation are data.
 
-Even so, the numbers are best for **comparing**: two titles, or a script before and after a rewrite. Use them to see where it drags and what confuses, rather than to predict exact views. Stage 4 will compare each screening with how the video really did.
+Even so, the numbers are best for **comparing**: two titles, or a script before and after a rewrite. Use them to see where it drags and what confuses, rather than to predict exact views.
+
+## Forecast vs reality: getting better with every video
+
+When a screened project is published and linked (**After publishing → Start tracking**), a **Forecast vs reality** card appears on it. Check it once the video has had about a week; retention settles by then, but you can check early and again later.
+
+**Check against the real numbers** compares the screening with the video's real results (signed in on My channel):
+
+| Forecast | Real |
+| --- | --- |
+| Watch on average | Average % viewed |
+| Stay past the opening | Share still watching at 0:30 |
+| Still watching, beat by beat | Your real retention curve at the same points in the video |
+| The biggest drop-off | Where the real curve drops most |
+| Would click | Click-through rate. It's on a different scale (share of an audience vs. share of impressions), so it's used to calibrate rather than scored. |
+
+You get the differences, a chart of the forecast vs. the real retention, and a verdict: **Close**, **Roughly right** or **Off**. **Explain the differences** (1 AI call, plus 1 API unit to read the real comments) says what the screening got right, what it missed and why, which predicted comment themes showed up in the real comments, **which avatars behaved unlike your real audience and how to adjust them**, and lessons for the next screening.
+
+**How it learns.** Every checked video teaches its audience group:
+- **Watch time and the opening:** if past screenings predicted, say, 12 points too much watch time, each viewer's expected watch time in the next screening is lowered by that much, and the AI is told which way it tends to miss.
+- **Clicks:** the ratio between "would click" and your real click-through turns future "would click" numbers into an estimated click-through for your channel.
+- **In new reports:** a **Corrected with past results** line sits under the numbers. It shows the corrected click-through, opening and watch time, and how many published videos taught it.
+- **Track record:** each group's track record (Audience lab → Avatars) shows how many videos were checked, the average miss over time ("20 → 14 → 7 pts, getting closer"), and the corrections in use. The last 10 checked videos count.
+
+Without signing in, only views and comments can be compared, and the numbers aren't calibrated.
+
+The title comparison is checked too: the card says whether you published the title the comparison favored.
