@@ -196,7 +196,8 @@ export function thumbnailSection(project, { ideas }) {
 export function publishedSection(project, { ideas, onChange }) {
   const card = h('section', { class: 'card' });
   const perf = project.performance;
-  if (!project.publishedVideoId || !perf) {
+  // No snapshot yet (e.g. restored from a partial backup) shows the link form again.
+  if (!project.publishedVideoId || !perf?.history?.length) {
     const input = h('input', { placeholder: 'Paste your published video link', class: 'grow' });
     const msg = h('span', { class: 'small' });
     card.append(
