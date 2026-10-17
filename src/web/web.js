@@ -24,6 +24,9 @@ const svgEl = (tag, attrs = {}) => {
   for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
   return el;
 };
+// Zoomed in this far (or more), dots turn into thumbnails.
+const THUMB_ZOOM = 1.8;
+const thumbOf = (n) => n.thumb || `https://i.ytimg.com/vi/${n.id}/mqdefault.jpg`;
 const short = (t, n = 30) => (t.length > n ? `${t.slice(0, n - 1)}…` : t);
 const idFrom = (s) => (/(?:v=|youtu\.be\/|shorts\/)([\w-]{11})/.exec(s) ?? /^([\w-]{11})$/.exec(s.trim()))?.[1];
 
@@ -40,7 +43,10 @@ function drawGraph(ins) {
   const pairs = new Set(web.edges.map((e) => `${e.from}>${e.to}`));
 
   const svg = svgEl('svg', { viewBox: `${view.x} ${view.y} ${view.w} ${view.h}`, role: 'img', 'aria-label': 'Video suggestion web' });
+  nodeGeom.clear();
+  shown.clear();
   const defs = svgEl('defs');
+  defsEl = defs;
   const marker = svgEl('marker', { id: 'arrow', viewBox: '0 0 10 10', refX: 10, refY: 5, markerWidth: 6, markerHeight: 6, orient: 'auto-start-reverse' });
   marker.append(svgEl('path', { d: 'M0,0 L10,5 L0,10 z', fill: 'var(--edge)' }));
   defs.append(marker);
@@ -60,11 +66,16 @@ function drawGraph(ins) {
     const p = pos.get(n.id);
     if (!p || !n.title) continue;
     const g = svgEl('g', { class: ['node', n.id === web.seed && 'seed', n.id === selected && 'sel', dimmed(n.id) && 'dim'].filter(Boolean).join(' '), tabindex: 0 });
-    const c = svgEl('circle', { cx: p.x, cy: p.y, r: radius(n), class: `fill-${tier(n.multiplier)}` });
-    const title = svgEl('title');
-    title.textContent = `${n.title}\n${n.channelTitle} · ${fmtNum(n.views)} views · ${fmtMult(n.multiplier)}${inDeg.has(n.id) ? ` · suggested from ${inDeg.get(n.id)} videos` : ''}`;
-    c.append(title);
+    const c = svgEl('circle', { cx: p.x, cy: p.y, r: radius(n), class: `fill-${tier(n.multiplier)} ring-${tier(n.multiplier)}` });
+    g.setAttribute('aria-label', `${n.title}, ${n.channelTitle}, ${fmtNum(n.views)} views, ${fmtMult(n.multiplier)}`);
+    g.dataset.id = n.id;
     g.append(c);
+    nodeGeom.set(n.id, { x: p.x, y: p.y, r: radius(n), g, circle: c, inDeg: inDeg.get(n.id) ?? 0 });
+    g.addEventListener('pointerenter', (ev) => showHover(n, ev));
+    g.addEventListener('pointermove', (ev) => moveHover(ev));
+    g.addEventListener('pointerleave', hideHover);
+    g.addEventListener('focus', () => showHover(n, null));
+    g.addEventListener('blur', hideHover);
     if (labelled.has(n.id) || n.id === selected) {
       const t = svgEl('text', { x: p.x + radius(n) + 4, y: p.y + 4 });
       t.textContent = short(n.title);
@@ -78,7 +89,74 @@ function drawGraph(ins) {
     svg.append(g);
   }
   enablePanZoom(svg);
+  graphSvg = svg;
+  // Draw thumbnails once the SVG is on the page (it needs its size).
+  requestAnimationFrame(updateThumbs);
   return svg;
+}
+
+// ---------- thumbnails: hover card, and dots → thumbnails when zoomed in ----------
+
+const nodeGeom = new Map(); // id -> { x, y, r, g, circle, inDeg }
+const shown = new Set(); // ids whose thumbnail is drawn
+let graphSvg = null;
+let defsEl = null;
+
+/** Draws thumbnails for nodes in view while zoomed in; each loads once. */
+function updateThumbs() {
+  if (!graphSvg?.isConnected) return;
+  const zoomed = W / view.w >= THUMB_ZOOM;
+  graphSvg.classList.toggle('zoomed', zoomed);
+  if (!zoomed) return;
+  const pad = 40;
+  for (const [id, gm] of nodeGeom) {
+    if (shown.has(id)) continue;
+    const inView = gm.x > view.x - pad && gm.x < view.x + view.w + pad && gm.y > view.y - pad && gm.y < view.y + view.h + pad;
+    if (!inView) continue;
+    const clipId = `clip-${id}`;
+    const clip = svgEl('clipPath', { id: clipId });
+    clip.append(svgEl('circle', { cx: gm.x, cy: gm.y, r: gm.r }));
+    defsEl.append(clip);
+    // 16:9 thumbnail, cropped to the circle; the circle stays on top as a colored ring.
+    const img = svgEl('image', { href: thumbOf(web.nodes[id]), x: gm.x - (gm.r * 16) / 9, y: gm.y - gm.r, width: (gm.r * 32) / 9, height: gm.r * 2, 'clip-path': `url(#${clipId})`, preserveAspectRatio: 'xMidYMid slice', class: 'thumb' });
+    gm.g.insertBefore(img, gm.circle);
+    shown.add(id);
+  }
+}
+
+let hoverEl = null;
+function showHover(n, ev) {
+  hideHover();
+  const gm = nodeGeom.get(n.id);
+  hoverEl = h('div', { class: 'hover-card', role: 'tooltip' },
+    h('img', { src: thumbOf(n), alt: '' }),
+    h('div', { class: 'hc-body' },
+      h('div', { class: 'hc-title' }, n.title),
+      h('div', { class: 'hc-meta' }, `${n.channelTitle} · ${fmtNum(n.views)} views${n.publishedAt ? ` · ${ageText(n.publishedAt)}` : ''}`),
+      h('div', { class: 'hc-meta' }, pill(n.multiplier), gm?.inDeg ? ` suggested from ${gm.inDeg} video${gm.inDeg === 1 ? '' : 's'}` : '', n.id === web.seed ? ' · the center' : '')));
+  graphSvg.parentElement.append(hoverEl);
+  if (ev) moveHover(ev);
+  else {
+    const box = gm.g.getBoundingClientRect();
+    placeHover(box.right, box.top);
+  }
+}
+function moveHover(ev) {
+  if (hoverEl) placeHover(ev.clientX, ev.clientY);
+}
+function placeHover(clientX, clientY) {
+  const host = graphSvg.parentElement.getBoundingClientRect();
+  const cw = hoverEl.offsetWidth;
+  const ch = hoverEl.offsetHeight;
+  let x = clientX - host.left + 14;
+  let y = clientY - host.top + 14;
+  if (x + cw > host.width - 4) x = clientX - host.left - cw - 14; // flip left near the edge
+  if (y + ch > host.height - 4) y = Math.max(4, clientY - host.top - ch - 14);
+  hoverEl.style.transform = `translate(${Math.round(x)}px, ${Math.round(y)}px)`;
+}
+function hideHover() {
+  hoverEl?.remove();
+  hoverEl = null;
 }
 
 function enablePanZoom(svg) {
@@ -95,11 +173,13 @@ function enablePanZoom(svg) {
     view.x = drag.vx - (e.clientX - drag.x) * s;
     view.y = drag.vy - (e.clientY - drag.y) * s;
     svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+    hideHover();
   });
   svg.addEventListener('pointerup', (e) => {
     const moved = drag && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) > 4;
     drag = null;
     svg.classList.remove('panning');
+    updateThumbs();
     if (!moved && !e.target.closest('.node') && (selected || highlight)) {
       selected = null;
       highlight = null;
@@ -114,6 +194,8 @@ function enablePanZoom(svg) {
     const py = view.y + ((e.clientY - box.top) / box.height) * view.h;
     view = { x: px - (px - view.x) * f, y: py - (py - view.y) * f, w: view.w * f, h: view.h * f };
     svg.setAttribute('viewBox', `${view.x} ${view.y} ${view.w} ${view.h}`);
+    hideHover();
+    updateThumbs();
   }, { passive: false });
 }
 
@@ -231,7 +313,7 @@ function render() {
             h('button', { onclick: () => { showList = !showList; render(); } }, showList ? 'Hide list' : 'List view'),
             h('button', { onclick: async () => { if (confirm('Delete this web?')) { await send({ type: 'webDelete', seed: web.seed }); location.search = ''; } } }, 'Delete web')),
           legend),
-        h('p', { class: 'small muted' }, `${ins.size} videos · ${ins.edges} suggestion links · ${ins.mutual.length} two-way · updated ${new Date(web.updatedAt).toLocaleString()} · drag to pan, scroll to zoom, click a video for details`),
+        h('p', { class: 'small muted' }, `${ins.size} videos · ${ins.edges} suggestion links · ${ins.mutual.length} two-way · updated ${new Date(web.updatedAt).toLocaleString()} · drag to pan, scroll to zoom (zoom in to see thumbnails), hover or click a video for details`),
         showList && listView(ins)),
       h('aside', { class: 'side' }, selectedCard(), ...insightCards(ins))),
   );

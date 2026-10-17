@@ -2,6 +2,11 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
+## [Unreleased]
+
+### Added
+- **Thumbnails in the video web**: hover a video for a card with its thumbnail, title, views and score; zoom in and the dots become thumbnails ringed in their outlier color. The web's layout is unchanged, and thumbnails load only when in view.
+
 ## [0.8.0] - 2026-10-17
 
 The Audience lab: test a video on realistic viewers before you publish it, and see how close the forecast was afterwards.

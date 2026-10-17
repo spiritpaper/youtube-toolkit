@@ -12,6 +12,8 @@ Open it from **Video web** in the video panel, a keyword-explorer result, a save
 - Labels appear for the center, the hubs and the top outliers. Hover any circle for its title and numbers.
 - **Drag** the background to pan, **scroll** to zoom, **Reset view** to recenter, **List view** for the same data as a table.
 
+**Thumbnails.** Hover any video (or focus it with Tab) to see a card with its thumbnail, title, channel, views and outlier score. Zoom in (scroll) and the dots become round thumbnails, ringed in their outlier color, so you can see what the videos look like without losing the shape of the web. Thumbnails load only for videos in view, and only once. **Reset view** zooms back out to the dots.
+
 ## Click a video
 
 The side panel explains **why it's connected**: the suggestion rank (#1 = top of the sidebar), same channel, and shared topic words. It also lists which videos suggest it and which it suggests. From there:
