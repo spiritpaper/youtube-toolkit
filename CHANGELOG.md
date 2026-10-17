@@ -2,7 +2,9 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
-## [Unreleased]
+## [0.9.0] - 2026-10-17
+
+A lab that learns: ask your audience before you write, update your avatars from what real viewers did, and keep a notebook of what you noticed, learned and tested, which comes back to you while you write.
 
 ### Added
 - **Lab notebook**: every note you took on videos in one place, grouped by video and filterable by #tags; lessons you write down, plus the ones forecast vs reality taught; and experiments that test an idea across videos against your other videos' real numbers (views at 7 days, watch time or click-through), with a careful verdict. While you write a project's outline or script, **From your notebook** shows the notes, lessons and experiments that match the paragraph you're on. Plain word matching on your device: no AI and no quota.
