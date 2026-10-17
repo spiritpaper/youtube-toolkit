@@ -87,6 +87,19 @@ Simulated viewers tend to be too kind. To counter that:
 
 Even so, the numbers are best for **comparing**: two titles, or a script before and after a rewrite. Use them to see where it drags and what confuses, rather than to predict exact views.
 
+## What it costs
+
+Everything runs on your own AI key; the extension adds no cost of its own.
+
+| Action | AI calls |
+| --- | --- |
+| Build or regenerate a group | 1 |
+| Test screening | 3 (5 when run twice; the first carries images if you include the thumbnail) |
+| Compare titles | 1 |
+| Explain the differences after publishing | 1 (plus 1 YouTube API unit for the comments) |
+
+Free AI tiers have daily limits. On some Gemini free tiers, that's about 20 requests a day per model, or roughly 4–6 screenings. If you hit the limit, switch to a "lite" model in **Settings → AI** (it has its own limit), use a paid key, or wait for the limit to reset.
+
 ## Forecast vs reality: getting better with every video
 
 When a screened project is published and linked (**After publishing → Start tracking**), a **Forecast vs reality** card appears on it. Check it once the video has had about a week; retention settles by then, but you can check early and again later.
