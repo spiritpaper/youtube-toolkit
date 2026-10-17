@@ -309,6 +309,11 @@ $('wipe').addEventListener('click', async () => {
   showUsage();
 });
 
+// ---------- video downloads (status only; setup is on the Downloads page) ----------
+send({ type: 'companionHello' }).then((s) => {
+  $('dl-status').textContent = !s.enabled ? 'Off.' : s.error ? `On, but the companion app isn't reachable: ${s.error}` : `Ready: companion ${s.version}, downloader ${s.ytdlp}${s.ffmpeg ? ', ffmpeg found' : ''}. Saves to ${s.folder}.`;
+}).catch(() => {});
+
 // ---------- version & updates ----------
 async function showUpdate(info) {
   $('version').textContent = chrome.runtime.getManifest().version;

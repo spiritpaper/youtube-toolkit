@@ -11,12 +11,14 @@ YTK.loadSettings = async () => {
   try {
     YTK.saved = new Set(await YTK.send({ type: 'savedIds' }));
   } catch {}
-  const { watchlist = {} } = await chrome.storage.local.get('watchlist');
+  const { watchlist = {}, downloadsEnabled = false } = await chrome.storage.local.get(['watchlist', 'downloadsEnabled']);
   YTK.following = new Set(Object.keys(watchlist));
+  YTK.downloadsEnabled = downloadsEnabled;
 };
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== 'local') return;
+  if (changes.downloadsEnabled) YTK.downloadsEnabled = !!changes.downloadsEnabled.newValue;
   let settingsChanged = false;
   for (const k of Object.keys(YTK.settings)) {
     if (k in changes) {

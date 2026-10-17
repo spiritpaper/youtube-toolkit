@@ -193,3 +193,4 @@ dialog.qs::backdrop { background: rgba(0, 0, 0, 0.35); }
 .empty-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
 .button-link.primary { background: var(--fg); color: var(--bg); border-color: transparent; }
 .loading.inline { flex-direction: row; justify-content: flex-start; padding: 8px 0; font-size: 13px; text-align: left; } .loading.inline::before { width: 16px; height: 16px; flex: none; }
+button.small-btn { padding: 3px 10px; font-size: 12px; }

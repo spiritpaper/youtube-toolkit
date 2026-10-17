@@ -129,6 +129,7 @@ function notesCard(idea, entry) {
 
 // ---------- Shorts from this video ----------
 
+let downloadsEnabled = false;
 function shortsCard(idea, tx, a, heatmap, mine) {
   const id = idea.id;
   const candidates = shortCandidates(tx.segments, { heatmap, devices: a.devices });
@@ -151,10 +152,25 @@ function shortsCard(idea, tx, a, heatmap, mine) {
     candidates.length
       ? h('ol', { class: 'shorts' }, candidates.map((c) =>
           h('li', {},
-            h('div', { class: 'row' }, ts(id, c.start), h('span', { class: 'muted small' }, `→ ${formatTime(c.end)} · ${Math.round(c.end - c.start)} s · ${c.reasons.map((r) => (DEVICES[r]?.label ?? r)).join(', ')}`)),
+            h('div', { class: 'row' }, ts(id, c.start), h('span', { class: 'muted small grow' }, `→ ${formatTime(c.end)} · ${Math.round(c.end - c.start)} s · ${c.reasons.map((r) => (DEVICES[r]?.label ?? r)).join(', ')}`),
+              downloadsEnabled && h('button', { class: 'small-btn', title: 'Save this stretch as a clip (companion app, needs ffmpeg)', onclick: (e) => downloadClip(idea, c, e.currentTarget) }, 'Download clip')),
             h('div', { class: 'quote' }, c.text.length > 280 ? `${c.text.slice(0, 280)}…` : c.text))))
       : h('p', { class: 'muted' }, 'This video is too short to cut Shorts from.'),
     box);
+}
+
+async function downloadClip(idea, c, btn) {
+  const url = `https://www.youtube.com/watch?v=${idea.id}`;
+  const start = Math.floor(c.start);
+  const end = Math.ceil(c.end);
+  try {
+    await send({ type: 'downloadStart', url, kind: 'video', start, end, title: `${idea.title} (${formatTime(start)}–${formatTime(end)})` });
+    btn.textContent = 'Downloading…';
+    btn.disabled = true;
+  } catch {
+    // First time, or the companion isn't set up yet: finish on the Downloads page.
+    location.href = `../downloads/downloads.html?url=${encodeURIComponent(url)}&start=${start}&end=${end}&title=${encodeURIComponent(idea.title)}`;
+  }
 }
 
 function shortsResult(idea, result) {
@@ -437,6 +453,7 @@ if (!id) renderLibrary();
 else {
   main.replaceChildren(h('div', { class: 'loading' }, 'Analyzing the script…'));
   const data = await load(id);
+  ({ downloadsEnabled = false } = await chrome.storage.local.get('downloadsEnabled'));
   if (!data.idea || !data.tx) {
     main.replaceChildren(errorBox('No saved transcript for this video. On its YouTube page, use Transcript → Save transcript in the YT Toolkit panel.'));
   } else {

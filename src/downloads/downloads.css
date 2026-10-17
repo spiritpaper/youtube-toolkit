@@ -1,0 +1,27 @@
+.dl-main { padding: 8px 24px 40px; display: grid; gap: 16px; max-width: 980px; }
+.card { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; background: var(--bg); }
+.card h2 { font-size: 16px; margin: 0 0 8px; }
+.status { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: var(--fg-2); flex: none; }
+.dot.ok { background: var(--ok); }
+.dot.warn { background: var(--warn); }
+.steps { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 8px; }
+.steps code, .idbox code { background: var(--bg-2); border-radius: 6px; padding: 2px 6px; font-size: 12.5px; word-break: break-all; }
+.idbox { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 6px 0; }
+.os-links { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.notice { border-left: 3px solid var(--warn); }
+.notice label { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0; }
+.form { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+.form input[type='url'] { min-width: 0; }
+.clip { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 8px; font-size: 13px; color: var(--fg-2); }
+.clip input { width: 80px; }
+@media (max-width: 640px) { .form { grid-template-columns: 1fr; } }
+.list { display: grid; gap: 8px; }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.row .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row .m { font-size: 12px; color: var(--fg-2); overflow-wrap: anywhere; }
+.row .acts { display: flex; gap: 6px; }
+.bar { grid-column: 1 / -1; height: 6px; border-radius: 3px; background: var(--bg-3); overflow: hidden; }
+.bar > div { height: 100%; background: var(--accent); transition: width 0.4s; }
+.row.done .bar > div { background: var(--ok); }
+.row.error .m.err { color: var(--danger); }

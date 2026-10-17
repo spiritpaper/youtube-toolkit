@@ -276,6 +276,27 @@ YTK.watchPanel = (() => {
     if (open) await YTK.send({ type: 'openPage', page: 'script', query: `?id=${v.id}` });
   }
 
+  // Optional: download through the companion app (Settings → Downloads).
+  function downloadButton(v) {
+    const btn = h('button', { class: 'btn small-btn', title: 'Save this video with the companion app (only videos you own or may use)' }, 'Download');
+    btn.addEventListener('click', async () => {
+      const url = `https://www.youtube.com/watch?v=${v.id}`;
+      btn.disabled = true;
+      try {
+        await YTK.send({ type: 'downloadStart', url, kind: 'video', title: v.title });
+        btn.textContent = 'Downloading… (see Downloads)';
+        btn.onclick = () => YTK.send({ type: 'openPage', page: 'downloads' });
+      } catch (err) {
+        // First time, or the companion isn't set up: finish on the Downloads page.
+        YTK.send({ type: 'openPage', page: 'downloads', query: `?url=${encodeURIComponent(url)}&title=${encodeURIComponent(v.title)}` });
+        btn.textContent = 'Download';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+    return btn;
+  }
+
   function toolRow(v) {
     const url = `https://www.youtube.com/watch?v=${v.id}`;
     const transcriptButtons =
@@ -337,6 +358,7 @@ YTK.watchPanel = (() => {
         },
         'Video web',
       ),
+      YTK.downloadsEnabled && downloadButton(v),
       h(
         'button',
         {

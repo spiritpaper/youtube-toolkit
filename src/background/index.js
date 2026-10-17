@@ -27,6 +27,7 @@ import { addNode, getNode, listNodes, updateNode, deleteNodes, deleteHolesOlderT
 import { usage, cleanup, exportAll, importAll } from '../lib/storage-admin.js';
 import { getNotes, listNoted, addNote, updateNote, deleteNote } from '../lib/notes.js';
 import { rememberLoadedBuild, reloadIfUpdated, checkForRelease } from './updates.js';
+import { companionHello, startDownload, cancelDownload, revealDownload, updateDownloader, clearDownloads } from './companion.js';
 import { signIn, signOut, authStatus } from './auth.js';
 import { listProjects, createProject, updateProject, deleteProject, mutateProjects, archiveOld, ARCHIVE_DAYS_DEFAULT } from '../lib/projects.js';
 import { followKeyword, unfollowKeyword, listKeywords, trendCheck, mutateAlerts } from './trends.js';
@@ -224,6 +225,12 @@ const handlers = {
     return true;
   },
   checkForUpdate: () => checkForRelease({ force: true }),
+  companionHello: () => companionHello(),
+  downloadStart: (msg) => startDownload(msg),
+  downloadCancel: ({ job }) => cancelDownload(job),
+  downloadReveal: ({ file }) => revealDownload(file),
+  downloaderUpdate: () => updateDownloader(),
+  downloadsClear: () => clearDownloads(),
   reloadIfUpdated: () => reloadIfUpdated(),
   notesGet: ({ id }) => getNotes(id),
   notesList: () => listNoted(),
@@ -243,7 +250,7 @@ const handlers = {
   },
   myVideoTotals: ({ id, publishedAt }) => videoTotals(id, publishedAt),
   openPage: async ({ page, query = '' }) => {
-    const pages = { script: 'src/script/script.html', ideas: 'src/ideas/ideas.html', web: 'src/web/web.html', audience: 'src/audience/audience.html' };
+    const pages = { script: 'src/script/script.html', ideas: 'src/ideas/ideas.html', web: 'src/web/web.html', audience: 'src/audience/audience.html', downloads: 'src/downloads/downloads.html' };
     await chrome.tabs.create({ url: chrome.runtime.getURL(`${pages[page]}${query}`) });
     return true;
   },

@@ -18,6 +18,7 @@ const ICONS = {
   script: '<path d="M7 3h8l4 4v14H7z"/><path d="M15 3v4h4M10 12h6M10 16h6"/>',
   me: '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  download: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
   menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
   heart: '<path d="M12 20s-7-4.4-9.3-9A5 5 0 0 1 12 6a5 5 0 0 1 9.3 5C19 15.6 12 20 12 20z"/>',
 };
@@ -41,6 +42,7 @@ export const NAV = [
   { id: 'ideas', label: 'Saved outliers', icon: 'star', href: 'ideas/ideas.html' },
   { id: 'titles', label: 'Title lab', icon: 'title', href: 'studio/studio.html#titles' },
   { id: 'script', label: 'Script lab', icon: 'script', href: 'script/script.html' },
+  { id: 'downloads', label: 'Downloads', icon: 'download', href: 'downloads/downloads.html' },
   { section: 'You' },
   { id: 'mine', label: 'My channel', icon: 'me', href: 'studio/studio.html#mine' },
   { id: 'settings', label: 'Settings', icon: 'gear', href: 'options/options.html' },
