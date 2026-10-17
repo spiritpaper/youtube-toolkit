@@ -46,6 +46,7 @@ Every analyzed script has a **My notes** card near the top: your own observation
 - **+ note** next to any transcript line (shown on hover) fills in that line's time.
 - Click a note to edit it or change its time; click its time to open the video at that moment. Notes support Markdown (**bold**, lists, links).
 - **Download** saves them as a Markdown list with timestamped links.
+- Add **#tags** (like `#hook` or `#pacing`) to group notes in the [Lab notebook](lab-notebook.md). They come back to you while you write a project's outline or script.
 
 Notes added from the [panel on YouTube](finding-outliers.md#the-video-panel) show up here instantly, and vice versa. The Script lab start page lists every video you've taken notes on, including ones you haven't analyzed yet. Notes are included in backups and are only deleted by **Delete everything**.
 

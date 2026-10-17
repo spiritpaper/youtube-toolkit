@@ -49,6 +49,7 @@ All exports respect the current search and filters.
   - followed channels with their notes, daily growth history and **last-known stats and uploads**, so Following, Compare and Content gaps work right after a restore without spending quota
   - the radar feed and keyword alerts
   - rabbit holes, video webs, transcripts, retention heatmaps and comment research
+  - your notes, and the lab notebook's lessons and experiments
   - recent AI results and your AI settings (provider, models, channel description)
   - your Google client ID (you still sign in again)
 

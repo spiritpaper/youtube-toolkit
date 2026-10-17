@@ -50,7 +50,7 @@ AI calls are made **from the pages**, not the service worker (which may be suspe
 | `src/lib/ai.js` | AI providers and every prompt |
 | `src/lib/nav.js`, `ui.js`, `markdown.js`, `linechart.js`, `heatmap-view.js`, `base.css` | Shared page UI |
 | `src/content/` | YouTube overlays |
-| `src/home`, `explore`, `web`, `channels`, `board`, `project`, `studio`, `script`, `audience`, `ideas`, `options`, `popup` | Pages |
+| `src/home`, `explore`, `web`, `channels`, `board`, `project`, `studio`, `script`, `audience`, `ideas`, `lab`, `notebook`, `downloads`, `options`, `popup` | Pages |
 | `test/` | Node tests (`node --test`) |
 | `docs/` | Documentation |
 
@@ -67,6 +67,8 @@ Pages and content scripts call `chrome.runtime.sendMessage({ type, ...args })`; 
 | Channels | `watch`, `unwatch`, `following`, `updateFollow`, `compare`, `setCompareAs`, `gapData` |
 | Radar | `radarCheck`, `radarRead`, `radarClear`, `followKeyword`, `unfollowKeyword`, `keywords` |
 | Projects | `projects`, `projectCreate`, `projectUpdate`, `projectDelete`, `projectPublish`, `projectTrack` |
+| Notes and notebook | `notesGet`, `notesList`, `notesAdd`, `notesUpdate`, `notesDelete`, `notebook`, `lessonSave`, `lessonDelete`, `experimentSave`, `experimentDelete` |
+| Audience lab | `avatarGroups`, `avatarGroupSave`, `avatarGroupDelete`, `avatarSave`, `avatarDelete`, `screenings`, `screeningGet`, `screeningSave`, `screeningDelete` |
 | Google | `authStatus`, `setClientId`, `signIn`, `signOut`, `myOverview`, `myTopVideos`, `myRetention`, `myTraffic`, `myVideoTotals` |
 | Storage | `storageUsage`, `cleanup`, `exportData`, `importData`, `clearCache` |
 | Misc | `quota`, `testKey`, `openExplorer`, `openPage` |
@@ -85,6 +87,9 @@ Pages and content scripts call `chrome.runtime.sendMessage({ type, ...args })`; 
 | `vw:<seedId>` | Video webs | background |
 | `watchlist`, `radar`, `keywordAlerts` | Followed channels (with history), radar feed, keyword alerts | background |
 | `projects`, `th:<projectId>` | Idea-board projects; uploaded thumbnails | background; project page (thumbnails) |
+| `sn:<videoId>` | Your timestamped notes on a video (#tags live in the text) | background |
+| `notebook` | Lab notebook: your lessons and experiments | background |
+| `avatars`, `sim:<id>` | Audience lab groups (with their update history); screenings, title tests, pitches and chats | background |
 | `aiRuns`, `titleLab` | Past AI results; Title-lab drafts | background; studio |
 | `quota`, `*CheckedAt`, `ideasRefreshedAt` | Bookkeeping | background |
 | `cache:*` | API response cache (TTL) | background |
