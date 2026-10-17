@@ -2,6 +2,11 @@
 
 All notable changes to YT Toolkit. Each release's section becomes its GitHub Release notes.
 
+## [Unreleased]
+
+### Added
+- **Audience lab**: groups of avatars, realistic fictional viewers built from your real analytics (age, countries, devices, subscribers, how people find you), your top videos and recent comments, or from your channel description or a channel you follow. Lock, edit, add by hand, and regenerate the rest. Each avatar shows the data it reflects.
+
 ## [0.7.2] - 2026-10-17
 
 ### Added
