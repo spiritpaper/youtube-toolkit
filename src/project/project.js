@@ -9,6 +9,7 @@ import { shotListSection, thumbnailSection, publishedSection } from './productio
 import { screeningSection } from './screening-card.js';
 import { askPanel } from '../lab/ask-panel.js';
 import { accuracySection } from './accuracy-card.js';
+import { recallPanel } from './recall.js';
 
 mountShell('board');
 const main = document.getElementById('main');
@@ -117,8 +118,11 @@ function outlineSection() {
       btn.textContent = 'Draft outline with AI';
     }
   });
-  return h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', {}, 'Outline'), status, editor.tabs, btn), out, editor.view);
+  return h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', {}, 'Outline'), status, editor.tabs, btn), out, editor.view, recallPanel(ta, { title: projectContext }));
 }
+
+// The project's title and angle add a little context to notebook recall.
+const projectContext = () => `${project.title} ${project.angle ?? ''}`;
 
 let scriptArea = null;
 function scriptSection() {
@@ -131,7 +135,7 @@ function scriptSection() {
   };
   ta.addEventListener('input', update);
   update();
-  return h('section', { class: 'card', id: 'script' }, h('div', { class: 'card-head' }, h('h2', {}, 'Script'), count, status), ta);
+  return h('section', { class: 'card', id: 'script' }, h('div', { class: 'card-head' }, h('h2', {}, 'Script'), count, status), ta, recallPanel(ta, { title: projectContext }));
 }
 
 function render() {
