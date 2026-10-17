@@ -118,11 +118,11 @@ function outlineSection() {
       btn.textContent = 'Draft outline with AI';
     }
   });
-  return h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', {}, 'Outline'), status, editor.tabs, btn), out, editor.view, recallPanel(ta, { title: projectContext }));
+  return h('section', { class: 'card' }, h('div', { class: 'card-head' }, h('h2', {}, 'Outline'), status, editor.tabs, btn), out, editor.view, recallPanel(ta, { title: recallContext }));
 }
 
 // The project's title and angle add a little context to notebook recall.
-const projectContext = () => `${project.title} ${project.angle ?? ''}`;
+const recallContext = () => `${project.title} ${project.angle ?? ''}`;
 
 let scriptArea = null;
 function scriptSection() {
@@ -135,7 +135,7 @@ function scriptSection() {
   };
   ta.addEventListener('input', update);
   update();
-  return h('section', { class: 'card', id: 'script' }, h('div', { class: 'card-head' }, h('h2', {}, 'Script'), count, status), ta, recallPanel(ta, { title: projectContext }));
+  return h('section', { class: 'card', id: 'script' }, h('div', { class: 'card-head' }, h('h2', {}, 'Script'), count, status), ta, recallPanel(ta, { title: recallContext }));
 }
 
 function render() {
