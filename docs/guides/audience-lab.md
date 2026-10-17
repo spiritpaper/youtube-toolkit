@@ -35,6 +35,24 @@ Choose how many avatars you want (8 by default, up to 20). More avatars give a f
 
 Groups are saved in the extension, included in backups, and shown under **Settings → Storage & data**.
 
+## Ask your audience
+
+Before you write anything, ask the group. It's on every project (the **Ask your audience** card, right after **The idea**), and in **Audience lab → Ask your audience** for ideas that aren't projects yet.
+
+**Pitch ideas** (1 AI call): write up to 4 one-line ideas, one per line. A project starts with its working title and title options filled in. Each viewer says, for every idea:
+- whether they'd watch it (yes, maybe or no) and why, in their own voice
+- what they'd expect the video to deliver (the promise they hear)
+- what they'd want instead, or in addition
+
+The result shows how much of the audience each idea pulls (weighted; "maybe" counts half), who's in, and **who it wins over** (viewers who'd watch it but not every other idea). The group's **takeaways** say which idea pulls and for whom, the expectations to meet, and what viewers kept asking for. **Every viewer's answer** opens the full result.
+
+**Ask a question** (1 AI call per message): ask anything, like "Would you watch 25 minutes of this, or 10?", "What would make you stay past the first minute?" or "What do you already know about Godot?"
+- **Everyone:** the viewers who'd actually have something to say answer, in their own voice; the others stay quiet, like a real group. Disagreement is welcome.
+- **One viewer:** pick a name to ask them directly, for example the skeptic.
+- **Follow-ups:** the conversation remembers what was said, so you can keep going. **New conversation** starts fresh; earlier ones stay under **Earlier conversations**.
+
+Pitches and conversations are saved with your screenings (**Test screenings** tab), included in backups, and removed with **Delete**.
+
 ## Test screenings
 
 A test screening runs a video past one of your groups, viewer by viewer, the way real viewers meet it:
