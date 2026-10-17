@@ -932,3 +932,46 @@ Which personas reacted unlike the real audience, and what to change in them (pat
 2-3 short lessons about this audience.`;
   return { system, prompt };
 }
+
+// ---------- Ask your audience (Audience lab) ----------
+
+/** Pitch test: each viewer reacts to up to 4 one-line ideas. Replies with one JSON object. */
+export function pitchPrompt({ avatars, pitches, context = '', niche = '' }) {
+  const prompt = `${nicheLine(niche)}
+
+The viewers:
+${avatars.map((a) => `- ${a}`).join('\n')}
+${context ? `\nWhat the creator has so far: ${context}\n` : ''}
+The creator is deciding what video to make next and pitches these ideas (nothing is filmed yet):
+${pitches.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+
+For EACH viewer and EACH idea: would they watch a video about it ("yes", "maybe", "no"), why (in their own voice), what they'd expect it to deliver (the promise they hear), and what they'd want instead or in addition (or "" if nothing).
+Be realistic: most ideas don't interest most people, and a viewer can like the topic but not this angle.
+
+Then write "takeaways": 3-5 short Markdown bullet points for the creator: which idea has the strongest pull and for whom, the expectations they must meet, and what the group kept asking for.
+
+Reply with ONLY a JSON object:
+{"viewers": [{"id": "…", "pitches": [{"pitch": 1, "interest": "yes|maybe|no", "why": "…", "expect": "…", "instead": "…"}]}], "takeaways": "- …"}`;
+  return { system: SCREENING_SYSTEM, prompt };
+}
+
+/**
+ * A follow-up question to the group (or one viewer). Viewers answer in
+ * character; those with nothing to say stay quiet. Replies with a JSON array.
+ */
+export function audienceChatPrompt({ avatars, question, history = '', context = '', single = false, niche = '' }) {
+  const prompt = `${nicheLine(niche)}
+
+${single ? 'You are this viewer' : 'The viewers in this conversation'}:
+${avatars.map((a) => `- ${a}`).join('\n')}
+${context ? `\nContext from the creator: ${context}\n` : ''}${history ? `\nThe conversation so far:\n${history}\n` : ''}
+The creator now asks: "${question}"
+
+${single
+    ? 'Answer as this viewer: honestly, in their own voice and words, 1-4 sentences. You can disagree, be unsure, or ask something back.'
+    : 'Each viewer who would actually have something to say answers in their own voice (1-3 sentences). Viewers who wouldn\'t care stay quiet: leave them out. Disagreement between viewers is fine and useful.'}
+
+Reply with ONLY a JSON array:
+[{"id": "…", "reply": "…"}]`;
+  return { system: SCREENING_SYSTEM, prompt };
+}
