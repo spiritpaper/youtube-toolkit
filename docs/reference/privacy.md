@@ -15,6 +15,8 @@ Everything is stored in your browser's extension storage (`chrome.storage.local`
 
 Google sign-in tokens are kept **only in memory** (`chrome.storage.session`) and expire after an hour. Signing out revokes the token and deletes cached analytics.
 
+The optional download companion runs on your computer: links you download go from the extension to it and from it to the video site, nowhere else.
+
 Backups you download contain your data (including your AI provider choice and channel description) but **never** your API keys or sign-in tokens.
 
 ## What's sent where

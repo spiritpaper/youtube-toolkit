@@ -33,6 +33,7 @@ On YouTube itself:
 - **Honest channel review** (AI, My channel): built only on your own analytics (retention drop-offs with what you said there, top videos, traffic, followed channels), listing every problem with where it is, the evidence and how to fix it.
 - **Shorts from a long video** (Script analyzer): clips around the most replayed moments, and an AI plan with hooks, cuts and loop endings.
 - **Quick search** (Ctrl+K on any page) across projects, saved videos, channels, notes and rabbit holes.
+- **Video downloads** (optional add-on): save your own videos, audio or a clip with a small companion app for Windows, Mac and Linux. See [Video downloads](docs/guides/video-downloads.md).
 - **Outlier remix** (Saved outliers): tick 2–4 outliers and AI combines their formats into new concepts.
 - **Audience questions**: the top 100 comments of any video (1 API unit, saved permanently), sorted into requests, questions, pain points and timestamped moments. AI turns them into video ideas.
 - Plus the keyword explorer, video web, script analyzer and hook library, content gaps, title lab, compare, my channel, saved outliers with tracked stats, CSV exports, storage management and full backups (everything except your keys).

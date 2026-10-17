@@ -6,6 +6,8 @@ scripts/update.sh -export-ignore
 scripts/update.ps1 -export-ignore
 scripts/update.cmd -export-ignore
 .github/ export-ignore
+# The companion app is built and released separately.
+companion/ export-ignore
 package.json export-ignore
 .gitignore export-ignore
 .gitattributes export-ignore
