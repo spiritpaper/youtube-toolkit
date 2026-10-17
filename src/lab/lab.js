@@ -5,7 +5,7 @@ import { mountShell } from '../lib/nav.js';
 import { send, h, emptyState } from '../lib/ui.js';
 import { activeAi, generate, avatarsPrompt, PROVIDERS } from '../lib/ai.js';
 import { face } from './face.js';
-import { renderReport, REPORT_CSS } from './report.js';
+import { renderReport, expectations, REPORT_CSS } from './report.js';
 import { runScreening } from './screen-run.js';
 import { audienceSheet, parseAvatars, mergeRegenerated, normalizeAvatar, DEFAULT_COUNT, MAX_COUNT, KNOWLEDGE, DEVICES, DISCOVERY, RELATIONSHIP } from '../lib/avatars.js';
 
@@ -158,6 +158,8 @@ async function renderScreenings() {
     const proj = h('select', { 'aria-label': 'Project' }, projectList.map((p) => h('option', { value: p.id }, p.title)));
     const grp = h('select', { 'aria-label': 'Audience group' }, groupList.map((g) => h('option', { value: g.id }, `${g.name} (${g.avatars.length})`)));
     const run = h('button', { class: 'primary' }, 'Run test screening');
+    const thumb = h('input', { type: 'checkbox' });
+    const twice = h('input', { type: 'checkbox' });
     const status = h('div', {});
     run.addEventListener('click', async () => {
       const ai = await activeAi();
@@ -167,7 +169,7 @@ async function renderScreenings() {
       status.replaceChildren(progress);
       try {
         const p = projects[proj.value];
-        const sim = await runScreening({ ai, project: p, group: groups[grp.value], title: p.title, principles: screeningPrinciples, onProgress: (t) => (progress.textContent = t) });
+        const sim = await runScreening({ ai, project: p, group: groups[grp.value], title: p.title, thumbnail: thumb.checked, passes: twice.checked ? 2 : 1, principles: screeningPrinciples, onProgress: (t) => (progress.textContent = t) });
         history.replaceState(null, '', `#sim=${sim.id}`);
         render();
       } catch (err) {
@@ -176,15 +178,21 @@ async function renderScreenings() {
       }
     });
     return h('section', { class: 'card' }, h('h2', {}, 'New test screening'),
-      h('p', { class: 'muted small' }, 'Pick a project and an audience: the viewers see the title in their feed, watch the opening, then the script beat by beat. 3 AI calls. To test other title options, run it from the project page.'),
-      h('div', { class: 'ghead' }, proj, grp, run), status);
+      h('p', { class: 'muted small' }, 'Pick a project and an audience: the viewers see the title in their feed, watch the opening, then the script beat by beat. 3 AI calls (5 when run twice). To test other title options or compare titles, use the project\'s Test screening card.'),
+      h('div', { class: 'ghead' }, proj, grp,
+        h('label', { class: 'small', title: 'Needs a thumbnail uploaded on the project. Costs more tokens.' }, thumb, ' Include the thumbnail'),
+        h('label', { class: 'small' }, twice, ' Run twice and combine'),
+        run),
+      status, expectations());
   })();
   main.replaceChildren(tabs(), form,
     h('section', { class: 'card' }, h('h2', {}, 'Past screenings'),
       sims.length
         ? h('div', { class: 'sim-list' }, sims.map((sm) => h('a', { class: 'sim-row', href: `#sim=${sm.id}`, onclick: (e) => { e.preventDefault(); history.replaceState(null, '', `#sim=${sm.id}`); render(); } },
             h('div', {}, h('b', {}, sm.projectTitle), h('div', { class: 'muted small' }, `"${sm.title}" · ${sm.groupName} · ${new Date(sm.at).toLocaleString()}`)),
-            h('div', { class: 'sim-nums' }, `click ${Math.round(sm.result.clickShare * 100)}%`, ' · ', `watch ${sm.result.watchedShare == null ? '—' : `${Math.round(sm.result.watchedShare * 100)}%`}`, sm.result.score != null ? ` · ${sm.result.score.toFixed(1)}/10` : ''))))
+            sm.kind === 'titles'
+              ? h('div', { class: 'sim-nums' }, `title comparison · ★ ${sm.scored.titles.find((t) => t.letter === sm.scored.winner)?.title ?? '—'}`)
+              : h('div', { class: 'sim-nums' }, `click ${Math.round(sm.result.clickShare * 100)}%`, ' · ', `watch ${sm.result.watchedShare == null ? '—' : `${Math.round(sm.result.watchedShare * 100)}%`}`, sm.result.score != null ? ` · ${sm.result.score.toFixed(1)}/10` : '', sm.result.passes > 1 ? ' · 2 runs' : ''))))
         : emptyState('No test screenings yet', 'Run one above, or from the Test screening card on any project.')));
 }
 

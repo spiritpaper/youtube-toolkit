@@ -22,10 +22,12 @@ export function headline(sim) {
   const of = (n, d) => `${n} of ${d} viewer${d === 1 ? '' : 's'}`;
   // With very few viewers behind a number, say so instead of a confident %.
   const few = (n) => n < 3;
+  // With two runs, how far apart they were: a measure of how steady a number is.
+  const spread = (k) => (r.spread?.[k] != null ? `±${Math.round((r.spread[k] * 100) / 2)} pts between runs` : '');
   return h('div', { class: 'tiles' },
-    tile('Would click', pct(r.clickShare), b?.ctr != null ? `your real click rate: ${b.ctr.toFixed(1)}% of impressions` : of(c.clicked ?? 0, c.avatars ?? 0), 'Weighted by each viewer\'s share of the audience; "maybe" counts half. People shown a video in a real feed click far less often, so compare titles and versions, not this number with YouTube\'s.'),
-    tile('Stay past the hook', pct(r.hookHold), sim.material?.hook ? of(c.stayed ?? 0, c.clicked ?? 0) : 'no script yet'),
-    tile('Watch on average', pct(r.watchedShare), b?.avgViewed != null ? `your real average: ${Math.round(b.avgViewed)}%` : 'estimated, of those who click', b?.bySub?.subscribed != null || b?.bySub?.unsubscribed != null ? 'Each viewer was anchored to your channel\'s real watch time for subscribers and non-subscribers.' : 'Each viewer was anchored to typical YouTube watch times (sign in on My channel to use your own).'),
+    tile('Would click', pct(r.clickShare), [b?.ctr != null ? `your real click rate: ${b.ctr.toFixed(1)}% of impressions` : of(c.clicked ?? 0, c.avatars ?? 0), spread('clickShare')].filter(Boolean).join(' · '), 'Weighted by each viewer\'s share of the audience; "maybe" counts half. People shown a video in a real feed click far less often, so compare titles and versions, not this number with YouTube\'s.'),
+    tile('Stay past the hook', pct(r.hookHold), sim.material?.hook ? [of(c.stayed ?? 0, c.clicked ?? 0), spread('hookHold')].filter(Boolean).join(' · ') : 'no script yet'),
+    tile('Watch on average', pct(r.watchedShare), [b?.avgViewed != null ? `your real average: ${Math.round(b.avgViewed)}%` : 'estimated, of those who click', spread('watchedShare')].filter(Boolean).join(' · '), b?.bySub?.subscribed != null || b?.bySub?.unsubscribed != null ? 'Each viewer was anchored to your channel\'s real watch time for subscribers and non-subscribers.' : 'Each viewer was anchored to typical YouTube watch times (sign in on My channel to use your own).'),
     tile('Reach the end', pct(r.finishShare), `${of(c.finished ?? 0, c.clicked ?? 0)}${r.score != null ? ` · ${r.score.toFixed(1)}/10` : ''}`),
     r.score != null && tile('Would subscribe', few(c.finished) ? `${Math.round(r.subscribe * c.finished)} of ${c.finished}` : pct(r.subscribe), few(c.finished) ? 'too few finished to give a %' : `of those who finish · like ${pct(r.like)}`, 'Among those who reach the end'));
 }
@@ -101,7 +103,8 @@ function viewer(sim, a) {
 export function renderReport(sim, { compact = false } = {}) {
   const md = h('div', { class: 'md' });
   md.innerHTML = markdownToHtml(sim.summary?.text ?? ''); // escapes everything first
-  const meta = `${new Date(sim.at).toLocaleString()} · "${sim.title}" · ${sim.groupName} (${sim.avatars.length} viewers)${sim.summary ? ` · ${PROVIDERS[sim.summary.provider]?.label ?? sim.summary.provider}` : ''}`;
+  const meta = `${new Date(sim.at).toLocaleString()} · "${sim.title}" · ${sim.groupName} (${sim.avatars.length} viewers)${sim.thumbnail ? ' · with thumbnail' : ''}${sim.result?.passes > 1 ? ` · ${sim.result.passes} runs combined` : ''}${sim.summary ? ` · ${PROVIDERS[sim.summary.provider]?.label ?? sim.summary.provider}` : ''}`;
+  if (sim.kind === 'titles') return renderTitleTest(sim, { compact, meta });
   if (compact) {
     const drops = sim.result.leaves.slice(0, 3);
     return h('div', { class: 'sim-report compact' },
@@ -123,7 +126,63 @@ export function renderReport(sim, { compact = false } = {}) {
     h('details', { class: 'card' }, h('summary', {}, 'The raw results (as sent to the AI for the fixes)'), h('pre', { class: 'raw' }, sim.report)));
 }
 
+// ---------- title A/B ----------
+
+function renderTitleTest(sim, { compact, meta }) {
+  const sc = sim.scored;
+  const name = Object.fromEntries(sim.avatars.map((a) => [a.id, a]));
+  const ranked = [...sc.titles].sort((a, b) => b.clickShare - a.clickShare);
+  const table = h('table', { class: 'beats titles-ab' },
+    h('thead', {}, h('tr', {}, h('th', {}, ''), h('th', {}, 'Title'), h('th', {}, 'Would click'), h('th', {}, 'Favorite of'), h('th', {}, 'Wins over'))),
+    h('tbody', {}, ranked.map((t) => h('tr', { class: t.letter === sc.winner ? 'win' : '' },
+      h('td', {}, t.letter === sc.winner ? '★' : ''),
+      h('td', { class: 'first' }, t.title),
+      h('td', {}, pct(t.clickShare), h('span', { class: 'muted small' }, ` · ${t.yes.length + t.maybe.length} of ${sim.avatars.length}`)),
+      h('td', {}, t.favorites.length ? `${t.favorites.map((id) => name[id]?.name).join(', ')} (${pct(t.favoriteShare)})` : '—'),
+      h('td', {}, t.winsOver.map((id) => name[id]?.name).join(', ') || '—')))));
+  const note = sc.close ? h('p', { class: 'small' }, h('b', {}, 'Too close to call: '), 'the top titles are within 5 points. Run it again, or pick by who each one wins over.') : null;
+  if (compact) {
+    return h('div', { class: 'sim-report compact' }, h('div', { class: 'muted small' }, meta), table, note,
+      h('a', { class: 'button-link', href: `../lab/lab.html#sim=${sim.id}` }, 'Every viewer\'s reaction to each title →'));
+  }
+  const viewers = h('div', { class: 'viewers' }, [...sim.avatars].sort((a, b) => b.weight - a.weight).map((a) => {
+    const v = sim.votes[a.id];
+    return h('article', { class: 'viewer' },
+      h('div', { class: 'v-top' }, face(a), h('div', {}, h('b', {}, a.name), h('span', { class: 'muted small' }, ` · ${[a.age, a.occupation].filter(Boolean).join(', ')} · ${pct(a.weight)} of viewers`))),
+      sim.titles.map((t, i) => {
+        const vote = v?.votes?.[i];
+        return h('p', { class: 'v-line' }, h('span', { class: `chip c-${vote?.click ?? 'no'}` }, `${'ABCD'[i]} · ${CLICK[vote?.click ?? 'no']}`), v?.favorite === i ? ' ★' : '', vote?.thought ? ` “${vote.thought}”` : '');
+      }));
+  }));
+  return h('div', { class: 'sim-report' }, h('div', { class: 'muted small' }, meta),
+    h('section', { class: 'card' }, h('h3', {}, 'Which title they\'d click'), table, note,
+      h('p', { class: 'muted small' }, 'Each viewer judged every title on its own, in a random order; "maybe" counts half. "Wins over": viewers who\'d click this title but not every other one.')),
+    h('section', { class: 'card' }, h('h3', {}, 'Every viewer'), viewers));
+}
+
+// ---------- what to expect ----------
+
+/** A short, honest guide to reading screenings, shown wherever they're run. */
+export function expectations() {
+  return h('details', { class: 'expect' },
+    h('summary', {}, 'What to expect from test screenings'),
+    h('ul', {},
+      h('li', {}, h('b', {}, 'Best for comparing. '), 'Two titles, or a script before and after a rewrite, tested on the same audience. Also for finding where viewers drift and why: their own words point at the line.'),
+      h('li', {}, h('b', {}, 'Estimates, not view counts. '), 'Simulated viewers can\'t know how far YouTube will push a video. The numbers say how this audience reacts, not how many people will see it.'),
+      h('li', {}, h('b', {}, 'Small groups vary. '), 'With 6–8 viewers, one person can move a number a lot, so every number shows how many viewers it rests on. Run twice and combine for steadier numbers, or test the same thing again before deciding on a close call.'),
+      h('li', {}, h('b', {}, 'Kept realistic on purpose. '), 'Each viewer is anchored to how long people like them really watch (your channel\'s own numbers when you\'re signed in), and reacts honestly: boredom and doubt are data, not failure.'),
+      h('li', {}, h('b', {}, 'It gets better the more you use it. '), 'Every screening is saved. Once a video is published, the lab compares its forecast with what really happened and uses those misses to correct the next screenings. Locking the avatars that ring true, and building the group from your own analytics, sharpens it too.')));
+}
+
 export const REPORT_CSS = `
+.expect { font-size: 13px; }
+.screen-form { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; margin: 6px 0; }
+.screen-form label { display: inline-flex; gap: 5px; align-items: center; }
+.screen-latest h3 { font-size: 14px; margin: 12px 0 6px; }
+.sim-report > a.button-link { justify-self: start; }
+.expect summary { cursor: pointer; color: var(--fg-2); }
+.expect ul { margin: 8px 0 0; padding-left: 20px; display: grid; gap: 6px; }
+table.titles-ab tr.win td { background: color-mix(in srgb, var(--ok) 10%, transparent); font-weight: 600; }
 .sim-report { display: grid; gap: 12px; }
 .sim-report .chips { display: flex; gap: 5px; flex-wrap: wrap; }
 .sim-report .chip { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: var(--bg-2); color: var(--fg-2); }

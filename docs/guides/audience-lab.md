@@ -46,12 +46,37 @@ A test screening runs a video past one of your groups, viewer by viewer, the way
 
 **Run one** from a project's **Test screening** card (choose the group and which of the project's titles to test), or from **Audience lab → Test screenings**. A screening takes 3 AI calls. It tests the title, the opening and the script; with only an outline, the outline's lines stand in for the beats; with neither, only the title is tested.
 
+### Options
+
+- **Include the thumbnail** (needs a thumbnail uploaded on the project): the viewers see your thumbnail in the feed, next to the real thumbnails of the other videos, so they judge the whole package. The first AI call carries the images, so it costs more.
+- **Run twice and combine:** two independent runs, averaged (5 AI calls instead of 3). Each number then shows how far apart the runs were ("±6 pts between runs"): small means steady, large means "don't decide on this alone".
+
+## Compare titles (title A/B)
+
+**Compare titles** on a project's Test screening card shows all its title options (the working title plus the ones in **Titles**, up to 4) to every viewer. That's one AI call, plus the thumbnail if you include it. Each viewer judges every title on its own, in a fresh random order every time, says whether they'd click and their first thought, then picks a favorite.
+
+The comparison shows, for each title:
+- how many would click (weighted, "maybe" counts half)
+- whose favorite it is
+- **wins over:** viewers who'd click this title but not every other one, the people a title brings in that the others lose
+
+When the top titles are within 5 points, it says it's too close to call.
+
 ### The report
 
 - **Would click, stay past the opening, watch on average, reach the end, would subscribe.** These are computed by the extension from the viewers' answers, weighted by each viewer's share of your audience. They're shown next to your channel's real numbers when you're signed in.
 - **Through the video:** the attention curve and how many are still watching, with every beat's main feeling and who left where.
 - **Every viewer:** their click, first thought, how far they got and why they left, their comment, and their beat-by-beat reactions.
 - **Copy report** puts the raw results and the notes on your clipboard.
+
+### What to expect
+
+The same notes are on every Test screening card:
+
+- **Best for comparing:** two titles, or a script before and after a rewrite, on the same audience. Also for finding where viewers drift and why.
+- **Estimates, not view counts:** simulated viewers can't know how far YouTube will push a video.
+- **Small groups vary:** every number shows how many viewers it rests on; run twice for steadier numbers, and re-test close calls.
+- **It gets better the more you use it.** Every screening is saved. Once a video is published, the lab compares its forecast with what really happened and corrects the next screenings with it. Locking the avatars that ring true, and building groups from your own analytics, sharpens it too.
 
 ### Keeping it honest
 
