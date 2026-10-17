@@ -18,6 +18,7 @@ YT Toolkit is a Chrome extension for YouTube creators. It finds outlier videos (
 | [Scripts, hooks and titles](guides/scripts-and-titles.md) | Transcripts, Script analyzer, Hook library, Title lab, Audience questions |
 | [My channel](guides/my-channel.md) | Google sign-in, your retention curves, analytics, comparison with competitors |
 | [AI assistant](guides/ai-assistant.md) | Connecting Gemini, OpenAI, Claude or OpenRouter, and every AI feature |
+| [Local AI](guides/local-ai.md) | Run AI on your own computer with Ollama or LM Studio: what to install, which model |
 | [Data and storage](guides/data-and-storage.md) | Tracking, CSV exports, cleanup, backup and restore |
 | [Audience lab](guides/audience-lab.md) | Avatars of your real audience, for test screenings |
 | [Lab notebook](guides/lab-notebook.md) | Your notes, lessons and experiments, recalled while you write |

@@ -30,7 +30,7 @@ You'll now see outlier badges on YouTube thumbnails and a performance panel next
 AI writes breakdowns, outlines, hooks and ideas. Everything else works without it.
 
 1. Open **Settings** (sidebar, or the popup's Settings link).
-2. Choose a provider: Google Gemini (has a free tier), OpenAI, Anthropic Claude, or OpenRouter.
+2. Choose a provider: Google Gemini (has a free tier), OpenAI, Anthropic Claude, OpenRouter, or Local AI on your own computer (Ollama or LM Studio, no key; see the [Local AI guide](guides/local-ai.md)).
 3. Paste your key and click **Connect**. Chrome asks permission to contact that provider.
 4. Describe your channel in one or two sentences ("Budget travel vlogs for Gen Z, 12K subs, solo creator filming on a phone"). AI uses this to tailor ideas to you.
 

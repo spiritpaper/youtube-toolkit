@@ -28,6 +28,7 @@ Backups you download contain your data (including your AI provider choice and ch
 | `suggestqueries.google.com` | Keyword autocomplete | The keyword |
 | `i.ytimg.com` | AI breakdowns and thumbnail critiques | Fetches public thumbnails to pass to your AI provider |
 | `youtubeanalytics.googleapis.com`, `accounts.google.com`, `oauth2.googleapis.com` | Only if you sign in | Read-only analytics requests for your own channel |
+| Local AI (Ollama, LM Studio…) on `localhost` | Only when you click an AI button | The same prompts, but they never leave your computer |
 | Your AI provider (Gemini, OpenAI, Anthropic or OpenRouter) | Only when you click an AI button | The prompt: titles, stats, and where relevant transcripts, comments, your script, thumbnails and your channel description |
 
 On YouTube pages, the extension reads the page you're viewing to add badges and the panel. A small script in the page keeps a copy of the caption file the video player downloads, so transcripts work; nothing else in the page is touched or sent anywhere.
@@ -44,4 +45,5 @@ AI requests go directly from your browser to the provider you connected, under t
 | `alarms` | Daily tracking and the radar |
 | `identity` | Google sign-in (only if you use it) |
 | YouTube and Google API hosts | Read public YouTube data and, if signed in, your analytics |
-| AI provider hosts (optional) | Requested only when you connect that provider |
+| AI provider hosts (optional) | Requested only when you connect that provider (`localhost` for Local AI) |
+| `declarativeNetRequestWithHostAccess` | Removes the browser's Origin header from the extension's own requests to `localhost`, so Ollama accepts them. It has no effect until you allow `localhost` for Local AI, and never touches other sites. |

@@ -1,6 +1,6 @@
 # AI assistant
 
-AI is optional and uses **your own key**. Every feature works without AI; AI adds the "why" and drafts the writing.
+AI is optional and uses **your own key**, or a [model on your own computer](local-ai.md). Every feature works without AI; AI adds the "why" and drafts the writing.
 
 ## Connect a provider
 
@@ -12,6 +12,7 @@ AI is optional and uses **your own key**. Every feature works without AI; AI add
 | OpenAI | [platform.openai.com/api-keys](https://platform.openai.com/api-keys) | Default `gpt-5.4-mini` |
 | Anthropic Claude | [platform.claude.com/settings/keys](https://platform.claude.com/settings/keys) | Default `claude-opus-5-5` |
 | OpenRouter | [openrouter.ai/keys](https://openrouter.ai/keys) | Hundreds of models from many providers |
+| Local AI (Ollama, LM Studio…) | No key | Runs on your computer: free, private, slower. See the [Local AI guide](local-ai.md). |
 
 1. Choose the provider, paste the key, click **Connect**. Chrome asks permission to contact that provider (the extension can only reach providers you connect).
 2. The model list loads from the provider; pick any model your key can use.
