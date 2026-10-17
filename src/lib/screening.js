@@ -284,3 +284,90 @@ export function reportText({ avatars, feed, story, result, material }) {
   }
   return lines.filter((l) => l !== false && l != null).join('\n');
 }
+
+// ---------- title A/B ----------
+
+export const LETTERS = 'ABCD';
+
+/** Cleans the title test answers: per viewer, one vote per title letter. */
+export function cleanTitleVotes(arr, avatars, titleCount) {
+  const ids = new Set(avatars.map((a) => a.id));
+  const out = {};
+  for (const r of arr) {
+    const id = s(r.id, 40);
+    if (!ids.has(id)) continue;
+    const votes = {};
+    for (const v of Array.isArray(r.votes) ? r.votes : []) {
+      const k = String(v.title ?? '').trim().toUpperCase().charAt(0);
+      const i = LETTERS.indexOf(k);
+      if (i < 0 || i >= titleCount || votes[i]) continue;
+      const click = ['yes', 'maybe', 'no'].includes(String(v.click).toLowerCase()) ? String(v.click).toLowerCase() : 'no';
+      votes[i] = { click, thought: s(v.thought, 240) };
+    }
+    out[id] = { votes, favorite: LETTERS.indexOf(String(r.favorite ?? '').trim().toUpperCase().charAt(0)) };
+  }
+  return out;
+}
+
+/**
+ * Per title: weighted click share ("maybe" counts half), who'd click, and
+ * who it wins over (would click this title and not every other one).
+ * Returns { titles: [...], winner }.
+ */
+export function scoreTitles(avatars, votes, titles) {
+  const total = avatars.reduce((n, a) => n + a.weight, 0) || 1;
+  const v = (a, i) => votes[a.id]?.votes[i]?.click ?? 'no';
+  const rows = titles.map((title, i) => {
+    const yes = avatars.filter((a) => v(a, i) === 'yes');
+    const maybe = avatars.filter((a) => v(a, i) === 'maybe');
+    const share = (yes.reduce((n, a) => n + a.weight, 0) + 0.5 * maybe.reduce((n, a) => n + a.weight, 0)) / total;
+    const winsOver = avatars.filter((a) => v(a, i) !== 'no' && titles.some((_, j) => j !== i && v(a, j) === 'no'));
+    const favorites = avatars.filter((a) => votes[a.id]?.favorite === i);
+    return { title, letter: LETTERS[i], clickShare: share, yes: yes.map((a) => a.id), maybe: maybe.map((a) => a.id), winsOver: winsOver.map((a) => a.id), favorites: favorites.map((a) => a.id), favoriteShare: favorites.reduce((n, a) => n + a.weight, 0) / total };
+  });
+  const best = [...rows].sort((a, b) => b.clickShare - a.clickShare || b.favoriteShare - a.favoriteShare)[0];
+  const tie = rows.filter((r) => Math.abs(r.clickShare - best.clickShare) < 0.05).length > 1;
+  return { titles: rows, winner: best?.letter ?? null, close: tie };
+}
+
+// ---------- two runs, combined ----------
+
+const mean = (xs) => {
+  const v = xs.filter((x) => x != null && Number.isFinite(x));
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null;
+};
+
+/**
+ * Averages several runs' aggregate() results. `spread` is the largest
+ * difference between runs for the headline numbers, to show how steady
+ * they are.
+ */
+export function combineResults(results) {
+  if (results.length === 1) return results[0];
+  const keys = ['clickShare', 'hookHold', 'watchedShare', 'finishShare', 'score', 'like', 'subscribe', 'share', 'watchNext'];
+  const out = Object.fromEntries(keys.map((k) => [k, mean(results.map((r) => r[k]))]));
+  const range = (k) => {
+    const v = results.map((r) => r[k]).filter((x) => x != null);
+    return v.length > 1 ? Math.max(...v) - Math.min(...v) : null;
+  };
+  out.spread = Object.fromEntries(['clickShare', 'hookHold', 'watchedShare', 'finishShare'].map((k) => [k, range(k)]));
+  const beats = Math.max(...results.map((r) => r.curve.length));
+  out.curve = Array.from({ length: beats }, (_, i) => {
+    const at = results.map((r) => r.curve[i]).filter(Boolean);
+    const emotions = at.map((c) => c.emotion).filter(Boolean);
+    return { i, watching: mean(at.map((c) => c.watching)) ?? 0, attention: mean(at.map((c) => c.attention)), emotion: emotions[0] ?? '' };
+  });
+  const leaves = {};
+  for (const r of results) {
+    for (const l of r.leaves) {
+      leaves[l.i] ??= { i: l.i, share: 0, who: [] };
+      leaves[l.i].share += l.share / results.length;
+      leaves[l.i].who = [...new Set([...leaves[l.i].who, ...l.who])];
+    }
+  }
+  out.leaves = Object.values(leaves).sort((a, b) => b.share - a.share);
+  const sum = (k) => results.reduce((n, r) => n + (r.counts?.[k] ?? 0), 0);
+  out.counts = { avatars: results[0].counts.avatars * results.length, clicked: sum('clicked'), stayed: sum('stayed'), finished: sum('finished') };
+  out.passes = results.length;
+  return out;
+}

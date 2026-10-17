@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { splitMaterial, avatarBrief, extractJsonArray, cleanFeed, cleanStory, aggregate, reportText } from '../src/lib/screening.js';
-import { feedHookPrompt, storyPrompt, screeningSummaryPrompt } from '../src/lib/ai.js';
+import { feedHookPrompt, storyPrompt, screeningSummaryPrompt, titleTestPrompt } from '../src/lib/ai.js';
 import { normalizeAvatar } from '../src/lib/avatars.js';
 
 const sentence = (i) => `This is sentence number ${i} of the script and it keeps going a little.`;
@@ -113,4 +113,46 @@ test('each viewer gets a realistic expected watch time, from real numbers when k
   const s = storyPrompt({ avatars: ['x'], title: 'T', beats: [{ i: 0, start: 30, text: 'a' }] });
   assert.match(s.prompt, /WATCHING, not reading/);
   assert.match(s.prompt, /everyone finishes is unrealistic/);
+});
+
+test('title A/B: votes are cleaned, weighted, and each title shows who it wins over', async () => {
+  const { cleanTitleVotes, scoreTitles } = await import('../src/lib/screening.js');
+  const votes = cleanTitleVotes([
+    { id: 'a', votes: [{ title: 'A', click: 'yes' }, { title: 'B', click: 'no' }], favorite: 'A' },
+    { id: 'b', votes: [{ title: 'a', click: 'maybe' }, { title: 'B', click: 'yes' }, { title: 'Z', click: 'yes' }], favorite: 'B' },
+    { id: 'c', votes: [{ title: 'A', click: 'no' }, { title: 'B', click: 'yes' }], favorite: 'none' },
+    { id: 'ghost', votes: [{ title: 'A', click: 'yes' }] },
+  ], avatars, 2);
+  assert.deepEqual(Object.keys(votes), ['a', 'b', 'c']);
+  const r = scoreTitles(avatars, votes, ['Title A', 'Title B']);
+  const near = (x) => Math.round(x * 1000) / 1000;
+  assert.equal(near(r.titles[0].clickShare), 0.65); // a yes .5 + b maybe .3/2
+  assert.equal(near(r.titles[1].clickShare), 0.5); // b .3 + c .2
+  assert.equal(r.winner, 'A');
+  assert.deepEqual(r.titles[0].winsOver, ['a']);
+  assert.deepEqual(r.titles[1].winsOver, ['c']);
+  assert.equal(near(r.titles[1].favoriteShare), 0.3);
+  const t = titleTestPrompt({ avatars: ['x'], titles: ['One', 'Two'], thumbnail: true });
+  assert.match(t.prompt, /A\. "One"\nB\. "Two"/);
+  assert.match(t.prompt, /SEPARATELY/);
+  assert.match(t.prompt, /thumbnail is attached/);
+});
+
+test('two runs combine into averages, with the spread between them', async () => {
+  const { combineResults } = await import('../src/lib/screening.js');
+  const run = (click, watched, leaveShare) => ({ clickShare: click, hookHold: 0.8, watchedShare: watched, finishShare: 0.3, score: 8, like: 1, subscribe: 0.5, share: 0, watchNext: 1, curve: [{ i: 0, watching: 1, attention: 7, emotion: 'curious' }], leaves: [{ i: 0, share: leaveShare, who: ['a'] }], counts: { avatars: 3, clicked: 2, stayed: 2, finished: 1 } });
+  const c = combineResults([run(0.5, 0.6, 0.2), run(0.7, 0.4, 0.4)]);
+  const near = (x) => Math.round(x * 1000) / 1000;
+  assert.equal(near(c.clickShare), 0.6);
+  assert.equal(near(c.spread.clickShare), 0.2);
+  assert.equal(near(c.spread.watchedShare), 0.2);
+  assert.equal(near(c.leaves[0].share), 0.3);
+  assert.deepEqual(c.counts, { avatars: 6, clicked: 4, stayed: 4, finished: 2 });
+  assert.equal(c.passes, 2);
+  const one = run(0.5, 0.5, 0.1);
+  assert.equal(combineResults([one]), one);
+  const f = feedHookPrompt({ avatars: ['x'], title: 'Mine', hook: 'h', neighbors: ['N1', 'N2'], images: { tested: true, neighbors: 1 } });
+  assert.match(f.prompt, /\[image 2\] "N1"/);
+  assert.match(f.prompt, /\[image 1\] "Mine"/);
+  assert.ok(!f.prompt.includes('[image 3]'));
 });

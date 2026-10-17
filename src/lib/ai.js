@@ -791,14 +791,16 @@ const anchorLine = (baseline) =>
  * Stage 1 of a screening: each viewer sees the title in their feed, then the
  * clickers watch the hook. `neighbors`: other titles in the same feed.
  */
-export function feedHookPrompt({ avatars, title, hook, neighbors = [], baseline = null, niche = '' }) {
-  const feed = [...neighbors.slice(0, 5).map((t) => `"${t}"`), `"${title}"   ← the video being tested`];
+export function feedHookPrompt({ avatars, title, hook, neighbors = [], baseline = null, niche = '', images = null }) {
+  // images: { tested: true, neighbors: n } when thumbnails are attached, in that order.
+  const tag = (i) => (images ? `[image ${i}] ` : '');
+  const feed = [...neighbors.slice(0, 5).map((t, i) => `${images && i < images.neighbors ? tag(i + 2) : ''}"${t}"`), `${tag(1)}"${title}"   ← the video being tested`];
   const prompt = `${nicheLine(niche)}
 
 The viewers:
 ${avatars.map((a) => `- ${a}`).join('\n')}
 
-1. FEED. Each viewer is scrolling and sees these titles (no thumbnails):
+1. FEED. Each viewer is scrolling and sees these videos${images ? ' (the attached images are their thumbnails: image 1 is the tested video\'s, the others as tagged; videos without an image show only the title)' : ' (titles only, no thumbnails)'}:
 ${feed.map((t) => `   ${t}`).join('\n')}
 Would they click the tested video? "yes", "maybe" or "no", their first thought on seeing the title, and why.
 ${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)} Keep the share of "yes" near what's realistic.` : ''}
@@ -874,4 +876,29 @@ Keep it or change it, and up to 3 alternatives these viewers would click more, w
 
 Keep it concrete and short.`;
   return { system, prompt };
+}
+
+/**
+ * Title A/B: each viewer judges every title (labeled A, B…) on its own, as
+ * if it were the one in their feed, then picks a favorite. `titles` should
+ * already be in a random order. One call for the whole group.
+ */
+export function titleTestPrompt({ avatars, titles, neighbors = [], baseline = null, niche = '', thumbnail = false }) {
+  const prompt = `${nicheLine(niche)}
+
+The viewers:
+${avatars.map((a) => `- ${a}`).join('\n')}
+
+We're choosing a title for one video. Each viewer is scrolling past videos like:
+${neighbors.slice(0, 5).map((t) => `- "${t}"`).join('\n') || '- (other videos in their niche)'}
+${thumbnail ? '\nThe video\'s thumbnail is attached; it is the same for every title.\n' : ''}
+Judge each title SEPARATELY, as if it were the only version in their feed (don't compare while judging):
+${titles.map((t, i) => `${'ABCD'[i]}. "${t}"`).join('\n')}
+
+For every title: would this viewer click ("yes", "maybe", "no") and their honest first thought in their own voice. Then their favorite (the letter they'd most likely click, or "none").
+${anchorLine(baseline) ? `Reality check: ${anchorLine(baseline)}` : ''}
+
+Reply with ONLY a JSON array, one object per viewer, using their [id]:
+[{"id": "…", "votes": [{"title": "A", "click": "yes|maybe|no", "thought": "…"}], "favorite": "A"}]`;
+  return { system: SCREENING_SYSTEM, prompt };
 }
