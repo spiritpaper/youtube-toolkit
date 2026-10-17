@@ -574,6 +574,30 @@ export async function videoComments(videoId, { fresh = false } = {}) {
   return result;
 }
 
+/**
+ * Recent top-level comments across a whole channel (any public channel; 1
+ * quota unit, cached 12 hours). Used to give avatars real voices: only the
+ * text, likes and video id are kept, never author names.
+ */
+export async function channelComments(channelId) {
+  const key = `cc:${channelId}`;
+  const hit = await cache.get(key);
+  if (hit) return hit;
+  let body;
+  try {
+    body = await call('commentThreads', { part: 'snippet', allThreadsRelatedToChannelId: channelId, maxResults: 100, textFormat: 'plainText' });
+  } catch (err) {
+    if (err.reason === 'commentsDisabled') return [];
+    throw err;
+  }
+  const comments = (body.items ?? []).map((t) => {
+    const c = t.snippet.topLevelComment.snippet;
+    return { text: (c.textDisplay ?? c.textOriginal ?? '').slice(0, 500), likes: c.likeCount ?? 0, videoId: c.videoId ?? t.snippet.videoId ?? null };
+  });
+  await cache.set(key, comments, 12 * HOUR);
+  return comments;
+}
+
 /** Basic info for one video (cached; 1 unit if not). */
 export async function videoInfo(id) {
   const v = (await getVideos([id])).get(id);

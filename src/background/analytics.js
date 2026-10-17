@@ -138,3 +138,21 @@ export async function videoTotals(videoId, publishedAt) {
   }
   return out;
 }
+
+/**
+ * Who watches: age × gender shares, top countries, devices, subscribers vs
+ * not, and traffic sources, over the last `days` days. Each part fails
+ * independently (small channels often have no demographics), as null.
+ */
+export async function audienceProfile(days = 90) {
+  const range = { startDate: daysAgo(days + 1), endDate: daysAgo(2) };
+  const safe = (p) => p.catch((err) => (err.reason === 'signedOut' || err.reason === 'apiDisabled' ? Promise.reject(err) : null));
+  const [demographics, countries, devices, subscribed, traffic] = await Promise.all([
+    safe(report({ ...range, metrics: 'viewerPercentage', dimensions: 'ageGroup,gender', sort: 'gender,ageGroup' })),
+    safe(report({ ...range, metrics: 'views', dimensions: 'country', sort: '-views', maxResults: '10' })),
+    safe(report({ ...range, metrics: 'views', dimensions: 'deviceType', sort: '-views' })),
+    safe(report({ ...range, metrics: 'views,averageViewPercentage', dimensions: 'subscribedStatus' })),
+    safe(report({ ...range, metrics: 'views', dimensions: 'insightTrafficSourceType', sort: '-views' })),
+  ]);
+  return { days, demographics, countries, devices, subscribed, traffic };
+}
